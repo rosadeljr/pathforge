@@ -2,12 +2,19 @@ import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "", {
-  apiVersion: "2026-04-22.dahlia",
-});
+function getStripe() {
+  if (!process.env.STRIPE_SECRET_KEY) {
+    throw new Error("Stripe is not configured. Please add STRIPE_SECRET_KEY to environment variables.");
+  }
+  return new Stripe(process.env.STRIPE_SECRET_KEY, {
+    apiVersion: "2026-04-22.dahlia",
+  });
+}
 
 export async function POST(request: Request) {
   try {
+    const stripe = getStripe();
+
     const supabase = await createClient();
     const { data: { user }, error: authError } = await supabase.auth.getUser();
 
