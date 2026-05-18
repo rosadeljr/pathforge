@@ -48,38 +48,68 @@ export default function SignUp() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 flex items-center justify-center px-4">
-      <div className="w-full max-w-md">
-        <div className="text-center mb-8">
-          <div className="flex items-center justify-center gap-2 mb-4">
-            <div className="w-10 h-10 bg-gradient-to-br from-cyan-400 to-violet-500 rounded-lg flex items-center justify-center">
-              <Zap className="w-6 h-6 text-slate-950" />
+    <div className="min-h-screen bg-gradient-to-br from-black via-slate-900/30 to-black flex items-center justify-center px-4 relative overflow-hidden">
+      {/* Animated background elements */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl animate-float" />
+        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-violet-500/10 rounded-full blur-3xl animate-float animation-delay-2000" />
+      </div>
+
+      <div className="w-full max-w-md relative z-10">
+        <div className="text-center mb-8 animate-fade-in">
+          <Link href="/" className="inline-flex items-center justify-center gap-2 mb-6">
+            <div className="w-10 h-10 bg-gradient-to-br from-cyan-400 to-violet-500 rounded-lg flex items-center justify-center hover-lift">
+              <Zap className="w-6 h-6 text-black" />
             </div>
-            <h1 className="text-2xl font-bold bg-gradient-to-r from-cyan-400 to-violet-500 bg-clip-text text-transparent">PathForge</h1>
-          </div>
-          <p className="text-slate-400 text-sm">Forge your future, one quest at a time</p>
+            <span className="text-2xl font-bold gradient-text">PathForge</span>
+          </Link>
+          <h2 className="text-3xl font-bold mb-2">Start Your Journey</h2>
+          <p className="text-slate-400">Forge your future, one quest at a time</p>
         </div>
 
-        <div className="bg-slate-900 border border-slate-800 rounded-xl p-8 backdrop-blur-xl">
-          <h2 className="text-xl font-semibold mb-6">Start Your Journey</h2>
-
-          <form onSubmit={handleSignUp} className="space-y-4">
+        <div className="glass-dark rounded-2xl p-8 animate-slide-in-up">
+          <form onSubmit={handleSignUp} className="space-y-5">
             <div>
-              <label className="block text-sm font-medium text-slate-200 mb-2">Username</label>
-              <input type="text" value={username} onChange={(e) => setUsername(e.target.value)} placeholder="Choose your forge name" className="w-full px-4 py-2 bg-slate-800 border border-slate-700 rounded-lg focus:outline-none focus:border-cyan-400 text-slate-50 placeholder-slate-500" disabled={loading} />
+              <label className="block text-sm font-medium text-slate-300 mb-2">Username</label>
+              <input
+                type="text"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                placeholder="Choose your forge name"
+                className="w-full px-4 py-2.5 bg-slate-800/50 border border-slate-700 rounded-lg focus:border-cyan-500 focus:bg-slate-800 text-white placeholder-slate-500 transition-all"
+                disabled={loading}
+              />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-slate-200 mb-2">Email</label>
-              <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" className="w-full px-4 py-2 bg-slate-800 border border-slate-700 rounded-lg focus:outline-none focus:border-cyan-400 text-slate-50 placeholder-slate-500" disabled={loading} />
+              <label className="block text-sm font-medium text-slate-300 mb-2">Email</label>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="you@example.com"
+                className="w-full px-4 py-2.5 bg-slate-800/50 border border-slate-700 rounded-lg focus:border-cyan-500 focus:bg-slate-800 text-white placeholder-slate-500 transition-all"
+                disabled={loading}
+              />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-slate-200 mb-2">Password</label>
-              <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="At least 8 characters" className="w-full px-4 py-2 bg-slate-800 border border-slate-700 rounded-lg focus:outline-none focus:border-cyan-400 text-slate-50 placeholder-slate-500" disabled={loading} />
+              <label className="block text-sm font-medium text-slate-300 mb-2">Password</label>
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="At least 8 characters"
+                className="w-full px-4 py-2.5 bg-slate-800/50 border border-slate-700 rounded-lg focus:border-cyan-500 focus:bg-slate-800 text-white placeholder-slate-500 transition-all"
+                disabled={loading}
+              />
             </div>
 
-            <button type="submit" disabled={loading} className="w-full mt-6 bg-gradient-to-r from-cyan-500 to-cyan-600 hover:from-cyan-600 hover:to-cyan-700 disabled:opacity-50 disabled:cursor-not-allowed text-slate-950 font-semibold py-2 rounded-lg transition-all duration-200">
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full mt-6 btn-gradient font-semibold py-3 rounded-lg transition-all hover-lift disabled:opacity-50 disabled:cursor-not-allowed"
+            >
               {loading ? "Creating..." : "Forge My Path"}
             </button>
           </form>
