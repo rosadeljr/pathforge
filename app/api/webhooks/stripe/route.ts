@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 import Stripe from "stripe";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "", {
-  apiVersion: "2023-10-16",
+  apiVersion: "2026-04-22.dahlia",
 });
 
 export async function POST(request: Request) {
@@ -52,12 +52,6 @@ export async function POST(request: Request) {
               provider: "stripe",
               provider_customer_id: subscription.customer as string,
               provider_subscription_id: subscription.id,
-              current_period_start: new Date(
-                subscription.current_period_start * 1000
-              ).toISOString(),
-              current_period_end: new Date(
-                subscription.current_period_end * 1000
-              ).toISOString(),
             });
 
           // Update profile subscription tier

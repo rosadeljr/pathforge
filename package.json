@@ -9,6 +9,7 @@
   },
   "dependencies": {
     "@stripe/stripe-js": "^9.5.0",
+    "@supabase/ssr": "^0.10.3",
     "@supabase/supabase-js": "^2.106.0",
     "axios": "^1.16.1",
     "class-variance-authority": "^0.7.1",

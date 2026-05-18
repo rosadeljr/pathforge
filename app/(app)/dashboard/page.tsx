@@ -115,7 +115,7 @@ export default function Dashboard() {
               />
             </div>
             <p className="text-xs text-slate-400">
-              {levelInfo.currentXP} / {levelInfo.requiredXP} XP to next level
+              {levelInfo.currentXP} / {levelInfo.requiredForNext} XP to next level
             </p>
           </div>
 

@@ -44,8 +44,8 @@ export const CreateProjectSchema = z.object({
 
 // AI Mentor
 export const MentorMessageSchema = z.object({
-  message: z.string().min(1),
-  context: z.record(z.any()).optional(),
+  message: z.string().min(1, "Message is required"),
+  context: z.record(z.string(), z.any()).optional(),
 });
 
 // Readiness Score
