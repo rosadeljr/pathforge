@@ -41,56 +41,78 @@ const FULLSCREEN_ROUTES = ["/onboarding"];
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
-  const [authenticated, setAuthenticated] = useState(false);
+  const [authState, setAuthState] = useState<"loading" | "authenticated" | "unauthenticated">("loading");
   const [profile, setProfile] = useState<Profile | null>(null);
   const [mobileOpen, setMobileOpen] = useState(false);
+
+  // createClient() is now a singleton — same instance across renders
   const supabase = createClient();
 
   const isFullscreen = FULLSCREEN_ROUTES.some((route) => pathname?.startsWith(route));
 
   useEffect(() => {
-    async function checkAuth() {
-      try {
-        const { data: { user }, error } = await supabase.auth.getUser();
+    let mounted = true;
 
-        if (error) {
-          console.error("Auth check error:", error.message);
-          if (!pathname.includes("(marketing)") && !pathname.includes("(auth)")) {
-            router.push("/login?error=session_expired");
-          }
-          return;
-        }
-
-        if (!user && !pathname.includes("(marketing)") && !pathname.includes("(auth)")) {
-          router.push("/login");
-          return;
-        }
-
-        setAuthenticated(!!user);
-
-        // Fetch profile data for sidebar display
-        if (user) {
-          const { data: profileData } = await supabase
-            .from("profiles")
-            .select("username, current_level, current_xp, total_xp, streak_count")
-            .eq("id", user.id)
-            .single();
-          if (profileData) setProfile(profileData);
-        }
-      } catch (err) {
-        console.error("Unexpected auth error:", err);
-        if (!pathname.includes("(marketing)") && !pathname.includes("(auth)")) {
-          router.push("/login?error=auth_error");
-        }
+    // Initial session check
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!mounted) return;
+      if (session?.user) {
+        setAuthState("authenticated");
+        // Load profile (non-blocking)
+        supabase
+          .from("profiles")
+          .select("username, current_level, current_xp, total_xp, streak_count")
+          .eq("id", session.user.id)
+          .single()
+          .then(({ data }) => {
+            if (mounted && data) setProfile(data);
+          });
+      } else {
+        setAuthState("unauthenticated");
       }
+    });
+
+    // Subscribe to auth changes (handles login/logout/token refresh reliably)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (!mounted) return;
+      if (session?.user) {
+        setAuthState("authenticated");
+      } else if (event === "SIGNED_OUT") {
+        setAuthState("unauthenticated");
+        setProfile(null);
+      }
+    });
+
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
+  }, [supabase]);
+
+  // Redirect to login only AFTER we know the user is unauthenticated
+  // (not during the initial loading state)
+  useEffect(() => {
+    if (authState === "unauthenticated") {
+      router.replace("/login");
     }
-    checkAuth();
-  }, [router, supabase, pathname]);
+  }, [authState, router]);
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();
-    router.push("/login");
+    router.replace("/login");
   };
+
+  const authenticated = authState === "authenticated";
+
+  // Show nothing during loading — prevents flash of unauthenticated UI
+  // and prevents the redirect-to-login from firing too early.
+  if (authState === "loading") {
+    return (
+      <div className="min-h-screen bg-[#0a0a0f] flex items-center justify-center">
+        <div className="w-8 h-8 rounded-full border-2 border-white/10 border-t-white/60 animate-spin" />
+      </div>
+    );
+  }
 
   // Fullscreen routes (like onboarding) skip the sidebar
   if (isFullscreen) {

@@ -28,30 +28,32 @@ export default function Dashboard() {
   useEffect(() => {
     async function loadProfile() {
       try {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) {
-          router.push("/login");
+        // Layout already handles auth check + redirect.
+        // If we're here, getSession() should have a valid session.
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session?.user) {
+          // Don't redirect here - layout handles it
+          setLoading(false);
           return;
         }
 
         const { data, error } = await supabase
           .from("profiles")
           .select("*")
-          .eq("id", user.id)
+          .eq("id", session.user.id)
           .single();
 
         if (error) throw error;
         setProfile(data);
       } catch (error) {
         console.error("Error loading profile:", error);
-        router.push("/login");
       } finally {
         setLoading(false);
       }
     }
 
     loadProfile();
-  }, [router, supabase]);
+  }, [supabase]);
 
   const handleLogout = async () => {
     await supabase.auth.signOut();

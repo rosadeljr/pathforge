@@ -202,8 +202,8 @@ export default function SignUp() {
       if (data.session) {
         console.log("[signup] success with session - redirecting to /onboarding");
         toast.success("Welcome to PathForge");
-        router.refresh();
-        router.push("/onboarding");
+        // Hard navigation ensures cookies are fully established
+        window.location.href = "/onboarding";
       } else {
         console.log("[signup] success without session - email verification required");
         toast.success("Check your email to verify your account", { duration: 6000 });

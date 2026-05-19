@@ -114,8 +114,9 @@ export default function Login() {
       }
 
       toast.success("Welcome back");
-      router.refresh();
-      router.push("/dashboard");
+      // Hard navigation ensures cookies are fully established before
+      // the next page's auth check runs. router.push can race.
+      window.location.href = "/dashboard";
     } catch (error: any) {
       console.error("Login error:", error);
       toast.error(error?.message || "Sign in failed");
