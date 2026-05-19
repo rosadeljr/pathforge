@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { createClient } from "@/lib/supabase/client";
 import toast from "react-hot-toast";
 import Link from "next/link";
+import { Logo } from "@/components/brand/Logo";
 import {
   AlertCircle,
   Mail,
@@ -259,11 +260,7 @@ export default function SignUp() {
           >
             {/* Mobile logo */}
             <Link href="/" className="lg:hidden inline-flex items-center gap-2.5 mb-10">
-              <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-lg shadow-indigo-500/20">
-                <svg className="w-5 h-5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                  <path d="M13 2L3 14h7l-1 8 10-12h-7l1-8z" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-              </div>
+              <Logo size={36} />
               <span className="text-lg font-semibold tracking-tight">PathForge</span>
             </Link>
 
@@ -529,11 +526,7 @@ export default function SignUp() {
         <div className="hidden lg:flex lg:w-1/2 xl:w-3/5 flex-col justify-between p-12 xl:p-16 relative order-1 lg:order-2">
           {/* Logo */}
           <Link href="/" className="inline-flex items-center gap-2.5 group w-fit ml-auto">
-            <div className="relative w-9 h-9 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-lg shadow-indigo-500/20">
-              <svg className="w-5 h-5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                <path d="M13 2L3 14h7l-1 8 10-12h-7l1-8z" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-            </div>
+            <Logo size={36} />
             <span className="text-lg font-semibold tracking-tight">PathForge</span>
           </Link>
 

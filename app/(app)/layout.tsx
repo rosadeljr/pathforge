@@ -5,6 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { Logo } from "@/components/brand/Logo";
 import {
   LayoutDashboard,
   Swords,
@@ -145,11 +146,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         <div className="md:hidden sticky top-0 z-40 bg-[#0a0a0f]/80 backdrop-blur-xl border-b border-white/[0.06]">
           <div className="px-4 h-14 flex items-center justify-between">
             <Link href="/dashboard" className="flex items-center gap-2">
-              <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center">
-                <svg className="w-4 h-4 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                  <path d="M13 2L3 14h7l-1 8 10-12h-7l1-8z" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-              </div>
+              <Logo size={28} />
               <span className="font-semibold tracking-tight">PathForge</span>
             </Link>
             <button
@@ -169,11 +166,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             {/* Logo */}
             <div className="px-6 py-6 border-b border-white/[0.06]">
               <Link href="/dashboard" className="flex items-center gap-2.5 group">
-                <div className="relative w-9 h-9 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-lg shadow-indigo-500/20">
-                  <svg className="w-5 h-5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                    <path d="M13 2L3 14h7l-1 8 10-12h-7l1-8z" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
-                </div>
+                <Logo size={32} />
                 <span className="text-base font-semibold tracking-tight">PathForge</span>
               </Link>
             </div>

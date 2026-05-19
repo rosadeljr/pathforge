@@ -22,6 +22,7 @@ import {
   formatPhp,
   type CareerCategory,
 } from "@/lib/data/career-paths";
+import { Logo } from "@/components/brand/Logo";
 
 const GOAL_OPTIONS = [
   { value: "land_first_job", label: "Land my first job", emoji: "🚀" },
@@ -158,11 +159,7 @@ export default function Onboarding() {
               animate={{ opacity: 1, x: 0 }}
               className="flex items-center gap-2.5"
             >
-              <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-lg shadow-indigo-500/20">
-                <svg className="w-5 h-5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                  <path d="M13 2L3 14h7l-1 8 10-12h-7l1-8z" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-              </div>
+              <Logo size={36} />
               <span className="text-lg font-semibold tracking-tight">PathForge</span>
             </motion.div>
 
