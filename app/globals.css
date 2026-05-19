@@ -174,3 +174,201 @@ textarea:focus-visible {
 .btn-gradient:hover {
   box-shadow: 0 0 20px rgba(6, 182, 212, 0.4), 0 0 40px rgba(6, 182, 212, 0.2);
 }
+
+/* ============================================
+   ANIME VIBES - Solo Leveling & Demon Slayer
+   ============================================ */
+
+/* Dramatic anime glow effects */
+.glow-dramatic {
+  box-shadow:
+    0 0 30px rgba(139, 92, 246, 0.6),
+    0 0 60px rgba(139, 92, 246, 0.3),
+    inset 0 0 30px rgba(139, 92, 246, 0.1);
+}
+
+.glow-purple {
+  box-shadow:
+    0 0 20px rgba(168, 85, 247, 0.5),
+    0 0 40px rgba(168, 85, 247, 0.3),
+    inset 0 0 20px rgba(168, 85, 247, 0.1);
+}
+
+.glow-rose {
+  box-shadow:
+    0 0 20px rgba(244, 63, 94, 0.5),
+    0 0 40px rgba(244, 63, 94, 0.3),
+    inset 0 0 20px rgba(244, 63, 94, 0.1);
+}
+
+.glow-cyan-intense {
+  box-shadow:
+    0 0 30px rgba(6, 182, 212, 0.6),
+    0 0 60px rgba(6, 182, 212, 0.3),
+    inset 0 0 30px rgba(6, 182, 212, 0.1);
+}
+
+/* Anime-style gradient backgrounds */
+.gradient-anime-purple {
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.2), rgba(168, 85, 247, 0.1), rgba(59, 130, 246, 0.1));
+}
+
+.gradient-anime-dramatic {
+  background: linear-gradient(135deg, rgba(6, 182, 212, 0.15), rgba(139, 92, 246, 0.15), rgba(244, 63, 94, 0.1));
+}
+
+.gradient-anime-rose {
+  background: linear-gradient(135deg, rgba(244, 63, 94, 0.2), rgba(244, 63, 94, 0.1));
+}
+
+/* Anime border glow effects */
+.border-glow-cyan {
+  border: 2px solid;
+  border-color: rgba(6, 182, 212, 0.5);
+  box-shadow:
+    0 0 20px rgba(6, 182, 212, 0.3),
+    inset 0 0 20px rgba(6, 182, 212, 0.05);
+}
+
+.border-glow-purple {
+  border: 2px solid;
+  border-color: rgba(139, 92, 246, 0.5);
+  box-shadow:
+    0 0 20px rgba(139, 92, 246, 0.3),
+    inset 0 0 20px rgba(139, 92, 246, 0.05);
+}
+
+.border-glow-rose {
+  border: 2px solid;
+  border-color: rgba(244, 63, 94, 0.5);
+  box-shadow:
+    0 0 20px rgba(244, 63, 94, 0.3),
+    inset 0 0 20px rgba(244, 63, 94, 0.05);
+}
+
+/* Anime text glow */
+.text-glow-cyan {
+  color: rgb(34, 211, 238);
+  text-shadow:
+    0 0 10px rgba(6, 182, 212, 0.5),
+    0 0 20px rgba(6, 182, 212, 0.3);
+}
+
+.text-glow-purple {
+  color: rgb(196, 132, 252);
+  text-shadow:
+    0 0 10px rgba(139, 92, 246, 0.5),
+    0 0 20px rgba(139, 92, 246, 0.3);
+}
+
+.text-glow-rose {
+  color: rgb(251, 113, 133);
+  text-shadow:
+    0 0 10px rgba(244, 63, 94, 0.5),
+    0 0 20px rgba(244, 63, 94, 0.3);
+}
+
+/* Anime dramatic underline */
+.underline-glow {
+  position: relative;
+  text-decoration: none;
+}
+
+.underline-glow::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, rgba(6, 182, 212, 0.8), transparent);
+  box-shadow: 0 0 10px rgba(6, 182, 212, 0.5);
+}
+
+/* Anime shimmer effect */
+@keyframes shimmer-anime {
+  0% {
+    background-position: -1000px 0;
+  }
+  100% {
+    background-position: 1000px 0;
+  }
+}
+
+.shimmer-anime {
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.1),
+    transparent
+  );
+  background-size: 200% 100%;
+  animation: shimmer-anime 3s infinite;
+}
+
+/* Anime pulse glow */
+@keyframes pulse-glow {
+  0%, 100% {
+    opacity: 0.8;
+    box-shadow: 0 0 20px rgba(139, 92, 246, 0.3);
+  }
+  50% {
+    opacity: 1;
+    box-shadow: 0 0 40px rgba(139, 92, 246, 0.6);
+  }
+}
+
+.pulse-glow {
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+/* Anime breathing effect (like Demon Slayer) */
+@keyframes breathing {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 0.9;
+  }
+  50% {
+    transform: scale(1.02);
+    opacity: 1;
+  }
+}
+
+.breathing {
+  animation: breathing 4s ease-in-out infinite;
+}
+
+/* Anime dramatic enter */
+@keyframes dramatic-enter {
+  0% {
+    opacity: 0;
+    transform: scale(0.8) rotateY(-90deg);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) rotateY(0deg);
+  }
+}
+
+.dramatic-enter {
+  animation: dramatic-enter 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* Anime focus highlight */
+.anime-focus {
+  outline: 2px solid rgba(6, 182, 212, 0.6);
+  outline-offset: 2px;
+  box-shadow:
+    0 0 20px rgba(6, 182, 212, 0.4),
+    inset 0 0 20px rgba(6, 182, 212, 0.1);
+}
+
+/* Rank colors from Solo Leveling */
+.rank-e { --rank-glow-e: rgba(71, 85, 105, 0.5); }
+.rank-d { --rank-glow-d: rgba(16, 185, 129, 0.5); }
+.rank-c { --rank-glow-c: rgba(59, 130, 246, 0.5); }
+.rank-b { --rank-glow-b: rgba(139, 92, 246, 0.5); }
+.rank-a { --rank-glow-a: rgba(251, 146, 60, 0.5); }
+.rank-s { --rank-glow-s: rgba(244, 63, 94, 0.5); }
+.rank-ss { --rank-glow-ss: rgba(234, 179, 8, 0.5); }
+.rank-sss { --rank-glow-sss: rgba(6, 182, 212, 0.6); }
