@@ -152,7 +152,12 @@ export default function SignUp() {
         console.error("[signup] auth error:", authError);
 
         const msg = authError.message?.toLowerCase() || "";
-        if (msg.includes("already registered") || msg.includes("already been registered") || msg.includes("user already")) {
+        if (msg.includes("email rate limit")) {
+          toast.error(
+            "Email rate limit hit. Either disable email confirmation in Supabase, or wait ~1 hour and try a different email.",
+            { duration: 8000 }
+          );
+        } else if (msg.includes("already registered") || msg.includes("already been registered") || msg.includes("user already")) {
           toast.error("This email is already registered. Try signing in instead.");
         } else if (msg.includes("invalid email")) {
           toast.error("Please enter a valid email address.");
