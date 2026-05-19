@@ -1,38 +1,81 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { LoginSchema } from "@/lib/validations";
 import toast from "react-hot-toast";
 import Link from "next/link";
-import { Zap } from "lucide-react";
+import { Zap, AlertCircle } from "lucide-react";
 
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [configError, setConfigError] = useState(false);
   const router = useRouter();
+  const searchParams = useSearchParams();
   const supabase = createClient();
+
+  useEffect(() => {
+    // Check if environment variables are configured
+    if (
+      !process.env.NEXT_PUBLIC_SUPABASE_URL ||
+      !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+    ) {
+      setConfigError(true);
+      toast.error(
+        "Configuration error: Supabase credentials not found. Contact support."
+      );
+    }
+
+    // Check for error from redirect
+    const error = searchParams.get("error");
+    if (error) {
+      const errorMessages: Record<string, string> = {
+        session_expired: "Your session has expired. Please log in again.",
+        auth_error: "Authentication error. Please try again.",
+        auth_failed: "Authentication failed. Please check your credentials.",
+      };
+      toast.error(errorMessages[error] || "An error occurred. Please try again.");
+    }
+  }, [searchParams]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (configError) {
+      toast.error("System configuration error. Please contact support.");
+      return;
+    }
+
     setLoading(true);
 
     try {
       const validatedData = LoginSchema.parse({ email, password });
 
-      const { error } = await supabase.auth.signInWithPassword({
+      const { data, error } = await supabase.auth.signInWithPassword({
         email: validatedData.email,
         password: validatedData.password,
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error("Supabase auth error:", error);
+        throw error;
+      }
+
+      if (!data.user) {
+        throw new Error("No user returned from authentication");
+      }
 
       toast.success("Welcome back!");
+      // Force a refresh to ensure session is established
+      router.refresh();
       router.push("/dashboard");
     } catch (error: any) {
-      toast.error(error.message || "Failed to sign in");
+      console.error("Login error:", error);
+      const message = error?.message || "Failed to sign in";
+      toast.error(message);
     } finally {
       setLoading(false);
     }
@@ -53,6 +96,18 @@ export default function Login() {
 
         <div className="bg-slate-900 border border-slate-800 rounded-xl p-8 backdrop-blur-xl">
           <h2 className="text-xl font-semibold mb-6">Welcome Back</h2>
+
+          {configError && (
+            <div className="mb-6 p-4 bg-rose-500/10 border border-rose-500/50 rounded-lg flex gap-3">
+              <AlertCircle className="w-5 h-5 text-rose-400 flex-shrink-0 mt-0.5" />
+              <div>
+                <p className="text-sm text-rose-300 font-medium">Configuration Error</p>
+                <p className="text-xs text-rose-200 mt-1">
+                  The application is not properly configured. Please ensure environment variables are set correctly.
+                </p>
+              </div>
+            </div>
+          )}
 
           <form onSubmit={handleLogin} className="space-y-4">
             <div>

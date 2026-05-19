@@ -1,23 +1,55 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { SignUpSchema } from "@/lib/validations";
 import toast from "react-hot-toast";
 import Link from "next/link";
-import { Zap } from "lucide-react";
+import { Zap, AlertCircle } from "lucide-react";
 
 export default function SignUp() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [username, setUsername] = useState("");
   const [loading, setLoading] = useState(false);
+  const [configError, setConfigError] = useState(false);
   const router = useRouter();
+  const searchParams = useSearchParams();
   const supabase = createClient();
+
+  useEffect(() => {
+    // Check if environment variables are configured
+    if (
+      !process.env.NEXT_PUBLIC_SUPABASE_URL ||
+      !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+    ) {
+      setConfigError(true);
+      toast.error(
+        "Configuration error: Supabase credentials not found. Contact support."
+      );
+    }
+
+    // Check for error from redirect
+    const error = searchParams.get("error");
+    if (error) {
+      const errorMessages: Record<string, string> = {
+        session_expired: "Your session has expired. Please try again.",
+        auth_error: "Authentication error. Please try again.",
+        auth_failed: "Authentication failed. Please check your input.",
+      };
+      toast.error(errorMessages[error] || "An error occurred. Please try again.");
+    }
+  }, [searchParams]);
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (configError) {
+      toast.error("System configuration error. Please contact support.");
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -28,20 +60,32 @@ export default function SignUp() {
         password: validatedData.password,
       });
 
-      if (authError) throw authError;
+      if (authError) {
+        console.error("Supabase signup error:", authError);
+        throw authError;
+      }
 
       if (data.user) {
-        await supabase.from("profiles").insert({
+        // Insert user profile
+        const { error: profileError } = await supabase.from("profiles").insert({
           id: data.user.id,
           email: validatedData.email,
           username: validatedData.username,
         });
 
+        if (profileError) {
+          console.error("Profile insert error:", profileError);
+          throw profileError;
+        }
+
         toast.success("Account created! Redirecting...");
+        router.refresh();
         router.push("/onboarding");
       }
     } catch (error: any) {
-      toast.error(error.message || "Failed to sign up");
+      console.error("Sign up error:", error);
+      const message = error?.message || "Failed to sign up";
+      toast.error(message);
     } finally {
       setLoading(false);
     }
@@ -68,6 +112,18 @@ export default function SignUp() {
         </div>
 
         <div className="glass-dark rounded-2xl p-8 animate-slide-in-up">
+          {configError && (
+            <div className="mb-6 p-4 bg-rose-500/10 border border-rose-500/50 rounded-lg flex gap-3">
+              <AlertCircle className="w-5 h-5 text-rose-400 flex-shrink-0 mt-0.5" />
+              <div>
+                <p className="text-sm text-rose-300 font-medium">Configuration Error</p>
+                <p className="text-xs text-rose-200 mt-1">
+                  The application is not properly configured. Please ensure environment variables are set correctly.
+                </p>
+              </div>
+            </div>
+          )}
+
           <form onSubmit={handleSignUp} className="space-y-5">
             <div>
               <label className="block text-sm font-medium text-slate-300 mb-2">Username</label>

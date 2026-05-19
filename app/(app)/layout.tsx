@@ -14,11 +14,28 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     async function checkAuth() {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user && !pathname.includes("(marketing)") && !pathname.includes("(auth)")) {
-        router.push("/login");
-      } else {
-        setAuthenticated(!!user);
+      try {
+        const { data: { user }, error } = await supabase.auth.getUser();
+
+        if (error) {
+          console.error("Auth check error:", error.message);
+          // If there's an auth error and we're in a protected route, redirect to login
+          if (!pathname.includes("(marketing)") && !pathname.includes("(auth)")) {
+            router.push("/login?error=session_expired");
+          }
+          return;
+        }
+
+        if (!user && !pathname.includes("(marketing)") && !pathname.includes("(auth)")) {
+          router.push("/login");
+        } else {
+          setAuthenticated(!!user);
+        }
+      } catch (err) {
+        console.error("Unexpected auth error:", err);
+        if (!pathname.includes("(marketing)") && !pathname.includes("(auth)")) {
+          router.push("/login?error=auth_error");
+        }
       }
     }
     checkAuth();
