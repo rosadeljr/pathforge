@@ -109,8 +109,10 @@ export default function SignUp() {
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
+    console.log("[signup] handleSignUp fired", { email, username, passwordLength: password.length });
 
     if (configError) {
+      console.warn("[signup] blocked: config error");
       toast.error("Service unavailable. Please contact support.");
       return;
     }
@@ -122,11 +124,13 @@ export default function SignUp() {
     setTouched({ email: true, password: true, username: true });
 
     if (!isFormValid()) {
+      console.warn("[signup] blocked: form invalid", { email, username, passwordLength: password.length });
       toast.error("Please fix the errors in the form");
       return;
     }
 
     setLoading(true);
+    console.log("[signup] calling supabase.auth.signUp...");
 
     try {
       // Sign up - pass username as metadata so DB trigger can use it
@@ -142,30 +146,36 @@ export default function SignUp() {
         },
       });
 
-      if (authError) {
-        console.error("Sign up error:", authError);
+      console.log("[signup] supabase response", { hasUser: !!data?.user, hasSession: !!data?.session, error: authError?.message });
 
-        if (authError.message.includes("already registered") || authError.message.includes("already been registered")) {
-          toast.error("This email is already registered. Try signing in.");
-        } else if (authError.message.includes("invalid")) {
-          toast.error("Invalid email or password");
-        } else if (authError.message.includes("Password")) {
+      if (authError) {
+        console.error("[signup] auth error:", authError);
+
+        const msg = authError.message?.toLowerCase() || "";
+        if (msg.includes("already registered") || msg.includes("already been registered") || msg.includes("user already")) {
+          toast.error("This email is already registered. Try signing in instead.");
+        } else if (msg.includes("invalid email")) {
+          toast.error("Please enter a valid email address.");
+        } else if (msg.includes("password")) {
           toast.error(authError.message);
+        } else if (msg.includes("rate") || msg.includes("too many")) {
+          toast.error("Too many attempts. Please wait a moment and try again.");
         } else {
-          toast.error(authError.message || "Sign up failed");
+          toast.error(authError.message || "Sign up failed. Please try again.");
         }
         return;
       }
 
       if (!data.user) {
-        toast.error("Account creation failed");
+        console.error("[signup] no user returned from supabase");
+        toast.error("Account creation failed. Please try again.");
         return;
       }
 
       // Try to create/update profile - don't fail signup if this errors
       // (DB trigger should handle this automatically, but we try as backup)
       try {
-        await supabase.from("profiles").upsert(
+        const { error: profileError } = await supabase.from("profiles").upsert(
           {
             id: data.user.id,
             email: data.user.email || email,
@@ -173,24 +183,26 @@ export default function SignUp() {
           },
           { onConflict: "id" }
         );
+        if (profileError) {
+          console.warn("[signup] profile upsert (non-fatal):", profileError);
+        }
       } catch (profileError) {
-        // Non-fatal - the DB trigger should handle this
-        console.warn("Profile upsert (non-fatal):", profileError);
+        console.warn("[signup] profile upsert threw (non-fatal):", profileError);
       }
 
       // Check if email confirmation is required
       if (data.session) {
-        // Auto-signed in
+        console.log("[signup] success with session - redirecting to /onboarding");
         toast.success("Welcome to PathForge");
         router.refresh();
         router.push("/onboarding");
       } else {
-        // Email confirmation required
-        toast.success("Check your email to verify your account");
+        console.log("[signup] success without session - email verification required");
+        toast.success("Check your email to verify your account", { duration: 6000 });
         router.push("/login?error=email_verification_sent");
       }
     } catch (error: any) {
-      console.error("Unexpected signup error:", error);
+      console.error("[signup] unexpected error:", error);
       toast.error(error?.message || "Something went wrong. Please try again.");
     } finally {
       setLoading(false);

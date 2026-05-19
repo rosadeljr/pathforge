@@ -38,7 +38,9 @@ export default function Login() {
     }
 
     const error = searchParams.get("error");
-    if (error) {
+    if (error === "email_verification_sent") {
+      toast.success("Check your email to verify your account before signing in.", { duration: 6000 });
+    } else if (error) {
       const errorMessages: Record<string, string> = {
         session_expired: "Your session has expired. Please sign in again.",
         auth_error: "Authentication error. Please try again.",
