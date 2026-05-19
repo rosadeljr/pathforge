@@ -4,18 +4,37 @@ import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { createClient } from "@/lib/supabase/client";
-import { SignUpSchema } from "@/lib/validations";
 import toast from "react-hot-toast";
 import Link from "next/link";
-import { Zap, AlertCircle, Sparkles, Sword, Mail, Lock, User, ArrowRight, Crown } from "lucide-react";
+import {
+  AlertCircle,
+  Mail,
+  Lock,
+  User,
+  ArrowRight,
+  Eye,
+  EyeOff,
+  ShieldCheck,
+  Loader2,
+  Check,
+  CheckCircle2,
+} from "lucide-react";
+
+interface FieldErrors {
+  email?: string;
+  password?: string;
+  username?: string;
+}
 
 export default function SignUp() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [username, setUsername] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [configError, setConfigError] = useState(false);
-  const [focusedField, setFocusedField] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
+  const [touched, setTouched] = useState<Record<string, boolean>>({});
   const router = useRouter();
   const searchParams = useSearchParams();
   const supabase = createClient();
@@ -26,9 +45,6 @@ export default function SignUp() {
       !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
     ) {
       setConfigError(true);
-      toast.error(
-        "Configuration error: Supabase credentials not found. Contact support."
-      );
     }
 
     const error = searchParams.get("error");
@@ -36,247 +52,208 @@ export default function SignUp() {
       const errorMessages: Record<string, string> = {
         session_expired: "Your session has expired. Please try again.",
         auth_error: "Authentication error. Please try again.",
-        auth_failed: "Authentication failed. Please check your input.",
+        auth_failed: "Sign up failed. Please check your input.",
       };
-      toast.error(errorMessages[error] || "An error occurred. Please try again.");
+      toast.error(errorMessages[error] || "An error occurred.");
     }
   }, [searchParams]);
+
+  // Password strength calculation
+  const passwordStrength = (() => {
+    if (!password) return { score: 0, label: "", color: "" };
+    let score = 0;
+    if (password.length >= 8) score++;
+    if (password.length >= 12) score++;
+    if (/[A-Z]/.test(password) && /[a-z]/.test(password)) score++;
+    if (/\d/.test(password)) score++;
+    if (/[^A-Za-z0-9]/.test(password)) score++;
+
+    if (score <= 1) return { score, label: "Weak", color: "bg-red-500" };
+    if (score <= 2) return { score, label: "Fair", color: "bg-amber-500" };
+    if (score <= 3) return { score, label: "Good", color: "bg-blue-500" };
+    return { score, label: "Strong", color: "bg-emerald-500" };
+  })();
+
+  const validateField = (field: keyof FieldErrors, value: string) => {
+    const errors = { ...fieldErrors };
+    if (field === "email") {
+      if (!value) errors.email = "Email is required";
+      else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) errors.email = "Please enter a valid email";
+      else delete errors.email;
+    }
+    if (field === "password") {
+      if (!value) errors.password = "Password is required";
+      else if (value.length < 8) errors.password = "Must be at least 8 characters";
+      else delete errors.password;
+    }
+    if (field === "username") {
+      if (!value) errors.username = "Name is required";
+      else if (value.length < 3) errors.username = "Must be at least 3 characters";
+      else if (!/^[a-zA-Z0-9_-]+$/.test(value)) errors.username = "Only letters, numbers, _ and -";
+      else delete errors.username;
+    }
+    setFieldErrors(errors);
+  };
+
+  const isFormValid = () => {
+    return (
+      email &&
+      password &&
+      username &&
+      /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) &&
+      password.length >= 8 &&
+      username.length >= 3 &&
+      /^[a-zA-Z0-9_-]+$/.test(username)
+    );
+  };
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (configError) {
-      toast.error("System configuration error. Please contact support.");
+      toast.error("Service unavailable. Please contact support.");
+      return;
+    }
+
+    // Validate everything
+    validateField("email", email);
+    validateField("password", password);
+    validateField("username", username);
+    setTouched({ email: true, password: true, username: true });
+
+    if (!isFormValid()) {
+      toast.error("Please fix the errors in the form");
       return;
     }
 
     setLoading(true);
 
     try {
-      const validatedData = SignUpSchema.parse({ email, password, username });
-
+      // Sign up - pass username as metadata so DB trigger can use it
       const { error: authError, data } = await supabase.auth.signUp({
-        email: validatedData.email,
-        password: validatedData.password,
+        email,
+        password,
+        options: {
+          data: {
+            username,
+            full_name: username,
+          },
+          emailRedirectTo: `${window.location.origin}/api/auth/callback`,
+        },
       });
 
       if (authError) {
-        console.error("Supabase signup error:", authError);
-        throw authError;
+        console.error("Sign up error:", authError);
+
+        if (authError.message.includes("already registered") || authError.message.includes("already been registered")) {
+          toast.error("This email is already registered. Try signing in.");
+        } else if (authError.message.includes("invalid")) {
+          toast.error("Invalid email or password");
+        } else if (authError.message.includes("Password")) {
+          toast.error(authError.message);
+        } else {
+          toast.error(authError.message || "Sign up failed");
+        }
+        return;
       }
 
-      if (data.user) {
-        const { error: profileError } = await supabase.from("profiles").insert({
-          id: data.user.id,
-          email: validatedData.email,
-          username: validatedData.username,
-        });
+      if (!data.user) {
+        toast.error("Account creation failed");
+        return;
+      }
 
-        if (profileError) {
-          console.error("Profile insert error:", profileError);
-          throw profileError;
-        }
+      // Try to create/update profile - don't fail signup if this errors
+      // (DB trigger should handle this automatically, but we try as backup)
+      try {
+        await supabase.from("profiles").upsert(
+          {
+            id: data.user.id,
+            email: data.user.email || email,
+            username,
+          },
+          { onConflict: "id" }
+        );
+      } catch (profileError) {
+        // Non-fatal - the DB trigger should handle this
+        console.warn("Profile upsert (non-fatal):", profileError);
+      }
 
-        toast.success("⚡ Legend Born! Welcome, Hunter!");
+      // Check if email confirmation is required
+      if (data.session) {
+        // Auto-signed in
+        toast.success("Welcome to PathForge");
         router.refresh();
         router.push("/onboarding");
+      } else {
+        // Email confirmation required
+        toast.success("Check your email to verify your account");
+        router.push("/login?error=email_verification_sent");
       }
     } catch (error: any) {
-      console.error("Sign up error:", error);
-      const message = error?.message || "Failed to sign up";
-      toast.error(message);
+      console.error("Unexpected signup error:", error);
+      toast.error(error?.message || "Something went wrong. Please try again.");
     } finally {
       setLoading(false);
     }
   };
 
-  // Floating rune positions
-  const runes = [
-    { x: "8%", y: "12%", delay: 0, size: 22, color: "text-amber-400" },
-    { x: "88%", y: "18%", delay: 0.5, size: 24, color: "text-rose-400" },
-    { x: "12%", y: "78%", delay: 1, size: 18, color: "text-cyan-400" },
-    { x: "82%", y: "72%", delay: 1.5, size: 22, color: "text-violet-400" },
-    { x: "48%", y: "8%", delay: 0.3, size: 16, color: "text-emerald-400" },
-    { x: "5%", y: "45%", delay: 0.8, size: 20, color: "text-cyan-400" },
-    { x: "92%", y: "48%", delay: 1.2, size: 18, color: "text-violet-400" },
-    { x: "45%", y: "92%", delay: 1.7, size: 22, color: "text-amber-400" },
-  ];
-
   return (
-    <div className="min-h-screen bg-black flex items-center justify-center px-4 py-12 relative overflow-hidden">
-      {/* Epic Animated Background */}
+    <div className="min-h-screen bg-[#0a0a0f] text-white relative overflow-hidden">
+      {/* Ambient background */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        {/* Gradient mesh - more vibrant for signup */}
-        <div className="absolute inset-0 bg-gradient-to-br from-rose-950/40 via-black to-amber-950/40" />
-
-        {/* Massive glowing orbs */}
-        <motion.div
-          animate={{
-            scale: [1, 1.2, 1],
-            opacity: [0.3, 0.5, 0.3],
-          }}
-          transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute top-1/4 -left-32 w-[500px] h-[500px] bg-rose-600/30 rounded-full blur-[120px]"
-        />
-        <motion.div
-          animate={{
-            scale: [1, 1.3, 1],
-            opacity: [0.2, 0.4, 0.2],
-          }}
-          transition={{ duration: 10, repeat: Infinity, ease: "easeInOut", delay: 2 }}
-          className="absolute bottom-1/4 -right-32 w-[500px] h-[500px] bg-amber-600/30 rounded-full blur-[120px]"
-        />
-        <motion.div
-          animate={{
-            scale: [1, 1.4, 1],
-            opacity: [0.15, 0.3, 0.15],
-          }}
-          transition={{ duration: 12, repeat: Infinity, ease: "easeInOut", delay: 4 }}
-          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-violet-600/20 rounded-full blur-[150px]"
-        />
-
-        {/* Grid pattern */}
         <div
-          className="absolute inset-0 opacity-[0.03]"
+          className="absolute top-0 -right-40 w-[600px] h-[600px] rounded-full opacity-20"
+          style={{ background: "radial-gradient(circle, rgba(168, 85, 247, 0.3), transparent 70%)" }}
+        />
+        <div
+          className="absolute bottom-0 -left-40 w-[600px] h-[600px] rounded-full opacity-20"
+          style={{ background: "radial-gradient(circle, rgba(99, 102, 241, 0.3), transparent 70%)" }}
+        />
+
+        <div
+          className="absolute inset-0 opacity-[0.015]"
           style={{
-            backgroundImage: `linear-gradient(rgba(244, 63, 94, 0.5) 1px, transparent 1px),
-                              linear-gradient(90deg, rgba(244, 63, 94, 0.5) 1px, transparent 1px)`,
-            backgroundSize: "50px 50px",
+            backgroundImage: `linear-gradient(rgba(255,255,255,1) 1px, transparent 1px),
+                              linear-gradient(90deg, rgba(255,255,255,1) 1px, transparent 1px)`,
+            backgroundSize: "64px 64px",
           }}
         />
 
-        {/* Floating runes */}
-        {runes.map((rune, i) => (
-          <motion.div
-            key={i}
-            initial={{ opacity: 0 }}
-            animate={{
-              opacity: [0, 0.7, 0],
-              y: [0, -20, 0],
-              rotate: [0, 360],
-            }}
-            transition={{
-              duration: 6,
-              repeat: Infinity,
-              delay: rune.delay,
-              ease: "easeInOut",
-            }}
-            className="absolute"
-            style={{ left: rune.x, top: rune.y }}
-          >
-            <Sparkles
-              size={rune.size}
-              className={rune.color}
-              style={{ filter: "drop-shadow(0 0 8px currentColor)" }}
-            />
-          </motion.div>
-        ))}
-
-        {/* Scanline effect */}
-        <motion.div
-          animate={{ y: ["0%", "100vh"] }}
-          transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
-          className="absolute inset-x-0 h-32 bg-gradient-to-b from-transparent via-amber-500/[0.03] to-transparent"
+        <div
+          className="absolute inset-0 opacity-[0.015] mix-blend-overlay"
+          style={{
+            backgroundImage:
+              "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E\")",
+          }}
         />
       </div>
 
-      {/* Main Content */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, ease: "easeOut" }}
-        className="w-full max-w-md relative z-10"
-      >
-        {/* Logo & Title */}
-        <motion.div
-          initial={{ opacity: 0, scale: 0.8 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.5, delay: 0.2 }}
-          className="text-center mb-10"
-        >
-          <Link href="/" className="inline-flex items-center justify-center gap-3 mb-6 group">
-            <motion.div
-              animate={{
-                boxShadow: [
-                  "0 0 30px rgba(244, 63, 94, 0.5)",
-                  "0 0 60px rgba(251, 191, 36, 0.6)",
-                  "0 0 30px rgba(244, 63, 94, 0.5)",
-                ],
-              }}
-              transition={{ duration: 3, repeat: Infinity }}
-              className="relative w-14 h-14 bg-gradient-to-br from-rose-400 via-amber-500 to-violet-500 rounded-xl flex items-center justify-center"
-            >
-              <Zap className="w-8 h-8 text-black" strokeWidth={3} />
-              <motion.div
-                animate={{ rotate: 360 }}
-                transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
-                className="absolute inset-0 rounded-xl border-2 border-rose-400/50"
-                style={{ filter: "blur(2px)" }}
-              />
-            </motion.div>
-            <h1 className="text-4xl font-black tracking-tight">
-              <span className="bg-gradient-to-r from-rose-400 via-amber-400 to-violet-400 bg-clip-text text-transparent">
-                PathForge
-              </span>
-            </h1>
-          </Link>
-
+      <div className="relative z-10 min-h-screen flex flex-col lg:flex-row">
+        {/* Left Form Panel */}
+        <div className="flex-1 flex items-center justify-center px-6 py-12 lg:px-12 order-2 lg:order-1">
           <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.5 }}
-            className="space-y-2"
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+            className="w-full max-w-sm"
           >
-            <div className="flex items-center justify-center gap-2 text-xs font-bold tracking-[0.3em] text-amber-400 uppercase">
-              <div className="h-px w-12 bg-gradient-to-r from-transparent to-amber-400" />
-              <span style={{ textShadow: "0 0 10px rgba(251, 191, 36, 0.8)" }}>
-                Awakening Protocol
-              </span>
-              <div className="h-px w-12 bg-gradient-to-l from-transparent to-amber-400" />
-            </div>
-            <p className="text-slate-400 text-sm italic">
-              "Every legend begins with a single step."
-            </p>
-          </motion.div>
-        </motion.div>
+            {/* Mobile logo */}
+            <Link href="/" className="lg:hidden inline-flex items-center gap-2.5 mb-10">
+              <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-lg shadow-indigo-500/20">
+                <svg className="w-5 h-5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                  <path d="M13 2L3 14h7l-1 8 10-12h-7l1-8z" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </div>
+              <span className="text-lg font-semibold tracking-tight">PathForge</span>
+            </Link>
 
-        {/* Signup Card */}
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.3 }}
-          className="relative"
-        >
-          {/* Animated border glow */}
-          <motion.div
-            animate={{
-              background: [
-                "linear-gradient(0deg, rgba(244, 63, 94, 0.5), rgba(251, 191, 36, 0.5))",
-                "linear-gradient(180deg, rgba(251, 191, 36, 0.5), rgba(168, 85, 247, 0.5))",
-                "linear-gradient(360deg, rgba(244, 63, 94, 0.5), rgba(251, 191, 36, 0.5))",
-              ],
-            }}
-            transition={{ duration: 6, repeat: Infinity }}
-            className="absolute -inset-[2px] rounded-2xl blur-sm"
-          />
-
-          <div className="relative bg-black/80 backdrop-blur-2xl border border-white/10 rounded-2xl p-8 shadow-2xl">
             {/* Header */}
-            <div className="mb-8 text-center">
-              <motion.div
-                initial={{ scale: 0, rotate: -180 }}
-                animate={{ scale: 1, rotate: 0 }}
-                transition={{ delay: 0.6, type: "spring", stiffness: 200 }}
-                className="inline-flex items-center justify-center w-16 h-16 mb-4 rounded-full bg-gradient-to-br from-rose-500/20 to-amber-500/20 border-2 border-amber-400/40"
-                style={{ boxShadow: "0 0 30px rgba(251, 191, 36, 0.4)" }}
-              >
-                <Crown className="w-8 h-8 text-amber-400" />
-              </motion.div>
-              <h2 className="text-3xl font-black text-white mb-1">
-                Forge Your <span className="bg-gradient-to-r from-rose-400 to-amber-400 bg-clip-text text-transparent">Legend</span>
+            <div className="mb-8">
+              <h2 className="text-3xl font-semibold tracking-tight mb-2">
+                Create your account
               </h2>
               <p className="text-sm text-slate-400">
-                Awaken your hidden potential
+                Start building your career roadmap today.
               </p>
             </div>
 
@@ -284,241 +261,318 @@ export default function SignUp() {
             <AnimatePresence>
               {configError && (
                 <motion.div
-                  initial={{ opacity: 0, y: -10, height: 0 }}
-                  animate={{ opacity: 1, y: 0, height: "auto" }}
-                  exit={{ opacity: 0, y: -10, height: 0 }}
-                  className="mb-6 p-4 bg-rose-500/10 border border-rose-500/50 rounded-xl flex gap-3"
-                  style={{ boxShadow: "0 0 20px rgba(244, 63, 94, 0.2)" }}
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: "auto" }}
+                  exit={{ opacity: 0, height: 0 }}
+                  className="mb-6 p-3.5 rounded-lg bg-red-500/[0.08] border border-red-500/20 flex gap-3"
                 >
-                  <AlertCircle className="w-5 h-5 text-rose-400 flex-shrink-0 mt-0.5" />
-                  <div>
-                    <p className="text-sm text-rose-300 font-bold">⚠ System Configuration Error</p>
-                    <p className="text-xs text-rose-200 mt-1">
-                      The awakening ritual requires proper credentials. Contact your guildmaster.
+                  <AlertCircle className="w-4 h-4 text-red-400 flex-shrink-0 mt-0.5" />
+                  <div className="text-xs">
+                    <p className="text-red-300 font-medium">Service unavailable</p>
+                    <p className="text-red-300/70 mt-0.5">
+                      Authentication is misconfigured. Please contact support.
                     </p>
                   </div>
                 </motion.div>
               )}
             </AnimatePresence>
 
-            <form onSubmit={handleSignUp} className="space-y-5">
-              {/* Username Field */}
-              <motion.div
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.7 }}
-              >
-                <label className="flex items-center gap-2 text-xs font-bold tracking-wider text-amber-400 uppercase mb-2">
-                  <User size={12} />
-                  Hunter Name
+            <form onSubmit={handleSignUp} className="space-y-4">
+              {/* Username */}
+              <div>
+                <label className="block text-xs font-medium text-slate-300 mb-2">
+                  Username
                 </label>
-                <div className="relative group">
+                <div className="relative">
+                  <User className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 pointer-events-none" />
                   <input
                     type="text"
                     value={username}
-                    onChange={(e) => setUsername(e.target.value)}
-                    onFocus={() => setFocusedField("username")}
-                    onBlur={() => setFocusedField(null)}
-                    placeholder="Choose your legendary name"
-                    className="relative w-full px-4 py-3 bg-slate-950/80 border-2 border-slate-700 rounded-xl focus:outline-none focus:border-amber-400 text-white placeholder-slate-600 transition-all duration-300"
-                    style={{
-                      boxShadow:
-                        focusedField === "username"
-                          ? "0 0 20px rgba(251, 191, 36, 0.4), inset 0 0 20px rgba(251, 191, 36, 0.05)"
-                          : "none",
+                    onChange={(e) => {
+                      setUsername(e.target.value);
+                      if (touched.username) validateField("username", e.target.value);
                     }}
+                    onBlur={() => {
+                      setTouched((t) => ({ ...t, username: true }));
+                      validateField("username", username);
+                    }}
+                    placeholder="janedoe"
+                    autoComplete="username"
+                    className={`w-full pl-10 pr-4 py-2.5 bg-white/[0.03] border rounded-lg text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 transition-all ${
+                      fieldErrors.username
+                        ? "border-red-500/50 focus:border-red-500/50"
+                        : "border-white/[0.06] focus:border-indigo-500/50"
+                    }`}
                     disabled={loading}
                   />
+                  {!fieldErrors.username && username.length >= 3 && /^[a-zA-Z0-9_-]+$/.test(username) && (
+                    <CheckCircle2 className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-emerald-400" />
+                  )}
                 </div>
-              </motion.div>
+                {fieldErrors.username && (
+                  <motion.p
+                    initial={{ opacity: 0, y: -4 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="text-xs text-red-400 mt-1.5"
+                  >
+                    {fieldErrors.username}
+                  </motion.p>
+                )}
+              </div>
 
-              {/* Email Field */}
-              <motion.div
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.8 }}
-              >
-                <label className="flex items-center gap-2 text-xs font-bold tracking-wider text-rose-400 uppercase mb-2">
-                  <Mail size={12} />
-                  Hunter ID
+              {/* Email */}
+              <div>
+                <label className="block text-xs font-medium text-slate-300 mb-2">
+                  Email
                 </label>
-                <div className="relative group">
+                <div className="relative">
+                  <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 pointer-events-none" />
                   <input
                     type="email"
                     value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    onFocus={() => setFocusedField("email")}
-                    onBlur={() => setFocusedField(null)}
-                    placeholder="hunter@example.com"
-                    className="relative w-full px-4 py-3 bg-slate-950/80 border-2 border-slate-700 rounded-xl focus:outline-none focus:border-rose-400 text-white placeholder-slate-600 transition-all duration-300"
-                    style={{
-                      boxShadow:
-                        focusedField === "email"
-                          ? "0 0 20px rgba(244, 63, 94, 0.4), inset 0 0 20px rgba(244, 63, 94, 0.05)"
-                          : "none",
+                    onChange={(e) => {
+                      setEmail(e.target.value);
+                      if (touched.email) validateField("email", e.target.value);
                     }}
+                    onBlur={() => {
+                      setTouched((t) => ({ ...t, email: true }));
+                      validateField("email", email);
+                    }}
+                    placeholder="you@example.com"
+                    autoComplete="email"
+                    className={`w-full pl-10 pr-10 py-2.5 bg-white/[0.03] border rounded-lg text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 transition-all ${
+                      fieldErrors.email
+                        ? "border-red-500/50 focus:border-red-500/50"
+                        : "border-white/[0.06] focus:border-indigo-500/50"
+                    }`}
                     disabled={loading}
                   />
+                  {!fieldErrors.email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) && (
+                    <CheckCircle2 className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-emerald-400" />
+                  )}
                 </div>
-              </motion.div>
-
-              {/* Password Field */}
-              <motion.div
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.9 }}
-              >
-                <label className="flex items-center gap-2 text-xs font-bold tracking-wider text-violet-400 uppercase mb-2">
-                  <Lock size={12} />
-                  Secret Rune
-                </label>
-                <div className="relative group">
-                  <input
-                    type="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    onFocus={() => setFocusedField("password")}
-                    onBlur={() => setFocusedField(null)}
-                    placeholder="At least 8 powerful characters"
-                    className="relative w-full px-4 py-3 bg-slate-950/80 border-2 border-slate-700 rounded-xl focus:outline-none focus:border-violet-400 text-white placeholder-slate-600 transition-all duration-300"
-                    style={{
-                      boxShadow:
-                        focusedField === "password"
-                          ? "0 0 20px rgba(168, 85, 247, 0.4), inset 0 0 20px rgba(168, 85, 247, 0.05)"
-                          : "none",
-                    }}
-                    disabled={loading}
-                  />
-                </div>
-                {password.length > 0 && password.length < 8 && (
+                {fieldErrors.email && (
                   <motion.p
-                    initial={{ opacity: 0, y: -5 }}
+                    initial={{ opacity: 0, y: -4 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="text-xs text-amber-400 mt-1.5 flex items-center gap-1"
+                    className="text-xs text-red-400 mt-1.5"
                   >
-                    <Sparkles size={10} />
-                    Need {8 - password.length} more characters to forge your power
+                    {fieldErrors.email}
                   </motion.p>
                 )}
-              </motion.div>
+              </div>
 
-              {/* Submit Button */}
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 1 }}
-                className="pt-2"
+              {/* Password */}
+              <div>
+                <label className="block text-xs font-medium text-slate-300 mb-2">
+                  Password
+                </label>
+                <div className="relative">
+                  <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 pointer-events-none" />
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    value={password}
+                    onChange={(e) => {
+                      setPassword(e.target.value);
+                      if (touched.password) validateField("password", e.target.value);
+                    }}
+                    onBlur={() => {
+                      setTouched((t) => ({ ...t, password: true }));
+                      validateField("password", password);
+                    }}
+                    placeholder="At least 8 characters"
+                    autoComplete="new-password"
+                    className={`w-full pl-10 pr-10 py-2.5 bg-white/[0.03] border rounded-lg text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 transition-all ${
+                      fieldErrors.password
+                        ? "border-red-500/50 focus:border-red-500/50"
+                        : "border-white/[0.06] focus:border-indigo-500/50"
+                    }`}
+                    disabled={loading}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 transition-colors"
+                    tabIndex={-1}
+                  >
+                    {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                  </button>
+                </div>
+
+                {/* Password strength */}
+                {password.length > 0 && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: "auto" }}
+                    className="mt-2"
+                  >
+                    <div className="flex gap-1 mb-1.5">
+                      {[1, 2, 3, 4].map((i) => (
+                        <div
+                          key={i}
+                          className={`h-1 flex-1 rounded-full transition-all duration-300 ${
+                            i <= passwordStrength.score ? passwordStrength.color : "bg-white/[0.06]"
+                          }`}
+                        />
+                      ))}
+                    </div>
+                    <p className="text-xs text-slate-400 flex items-center gap-1">
+                      <span className="text-slate-500">Strength:</span>
+                      <span
+                        className={`font-medium ${
+                          passwordStrength.score <= 1
+                            ? "text-red-400"
+                            : passwordStrength.score <= 2
+                            ? "text-amber-400"
+                            : passwordStrength.score <= 3
+                            ? "text-blue-400"
+                            : "text-emerald-400"
+                        }`}
+                      >
+                        {passwordStrength.label}
+                      </span>
+                    </p>
+                  </motion.div>
+                )}
+
+                {fieldErrors.password && (
+                  <motion.p
+                    initial={{ opacity: 0, y: -4 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="text-xs text-red-400 mt-1.5"
+                  >
+                    {fieldErrors.password}
+                  </motion.p>
+                )}
+              </div>
+
+              {/* Terms */}
+              <p className="text-xs text-slate-500 leading-relaxed pt-1">
+                By signing up, you agree to our{" "}
+                <Link href="/terms" className="text-slate-300 hover:text-white underline underline-offset-2">
+                  Terms
+                </Link>{" "}
+                and{" "}
+                <Link href="/privacy" className="text-slate-300 hover:text-white underline underline-offset-2">
+                  Privacy Policy
+                </Link>
+                .
+              </p>
+
+              {/* Submit */}
+              <button
+                type="submit"
+                disabled={loading || configError}
+                className="group relative w-full py-2.5 mt-2 rounded-lg font-medium text-sm bg-white text-slate-900 hover:bg-slate-100 active:bg-slate-200 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 flex items-center justify-center gap-2 shadow-lg shadow-white/5"
               >
-                <motion.button
-                  type="submit"
-                  disabled={loading || configError}
-                  whileHover={{ scale: loading ? 1 : 1.02 }}
-                  whileTap={{ scale: loading ? 1 : 0.98 }}
-                  className="group relative w-full py-4 rounded-xl font-black text-base tracking-wider uppercase overflow-hidden disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  <motion.div
-                    animate={{
-                      backgroundPosition: ["0% 50%", "100% 50%", "0% 50%"],
-                    }}
-                    transition={{ duration: 5, repeat: Infinity, ease: "linear" }}
-                    className="absolute inset-0 bg-gradient-to-r from-rose-500 via-amber-500 to-violet-500"
-                    style={{ backgroundSize: "200% 100%" }}
-                  />
-
-                  <div
-                    className="absolute inset-0 opacity-50 group-hover:opacity-100 transition-opacity"
-                    style={{
-                      boxShadow:
-                        "0 0 40px rgba(244, 63, 94, 0.6), 0 0 60px rgba(251, 191, 36, 0.4)",
-                    }}
-                  />
-
-                  <motion.div
-                    animate={{ x: ["-100%", "200%"] }}
-                    transition={{
-                      duration: 2,
-                      repeat: Infinity,
-                      ease: "linear",
-                      repeatDelay: 1,
-                    }}
-                    className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent skew-x-12"
-                  />
-
-                  <span className="relative flex items-center justify-center gap-2 text-white">
-                    {loading ? (
-                      <>
-                        <motion.div
-                          animate={{ rotate: 360 }}
-                          transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                        >
-                          <Sparkles size={18} />
-                        </motion.div>
-                        Forging Your Path...
-                      </>
-                    ) : (
-                      <>
-                        ⚡ Awaken Your Power
-                        <motion.div
-                          animate={{ x: [0, 4, 0] }}
-                          transition={{ duration: 1.5, repeat: Infinity }}
-                        >
-                          <ArrowRight size={20} />
-                        </motion.div>
-                      </>
-                    )}
-                  </span>
-                </motion.button>
-              </motion.div>
+                {loading ? (
+                  <>
+                    <Loader2 size={16} className="animate-spin" />
+                    <span>Creating account</span>
+                  </>
+                ) : (
+                  <>
+                    <span>Create account</span>
+                    <ArrowRight size={14} className="group-hover:translate-x-0.5 transition-transform" />
+                  </>
+                )}
+              </button>
             </form>
 
             {/* Divider */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 1.1 }}
-              className="my-6 flex items-center gap-3"
-            >
-              <div className="flex-1 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent" />
-              <span className="text-xs font-bold tracking-widest text-slate-500 uppercase">
-                Already Awakened?
-              </span>
-              <div className="flex-1 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent" />
-            </motion.div>
+            <div className="my-6 flex items-center gap-3">
+              <div className="flex-1 h-px bg-white/[0.06]" />
+              <span className="text-xs text-slate-500">or</span>
+              <div className="flex-1 h-px bg-white/[0.06]" />
+            </div>
 
-            {/* Login Link */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 1.2 }}
-              className="text-center"
-            >
+            {/* Login link */}
+            <p className="text-center text-sm text-slate-400">
+              Already have an account?{" "}
               <Link
                 href="/login"
-                className="group inline-flex items-center gap-2 text-sm font-bold text-slate-300 hover:text-white transition-colors"
+                className="font-medium text-white hover:text-indigo-300 transition-colors"
               >
-                <Sword size={14} className="text-cyan-400 group-hover:-rotate-12 transition-transform" />
-                <span className="bg-gradient-to-r from-cyan-400 to-violet-400 bg-clip-text text-transparent">
-                  Return to Your Path
-                </span>
-                <ArrowRight size={14} className="text-cyan-400 group-hover:translate-x-1 transition-transform" />
+                Sign in
               </Link>
-            </motion.div>
-          </div>
-        </motion.div>
+            </p>
 
-        {/* Bottom info */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 1.4 }}
-          className="mt-8 text-center"
-        >
-          <div className="inline-flex items-center gap-2 text-xs text-slate-500">
-            <div className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
-            <span>Awakening Chamber — Ready</span>
+            {/* Mobile footer */}
+            <div className="lg:hidden mt-12 flex items-center justify-center gap-2 text-xs text-slate-500">
+              <ShieldCheck size={12} />
+              <span>End-to-end encrypted</span>
+            </div>
+          </motion.div>
+        </div>
+
+        {/* Right Brand Panel (desktop only) */}
+        <div className="hidden lg:flex lg:w-1/2 xl:w-3/5 flex-col justify-between p-12 xl:p-16 relative order-1 lg:order-2">
+          {/* Logo */}
+          <Link href="/" className="inline-flex items-center gap-2.5 group w-fit ml-auto">
+            <div className="relative w-9 h-9 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-lg shadow-indigo-500/20">
+              <svg className="w-5 h-5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                <path d="M13 2L3 14h7l-1 8 10-12h-7l1-8z" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </div>
+            <span className="text-lg font-semibold tracking-tight">PathForge</span>
+          </Link>
+
+          {/* Content */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+            className="max-w-xl ml-auto"
+          >
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/[0.04] border border-white/[0.06] mb-6">
+              <div className="w-1.5 h-1.5 rounded-full bg-purple-400" />
+              <span className="text-xs font-medium text-slate-300 tracking-wide">Join 10,000+ ambitious people</span>
+            </div>
+
+            <h1 className="text-5xl xl:text-6xl font-semibold tracking-tight leading-[1.05] mb-6">
+              Your career,
+              <br />
+              <span className="bg-gradient-to-r from-purple-300 via-pink-300 to-indigo-300 bg-clip-text text-transparent">
+                gamified.
+              </span>
+            </h1>
+
+            <p className="text-lg text-slate-400 leading-relaxed max-w-md mb-10">
+              Set goals, earn XP, level up your skills, and watch your progress
+              compound week after week.
+            </p>
+
+            {/* Feature list */}
+            <ul className="space-y-3.5">
+              {[
+                "Personalized career roadmap powered by AI",
+                "Daily quests aligned with your goals",
+                "Real-time progress tracking and analytics",
+                "Portfolio builder that recruiters love",
+              ].map((feature, i) => (
+                <motion.li
+                  key={i}
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.5, delay: 0.3 + i * 0.08 }}
+                  className="flex items-start gap-3 text-sm text-slate-300"
+                >
+                  <div className="mt-0.5 w-5 h-5 rounded-full bg-white/[0.05] border border-white/[0.08] flex items-center justify-center flex-shrink-0">
+                    <Check size={12} className="text-indigo-300" strokeWidth={3} />
+                  </div>
+                  <span>{feature}</span>
+                </motion.li>
+              ))}
+            </ul>
+          </motion.div>
+
+          {/* Footer */}
+          <div className="flex items-center justify-end gap-2 text-xs text-slate-500">
+            <ShieldCheck size={14} />
+            <span>End-to-end encrypted · SOC 2 compliant</span>
           </div>
-        </motion.div>
-      </motion.div>
+        </div>
+      </div>
     </div>
   );
 }

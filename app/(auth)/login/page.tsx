@@ -7,14 +7,24 @@ import { createClient } from "@/lib/supabase/client";
 import { LoginSchema } from "@/lib/validations";
 import toast from "react-hot-toast";
 import Link from "next/link";
-import { Zap, AlertCircle, Sparkles, Sword, Mail, Lock, ArrowRight } from "lucide-react";
+import {
+  AlertCircle,
+  Mail,
+  Lock,
+  ArrowRight,
+  Eye,
+  EyeOff,
+  ShieldCheck,
+  Loader2,
+} from "lucide-react";
 
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [configError, setConfigError] = useState(false);
-  const [focusedField, setFocusedField] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<{ email?: string; password?: string }>({});
   const router = useRouter();
   const searchParams = useSearchParams();
   const supabase = createClient();
@@ -25,27 +35,52 @@ export default function Login() {
       !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
     ) {
       setConfigError(true);
-      toast.error(
-        "Configuration error: Supabase credentials not found. Contact support."
-      );
     }
 
     const error = searchParams.get("error");
     if (error) {
       const errorMessages: Record<string, string> = {
-        session_expired: "Your session has expired. Please log in again.",
+        session_expired: "Your session has expired. Please sign in again.",
         auth_error: "Authentication error. Please try again.",
-        auth_failed: "Authentication failed. Please check your credentials.",
+        auth_failed: "Sign in failed. Please check your credentials.",
       };
       toast.error(errorMessages[error] || "An error occurred. Please try again.");
     }
   }, [searchParams]);
 
+  const validateField = (field: "email" | "password", value: string) => {
+    const errors = { ...fieldErrors };
+    if (field === "email") {
+      if (!value) {
+        errors.email = "Email is required";
+      } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
+        errors.email = "Please enter a valid email";
+      } else {
+        delete errors.email;
+      }
+    }
+    if (field === "password") {
+      if (!value) {
+        errors.password = "Password is required";
+      } else {
+        delete errors.password;
+      }
+    }
+    setFieldErrors(errors);
+  };
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (configError) {
-      toast.error("System configuration error. Please contact support.");
+      toast.error("System unavailable. Please contact support.");
+      return;
+    }
+
+    // Validate before submitting
+    validateField("email", email);
+    validateField("password", password);
+    if (!email || !password || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       return;
     }
 
@@ -60,217 +95,153 @@ export default function Login() {
       });
 
       if (error) {
-        console.error("Supabase auth error:", error);
-        throw error;
+        console.error("Auth error:", error);
+        if (error.message.includes("Invalid login")) {
+          toast.error("Incorrect email or password");
+        } else if (error.message.includes("Email not confirmed")) {
+          toast.error("Please verify your email before signing in");
+        } else {
+          toast.error(error.message);
+        }
+        return;
       }
 
       if (!data.user) {
-        throw new Error("No user returned from authentication");
+        toast.error("Authentication failed");
+        return;
       }
 
-      toast.success("⚡ Welcome back, Hunter!");
+      toast.success("Welcome back");
       router.refresh();
       router.push("/dashboard");
     } catch (error: any) {
       console.error("Login error:", error);
-      const message = error?.message || "Failed to sign in";
-      toast.error(message);
+      toast.error(error?.message || "Sign in failed");
     } finally {
       setLoading(false);
     }
   };
 
-  // Floating rune positions (deterministic for SSR)
-  const runes = [
-    { x: "10%", y: "15%", delay: 0, size: 20 },
-    { x: "85%", y: "20%", delay: 0.5, size: 24 },
-    { x: "15%", y: "75%", delay: 1, size: 18 },
-    { x: "80%", y: "70%", delay: 1.5, size: 22 },
-    { x: "50%", y: "10%", delay: 0.3, size: 16 },
-    { x: "5%", y: "45%", delay: 0.8, size: 20 },
-    { x: "92%", y: "50%", delay: 1.2, size: 18 },
-    { x: "45%", y: "90%", delay: 1.7, size: 22 },
-  ];
-
   return (
-    <div className="min-h-screen bg-black flex items-center justify-center px-4 py-12 relative overflow-hidden">
-      {/* Epic Animated Background */}
+    <div className="min-h-screen bg-[#0a0a0f] text-white relative overflow-hidden">
+      {/* Subtle ambient background */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        {/* Gradient mesh */}
-        <div className="absolute inset-0 bg-gradient-to-br from-violet-950/40 via-black to-cyan-950/40" />
+        {/* Soft gradient orbs */}
+        <div className="absolute top-0 -left-40 w-[600px] h-[600px] rounded-full opacity-20"
+          style={{ background: "radial-gradient(circle, rgba(99, 102, 241, 0.3), transparent 70%)" }} />
+        <div className="absolute bottom-0 -right-40 w-[600px] h-[600px] rounded-full opacity-20"
+          style={{ background: "radial-gradient(circle, rgba(168, 85, 247, 0.3), transparent 70%)" }} />
 
-        {/* Massive glowing orbs */}
-        <motion.div
-          animate={{
-            scale: [1, 1.2, 1],
-            opacity: [0.3, 0.5, 0.3],
-          }}
-          transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute top-1/4 -left-32 w-[500px] h-[500px] bg-violet-600/30 rounded-full blur-[120px]"
-        />
-        <motion.div
-          animate={{
-            scale: [1, 1.3, 1],
-            opacity: [0.2, 0.4, 0.2],
-          }}
-          transition={{ duration: 10, repeat: Infinity, ease: "easeInOut", delay: 2 }}
-          className="absolute bottom-1/4 -right-32 w-[500px] h-[500px] bg-cyan-600/30 rounded-full blur-[120px]"
-        />
-        <motion.div
-          animate={{
-            scale: [1, 1.4, 1],
-            opacity: [0.15, 0.3, 0.15],
-          }}
-          transition={{ duration: 12, repeat: Infinity, ease: "easeInOut", delay: 4 }}
-          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-rose-600/20 rounded-full blur-[150px]"
-        />
-
-        {/* Grid pattern overlay */}
+        {/* Subtle grid */}
         <div
-          className="absolute inset-0 opacity-[0.03]"
+          className="absolute inset-0 opacity-[0.015]"
           style={{
-            backgroundImage: `linear-gradient(rgba(6, 182, 212, 0.5) 1px, transparent 1px),
-                              linear-gradient(90deg, rgba(6, 182, 212, 0.5) 1px, transparent 1px)`,
-            backgroundSize: "50px 50px",
+            backgroundImage: `linear-gradient(rgba(255,255,255,1) 1px, transparent 1px),
+                              linear-gradient(90deg, rgba(255,255,255,1) 1px, transparent 1px)`,
+            backgroundSize: "64px 64px",
           }}
         />
 
-        {/* Floating runes */}
-        {runes.map((rune, i) => (
-          <motion.div
-            key={i}
-            initial={{ opacity: 0 }}
-            animate={{
-              opacity: [0, 0.6, 0],
-              y: [0, -20, 0],
-              rotate: [0, 360],
-            }}
-            transition={{
-              duration: 6,
-              repeat: Infinity,
-              delay: rune.delay,
-              ease: "easeInOut",
-            }}
-            className="absolute"
-            style={{ left: rune.x, top: rune.y }}
-          >
-            <Sparkles
-              size={rune.size}
-              className="text-cyan-400"
-              style={{ filter: "drop-shadow(0 0 8px rgba(6, 182, 212, 0.8))" }}
-            />
-          </motion.div>
-        ))}
-
-        {/* Scanline effect */}
-        <motion.div
-          animate={{ y: ["0%", "100vh"] }}
-          transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
-          className="absolute inset-x-0 h-32 bg-gradient-to-b from-transparent via-cyan-500/[0.03] to-transparent"
+        {/* Noise texture overlay */}
+        <div
+          className="absolute inset-0 opacity-[0.015] mix-blend-overlay"
+          style={{
+            backgroundImage:
+              "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E\")",
+          }}
         />
       </div>
 
-      {/* Main Content */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, ease: "easeOut" }}
-        className="w-full max-w-md relative z-10"
-      >
-        {/* Logo & Title */}
-        <motion.div
-          initial={{ opacity: 0, scale: 0.8 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.5, delay: 0.2 }}
-          className="text-center mb-10"
-        >
-          {/* Logo with glow */}
-          <Link href="/" className="inline-flex items-center justify-center gap-3 mb-6 group">
-            <motion.div
-              animate={{
-                boxShadow: [
-                  "0 0 30px rgba(6, 182, 212, 0.5)",
-                  "0 0 60px rgba(168, 85, 247, 0.6)",
-                  "0 0 30px rgba(6, 182, 212, 0.5)",
-                ],
-              }}
-              transition={{ duration: 3, repeat: Infinity }}
-              className="relative w-14 h-14 bg-gradient-to-br from-cyan-400 via-violet-500 to-rose-500 rounded-xl flex items-center justify-center"
-            >
-              <Zap className="w-8 h-8 text-black" strokeWidth={3} />
-              {/* Rotating border */}
-              <motion.div
-                animate={{ rotate: 360 }}
-                transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
-                className="absolute inset-0 rounded-xl border-2 border-cyan-400/50"
-                style={{ filter: "blur(2px)" }}
-              />
-            </motion.div>
-            <h1 className="text-4xl font-black tracking-tight">
-              <span className="bg-gradient-to-r from-cyan-400 via-violet-400 to-rose-400 bg-clip-text text-transparent">
-                PathForge
-              </span>
-            </h1>
+      <div className="relative z-10 min-h-screen flex flex-col lg:flex-row">
+        {/* Left Brand Panel (desktop only) */}
+        <div className="hidden lg:flex lg:w-1/2 xl:w-3/5 flex-col justify-between p-12 xl:p-16 relative">
+          {/* Logo */}
+          <Link href="/" className="inline-flex items-center gap-2.5 group w-fit">
+            <div className="relative w-9 h-9 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-lg shadow-indigo-500/20">
+              <svg className="w-5 h-5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                <path d="M13 2L3 14h7l-1 8 10-12h-7l1-8z" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </div>
+            <span className="text-lg font-semibold tracking-tight">PathForge</span>
           </Link>
 
-          {/* Tagline with awakening theme */}
+          {/* Hero Content */}
           <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.5 }}
-            className="space-y-2"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+            className="max-w-xl"
           >
-            <div className="flex items-center justify-center gap-2 text-xs font-bold tracking-[0.3em] text-cyan-400 uppercase">
-              <div className="h-px w-12 bg-gradient-to-r from-transparent to-cyan-400" />
-              <span style={{ textShadow: "0 0 10px rgba(6, 182, 212, 0.8)" }}>
-                Hunter System
-              </span>
-              <div className="h-px w-12 bg-gradient-to-l from-transparent to-cyan-400" />
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/[0.04] border border-white/[0.06] mb-6">
+              <div className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+              <span className="text-xs font-medium text-slate-300 tracking-wide">Career operating system</span>
             </div>
-            <p className="text-slate-400 text-sm italic">
-              "The weak have no choice. The strong forge their path."
+
+            <h1 className="text-5xl xl:text-6xl font-semibold tracking-tight leading-[1.05] mb-6">
+              Build the career
+              <br />
+              <span className="bg-gradient-to-r from-indigo-300 via-purple-300 to-pink-300 bg-clip-text text-transparent">
+                you actually want.
+              </span>
+            </h1>
+
+            <p className="text-lg text-slate-400 leading-relaxed max-w-md">
+              Personalized roadmaps, AI mentorship, and gamified progress
+              tracking — all in one place.
             </p>
+
+            {/* Stats */}
+            <div className="mt-12 grid grid-cols-3 gap-8 max-w-md">
+              {[
+                { value: "10k+", label: "Career paths" },
+                { value: "98%", label: "Satisfaction" },
+                { value: "24/7", label: "AI mentor" },
+              ].map((stat, i) => (
+                <motion.div
+                  key={i}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5, delay: 0.3 + i * 0.1 }}
+                >
+                  <div className="text-2xl font-semibold tracking-tight">{stat.value}</div>
+                  <div className="text-xs text-slate-500 mt-1">{stat.label}</div>
+                </motion.div>
+              ))}
+            </div>
           </motion.div>
-        </motion.div>
 
-        {/* Login Card with epic border */}
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.3 }}
-          className="relative"
-        >
-          {/* Animated border glow */}
+          {/* Footer */}
+          <div className="flex items-center gap-2 text-xs text-slate-500">
+            <ShieldCheck size={14} />
+            <span>End-to-end encrypted · SOC 2 compliant</span>
+          </div>
+        </div>
+
+        {/* Right Form Panel */}
+        <div className="flex-1 flex items-center justify-center px-6 py-12 lg:px-12">
           <motion.div
-            animate={{
-              background: [
-                "linear-gradient(0deg, rgba(6, 182, 212, 0.5), rgba(168, 85, 247, 0.5))",
-                "linear-gradient(180deg, rgba(168, 85, 247, 0.5), rgba(244, 63, 94, 0.5))",
-                "linear-gradient(360deg, rgba(6, 182, 212, 0.5), rgba(168, 85, 247, 0.5))",
-              ],
-            }}
-            transition={{ duration: 6, repeat: Infinity }}
-            className="absolute -inset-[2px] rounded-2xl blur-sm"
-          />
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+            className="w-full max-w-sm"
+          >
+            {/* Mobile logo */}
+            <Link href="/" className="lg:hidden inline-flex items-center gap-2.5 mb-10">
+              <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-lg shadow-indigo-500/20">
+                <svg className="w-5 h-5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                  <path d="M13 2L3 14h7l-1 8 10-12h-7l1-8z" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </div>
+              <span className="text-lg font-semibold tracking-tight">PathForge</span>
+            </Link>
 
-          {/* Card content */}
-          <div className="relative bg-black/80 backdrop-blur-2xl border border-white/10 rounded-2xl p-8 shadow-2xl">
             {/* Header */}
-            <div className="mb-8 text-center">
-              <motion.div
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                transition={{ delay: 0.6, type: "spring", stiffness: 200 }}
-                className="inline-flex items-center justify-center w-16 h-16 mb-4 rounded-full bg-gradient-to-br from-cyan-500/20 to-violet-500/20 border-2 border-cyan-400/40"
-                style={{ boxShadow: "0 0 30px rgba(6, 182, 212, 0.4)" }}
-              >
-                <Sword className="w-8 h-8 text-cyan-400" />
-              </motion.div>
-              <h2 className="text-3xl font-black text-white mb-1">
-                Welcome Back, <span className="bg-gradient-to-r from-cyan-400 to-violet-400 bg-clip-text text-transparent">Hunter</span>
+            <div className="mb-8">
+              <h2 className="text-3xl font-semibold tracking-tight mb-2">
+                Welcome back
               </h2>
               <p className="text-sm text-slate-400">
-                Resume your epic journey
+                Sign in to continue your journey.
               </p>
             </div>
 
@@ -278,17 +249,16 @@ export default function Login() {
             <AnimatePresence>
               {configError && (
                 <motion.div
-                  initial={{ opacity: 0, y: -10, height: 0 }}
-                  animate={{ opacity: 1, y: 0, height: "auto" }}
-                  exit={{ opacity: 0, y: -10, height: 0 }}
-                  className="mb-6 p-4 bg-rose-500/10 border border-rose-500/50 rounded-xl flex gap-3"
-                  style={{ boxShadow: "0 0 20px rgba(244, 63, 94, 0.2)" }}
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: "auto" }}
+                  exit={{ opacity: 0, height: 0 }}
+                  className="mb-6 p-3.5 rounded-lg bg-red-500/[0.08] border border-red-500/20 flex gap-3"
                 >
-                  <AlertCircle className="w-5 h-5 text-rose-400 flex-shrink-0 mt-0.5" />
-                  <div>
-                    <p className="text-sm text-rose-300 font-bold">⚠ System Configuration Error</p>
-                    <p className="text-xs text-rose-200 mt-1">
-                      The dungeon gateway requires proper credentials. Contact your guildmaster.
+                  <AlertCircle className="w-4 h-4 text-red-400 flex-shrink-0 mt-0.5" />
+                  <div className="text-xs">
+                    <p className="text-red-300 font-medium">Service unavailable</p>
+                    <p className="text-red-300/70 mt-0.5">
+                      Authentication is misconfigured. Please contact support.
                     </p>
                   </div>
                 </motion.div>
@@ -296,199 +266,140 @@ export default function Login() {
             </AnimatePresence>
 
             <form onSubmit={handleLogin} className="space-y-5">
-              {/* Email Field */}
-              <motion.div
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.7 }}
-              >
-                <label className="flex items-center gap-2 text-xs font-bold tracking-wider text-cyan-400 uppercase mb-2">
-                  <Mail size={12} />
-                  Hunter ID
+              {/* Email */}
+              <div>
+                <label className="block text-xs font-medium text-slate-300 mb-2">
+                  Email
                 </label>
-                <div className="relative group">
-                  <motion.div
-                    animate={{
-                      opacity: focusedField === "email" ? 1 : 0,
-                    }}
-                    className="absolute -inset-0.5 bg-gradient-to-r from-cyan-500 to-violet-500 rounded-xl blur opacity-0 group-hover:opacity-50 transition-opacity"
-                  />
+                <div className="relative">
+                  <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 pointer-events-none" />
                   <input
                     type="email"
                     value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    onFocus={() => setFocusedField("email")}
-                    onBlur={() => setFocusedField(null)}
-                    placeholder="hunter@example.com"
-                    className="relative w-full px-4 py-3 bg-slate-950/80 border-2 border-slate-700 rounded-xl focus:outline-none focus:border-cyan-400 text-white placeholder-slate-600 transition-all duration-300"
-                    style={{
-                      boxShadow:
-                        focusedField === "email"
-                          ? "0 0 20px rgba(6, 182, 212, 0.4), inset 0 0 20px rgba(6, 182, 212, 0.05)"
-                          : "none",
+                    onChange={(e) => {
+                      setEmail(e.target.value);
+                      if (fieldErrors.email) validateField("email", e.target.value);
                     }}
+                    onBlur={() => validateField("email", email)}
+                    placeholder="you@example.com"
+                    autoComplete="email"
+                    className={`w-full pl-10 pr-4 py-2.5 bg-white/[0.03] border rounded-lg text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 transition-all ${
+                      fieldErrors.email
+                        ? "border-red-500/50 focus:border-red-500/50"
+                        : "border-white/[0.06] focus:border-indigo-500/50"
+                    }`}
                     disabled={loading}
                   />
                 </div>
-              </motion.div>
+                {fieldErrors.email && (
+                  <motion.p
+                    initial={{ opacity: 0, y: -4 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="text-xs text-red-400 mt-1.5"
+                  >
+                    {fieldErrors.email}
+                  </motion.p>
+                )}
+              </div>
 
-              {/* Password Field */}
-              <motion.div
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.8 }}
-              >
-                <label className="flex items-center gap-2 text-xs font-bold tracking-wider text-violet-400 uppercase mb-2">
-                  <Lock size={12} />
-                  Secret Rune
-                </label>
-                <div className="relative group">
-                  <motion.div
-                    animate={{
-                      opacity: focusedField === "password" ? 1 : 0,
-                    }}
-                    className="absolute -inset-0.5 bg-gradient-to-r from-violet-500 to-rose-500 rounded-xl blur opacity-0 group-hover:opacity-50 transition-opacity"
-                  />
+              {/* Password */}
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <label className="block text-xs font-medium text-slate-300">
+                    Password
+                  </label>
+                  <Link
+                    href="/forgot-password"
+                    className="text-xs text-slate-400 hover:text-white transition-colors"
+                  >
+                    Forgot?
+                  </Link>
+                </div>
+                <div className="relative">
+                  <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 pointer-events-none" />
                   <input
-                    type="password"
+                    type={showPassword ? "text" : "password"}
                     value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    onFocus={() => setFocusedField("password")}
-                    onBlur={() => setFocusedField(null)}
-                    placeholder="••••••••"
-                    className="relative w-full px-4 py-3 bg-slate-950/80 border-2 border-slate-700 rounded-xl focus:outline-none focus:border-violet-400 text-white placeholder-slate-600 transition-all duration-300"
-                    style={{
-                      boxShadow:
-                        focusedField === "password"
-                          ? "0 0 20px rgba(168, 85, 247, 0.4), inset 0 0 20px rgba(168, 85, 247, 0.05)"
-                          : "none",
+                    onChange={(e) => {
+                      setPassword(e.target.value);
+                      if (fieldErrors.password) validateField("password", e.target.value);
                     }}
+                    onBlur={() => validateField("password", password)}
+                    placeholder="Enter your password"
+                    autoComplete="current-password"
+                    className={`w-full pl-10 pr-10 py-2.5 bg-white/[0.03] border rounded-lg text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 transition-all ${
+                      fieldErrors.password
+                        ? "border-red-500/50 focus:border-red-500/50"
+                        : "border-white/[0.06] focus:border-indigo-500/50"
+                    }`}
                     disabled={loading}
                   />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 transition-colors"
+                    tabIndex={-1}
+                  >
+                    {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                  </button>
                 </div>
-              </motion.div>
+                {fieldErrors.password && (
+                  <motion.p
+                    initial={{ opacity: 0, y: -4 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="text-xs text-red-400 mt-1.5"
+                  >
+                    {fieldErrors.password}
+                  </motion.p>
+                )}
+              </div>
 
-              {/* Submit Button - EPIC */}
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.9 }}
-                className="pt-2"
+              {/* Submit */}
+              <button
+                type="submit"
+                disabled={loading || configError}
+                className="group relative w-full py-2.5 rounded-lg font-medium text-sm bg-white text-slate-900 hover:bg-slate-100 active:bg-slate-200 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 flex items-center justify-center gap-2 shadow-lg shadow-white/5"
               >
-                <motion.button
-                  type="submit"
-                  disabled={loading || configError}
-                  whileHover={{ scale: loading ? 1 : 1.02 }}
-                  whileTap={{ scale: loading ? 1 : 0.98 }}
-                  className="group relative w-full py-4 rounded-xl font-black text-base tracking-wider uppercase overflow-hidden disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {/* Animated gradient background */}
-                  <motion.div
-                    animate={{
-                      backgroundPosition: ["0% 50%", "100% 50%", "0% 50%"],
-                    }}
-                    transition={{ duration: 5, repeat: Infinity, ease: "linear" }}
-                    className="absolute inset-0 bg-gradient-to-r from-cyan-500 via-violet-500 to-rose-500"
-                    style={{ backgroundSize: "200% 100%" }}
-                  />
-
-                  {/* Glow effect */}
-                  <div
-                    className="absolute inset-0 opacity-50 group-hover:opacity-100 transition-opacity"
-                    style={{
-                      boxShadow:
-                        "0 0 40px rgba(6, 182, 212, 0.6), 0 0 60px rgba(168, 85, 247, 0.4)",
-                    }}
-                  />
-
-                  {/* Shimmer effect */}
-                  <motion.div
-                    animate={{ x: ["-100%", "200%"] }}
-                    transition={{
-                      duration: 2,
-                      repeat: Infinity,
-                      ease: "linear",
-                      repeatDelay: 1,
-                    }}
-                    className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent skew-x-12"
-                  />
-
-                  {/* Button content */}
-                  <span className="relative flex items-center justify-center gap-2 text-white">
-                    {loading ? (
-                      <>
-                        <motion.div
-                          animate={{ rotate: 360 }}
-                          transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                        >
-                          <Sparkles size={18} />
-                        </motion.div>
-                        Awakening...
-                      </>
-                    ) : (
-                      <>
-                        ⚔ Enter The Realm
-                        <motion.div
-                          animate={{ x: [0, 4, 0] }}
-                          transition={{ duration: 1.5, repeat: Infinity }}
-                        >
-                          <ArrowRight size={20} />
-                        </motion.div>
-                      </>
-                    )}
-                  </span>
-                </motion.button>
-              </motion.div>
+                {loading ? (
+                  <>
+                    <Loader2 size={16} className="animate-spin" />
+                    <span>Signing in</span>
+                  </>
+                ) : (
+                  <>
+                    <span>Sign in</span>
+                    <ArrowRight size={14} className="group-hover:translate-x-0.5 transition-transform" />
+                  </>
+                )}
+              </button>
             </form>
 
             {/* Divider */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 1 }}
-              className="my-6 flex items-center gap-3"
-            >
-              <div className="flex-1 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent" />
-              <span className="text-xs font-bold tracking-widest text-slate-500 uppercase">
-                New Hunter?
-              </span>
-              <div className="flex-1 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent" />
-            </motion.div>
+            <div className="my-6 flex items-center gap-3">
+              <div className="flex-1 h-px bg-white/[0.06]" />
+              <span className="text-xs text-slate-500">or</span>
+              <div className="flex-1 h-px bg-white/[0.06]" />
+            </div>
 
-            {/* Signup Link */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 1.1 }}
-              className="text-center"
-            >
+            {/* Signup link */}
+            <p className="text-center text-sm text-slate-400">
+              Don't have an account?{" "}
               <Link
                 href="/signup"
-                className="group inline-flex items-center gap-2 text-sm font-bold text-slate-300 hover:text-white transition-colors"
+                className="font-medium text-white hover:text-indigo-300 transition-colors"
               >
-                <Sparkles size={14} className="text-amber-400 group-hover:rotate-12 transition-transform" />
-                <span className="bg-gradient-to-r from-amber-400 to-rose-400 bg-clip-text text-transparent">
-                  Forge Your Legend
-                </span>
-                <ArrowRight size={14} className="text-amber-400 group-hover:translate-x-1 transition-transform" />
+                Create one
               </Link>
-            </motion.div>
-          </div>
-        </motion.div>
+            </p>
 
-        {/* Bottom info - power level reference */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 1.3 }}
-          className="mt-8 text-center"
-        >
-          <div className="inline-flex items-center gap-2 text-xs text-slate-500">
-            <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-            <span>Hunter System v2.0 — Online</span>
-          </div>
-        </motion.div>
-      </motion.div>
+            {/* Mobile footer */}
+            <div className="lg:hidden mt-12 flex items-center justify-center gap-2 text-xs text-slate-500">
+              <ShieldCheck size={12} />
+              <span>End-to-end encrypted</span>
+            </div>
+          </motion.div>
+        </div>
+      </div>
     </div>
   );
 }
