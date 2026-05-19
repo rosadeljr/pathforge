@@ -173,7 +173,10 @@ export default function SignUp() {
 
       if (!data.user) {
         console.error("[signup] no user returned from supabase");
-        toast.error("Account creation failed. Please try again.");
+        toast.error(
+          "This email may already be registered. Try signing in, or use a different email.",
+          { duration: 6000 }
+        );
         return;
       }
 
