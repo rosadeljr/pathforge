@@ -397,17 +397,24 @@ export default function Settings() {
                       : "Daily quests, basic AI mentor, portfolio basics"}
                   </p>
                 </div>
-                <Link
-                  href="/pricing"
-                  className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-colors ${
-                    isPro
-                      ? "border border-white/[0.08] text-slate-300 hover:bg-white/[0.03]"
-                      : "bg-gradient-to-br from-amber-400 to-orange-500 text-slate-900 hover:from-amber-300 hover:to-orange-400 shadow-lg shadow-amber-500/20"
-                  }`}
-                >
-                  {isPro ? "Manage plan" : "Upgrade to Pro"}
-                  <ArrowRight size={12} />
-                </Link>
+                {tier === "free" ? (
+                  <Link
+                    href="/pricing"
+                    className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-colors bg-gradient-to-br from-amber-400 to-orange-500 text-slate-900 hover:from-amber-300 hover:to-orange-400 shadow-lg shadow-amber-500/20"
+                  >
+                    Upgrade to Pro
+                    <ArrowRight size={12} />
+                  </Link>
+                ) : (
+                  // For paid users — open Stripe customer portal directly
+                  <a
+                    href="/api/customer-portal"
+                    className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-colors border border-white/[0.08] text-slate-300 hover:bg-white/[0.03]"
+                  >
+                    Manage plan
+                    <ArrowRight size={12} />
+                  </a>
+                )}
               </div>
             </div>
           </div>

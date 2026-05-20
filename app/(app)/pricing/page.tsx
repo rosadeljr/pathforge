@@ -4,8 +4,9 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { Check, Sparkles, ArrowRight, CreditCard, Crown, Zap } from "lucide-react";
+import { Check, Sparkles, ArrowRight, CreditCard, Crown, Zap, Loader2 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import toast from "react-hot-toast";
 
 const PLANS = [
   {
@@ -96,6 +97,8 @@ const FAQS = [
 
 export default function Pricing() {
   const [authenticated, setAuthenticated] = useState(false);
+  const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
+  const [errorBanner, setErrorBanner] = useState<string | null>(null);
   const router = useRouter();
   const supabase = createClient();
 
@@ -105,18 +108,50 @@ export default function Pricing() {
       setAuthenticated(!!session?.user);
     }
     checkAuth();
+
+    // Surface errors returned by Stripe checkout (?error=...)
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      const err = params.get("error");
+      const cancelled = params.get("upgrade") === "cancelled";
+      if (err) setErrorBanner(decodeURIComponent(err));
+      if (cancelled) {
+        toast("Checkout cancelled. No charge was made.", { icon: "ℹ️" });
+      }
+    }
   }, [supabase]);
 
-  const handleSelect = (planName: string) => {
+  const handleSelect = async (planName: string) => {
     if (!authenticated) {
       router.push("/signup");
       return;
     }
     if (planName === "Free") {
       router.push("/dashboard");
-    } else {
-      // TODO: hook to Stripe checkout
-      router.push("/api/checkout?plan=" + planName.toLowerCase());
+      return;
+    }
+
+    const tier = planName.toLowerCase();
+    setLoadingPlan(tier);
+    try {
+      const res = await fetch("/api/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ tier }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || "Checkout failed");
+      }
+      if (data.url) {
+        window.location.href = data.url;
+      } else {
+        throw new Error("No checkout URL returned");
+      }
+    } catch (e: any) {
+      console.error("Checkout error:", e);
+      toast.error(e?.message || "Couldn't start checkout. Try again.");
+      setLoadingPlan(null);
     }
   };
 
@@ -145,6 +180,31 @@ export default function Pricing() {
             Start free. Upgrade only if PathForge becomes your edge. Cancel anytime.
           </p>
         </motion.div>
+
+        {/* Error banner */}
+        {errorBanner && (
+          <motion.div
+            initial={{ opacity: 0, y: -8 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-8 p-3.5 rounded-xl border border-rose-500/30 bg-rose-500/[0.06] text-sm text-rose-200 flex items-start gap-3"
+          >
+            <CreditCard size={14} className="text-rose-400 flex-shrink-0 mt-0.5" />
+            <div className="flex-1">
+              <div className="font-semibold">Checkout failed</div>
+              <div className="text-xs text-rose-200/80 mt-0.5">
+                {errorBanner === "checkout_failed"
+                  ? "Something went wrong starting checkout. Please try again."
+                  : errorBanner}
+              </div>
+            </div>
+            <button
+              onClick={() => setErrorBanner(null)}
+              className="text-rose-300 hover:text-rose-100 text-xs underline"
+            >
+              Dismiss
+            </button>
+          </motion.div>
+        )}
 
         {/* Plans Grid */}
         <div className="grid md:grid-cols-3 gap-4 lg:gap-6">
@@ -197,13 +257,21 @@ export default function Pricing() {
                 {/* CTA */}
                 <button
                   onClick={() => handleSelect(plan.name)}
-                  className={`w-full py-2.5 rounded-lg text-sm font-semibold transition-all mb-6 ${
+                  disabled={loadingPlan !== null}
+                  className={`w-full py-2.5 rounded-lg text-sm font-semibold transition-all mb-6 inline-flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed ${
                     plan.highlight
                       ? "bg-white text-slate-900 hover:bg-slate-100 shadow-lg shadow-white/5"
                       : "border border-white/[0.08] text-slate-300 hover:bg-white/[0.04] hover:border-white/[0.16]"
                   }`}
                 >
-                  {plan.cta}
+                  {loadingPlan === plan.name.toLowerCase() ? (
+                    <>
+                      <Loader2 size={14} className="animate-spin" />
+                      Opening Stripe…
+                    </>
+                  ) : (
+                    plan.cta
+                  )}
                 </button>
 
                 {/* Features */}
