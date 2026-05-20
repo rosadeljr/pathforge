@@ -18,10 +18,13 @@ import {
   ArrowRight,
   Share2,
   Copy,
+  Volume2,
+  VolumeX,
 } from "lucide-react";
 import Link from "next/link";
 import { CAREER_PATHS, formatPhp } from "@/lib/data/career-paths";
 import { PageShimmer } from "@/components/ui/Shimmer";
+import { isSoundEnabled, setSoundEnabled } from "@/lib/effects/celebration";
 
 interface Profile {
   id: string;
@@ -46,6 +49,18 @@ export default function Settings() {
   const [saving, setSaving] = useState(false);
   const [username, setUsername] = useState("");
   const [fullName, setFullName] = useState("");
+  const [soundOn, setSoundOn] = useState(true);
+
+  useEffect(() => {
+    setSoundOn(isSoundEnabled());
+  }, []);
+
+  const toggleSound = () => {
+    const next = !soundOn;
+    setSoundEnabled(next);
+    setSoundOn(next);
+    toast.success(next ? "Sound effects enabled" : "Sound effects muted");
+  };
   const router = useRouter();
   const supabase = createClient();
 
@@ -390,6 +405,52 @@ export default function Settings() {
                   <ArrowRight size={12} />
                 </Link>
               </div>
+            </div>
+          </div>
+        </motion.section>
+
+        {/* Preferences */}
+        <motion.section
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.175 }}
+          className="rounded-2xl border border-white/[0.06] bg-white/[0.02] overflow-hidden"
+        >
+          <div className="px-6 py-4 border-b border-white/[0.06] flex items-center gap-2">
+            <SettingsIcon size={14} className="text-slate-400" />
+            <h2 className="text-sm font-semibold uppercase tracking-wider text-slate-300">
+              Preferences
+            </h2>
+          </div>
+          <div className="p-6">
+            <div className="flex items-center justify-between gap-4">
+              <div className="flex items-center gap-3 min-w-0">
+                <div
+                  className={`w-10 h-10 rounded-xl flex items-center justify-center ${
+                    soundOn ? "bg-indigo-500/15 text-indigo-300" : "bg-white/[0.04] text-slate-500"
+                  }`}
+                >
+                  {soundOn ? <Volume2 size={18} /> : <VolumeX size={18} />}
+                </div>
+                <div>
+                  <div className="text-sm font-semibold">Sound effects</div>
+                  <div className="text-xs text-slate-400">
+                    Plays celebratory chimes on quest complete, level up, and achievements.
+                  </div>
+                </div>
+              </div>
+              <button
+                onClick={toggleSound}
+                className={`relative w-11 h-6 rounded-full transition-colors flex-shrink-0 ${
+                  soundOn ? "bg-indigo-500" : "bg-white/[0.1]"
+                }`}
+              >
+                <span
+                  className={`absolute top-0.5 w-5 h-5 rounded-full bg-white shadow-md transition-transform ${
+                    soundOn ? "translate-x-5" : "translate-x-0.5"
+                  }`}
+                />
+              </button>
             </div>
           </div>
         </motion.section>

@@ -172,15 +172,6 @@ export default function Landing() {
             </Link>
           </motion.div>
 
-          {/* Trust micro */}
-          <motion.p
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.7, delay: 0.35 }}
-            className="text-xs text-slate-500"
-          >
-            Free forever · No credit card · Cancel anytime
-          </motion.p>
         </div>
 
         {/* Live Product Preview Card (Hero visual) */}
@@ -456,16 +447,125 @@ export default function Landing() {
       </section>
 
       {/* Footer */}
-      <footer className="relative z-10 border-t border-white/[0.06]">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <Link href="/" className="flex items-center gap-2.5">
-            <Logo size={24} />
-            <span className="text-sm font-semibold tracking-tight">PathForge</span>
-          </Link>
-          <div className="flex items-center gap-6 text-xs text-slate-500">
-            <Link href="/pricing" className="hover:text-white transition-colors">Pricing</Link>
-            <Link href="/login" className="hover:text-white transition-colors">Sign in</Link>
-            <span>© 2026 PathForge</span>
+      <footer className="relative z-10 border-t border-white/[0.06] bg-[#070710]">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-14">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-10 mb-12">
+            {/* Brand */}
+            <div>
+              <Link href="/" className="inline-flex items-center gap-2.5 mb-4">
+                <Logo size={28} />
+                <span className="text-base font-semibold tracking-tight">PathForge</span>
+              </Link>
+              <p className="text-xs text-slate-500 leading-relaxed mb-4 max-w-xs">
+                The career operating system built for ambitious Filipinos and the Gen Z
+                freelance economy.
+              </p>
+              <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-md bg-white/[0.04] border border-white/[0.08]">
+                <div className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                <span className="text-[10px] text-slate-400 font-medium tracking-wide">
+                  A ZenForge Technologies product
+                </span>
+              </div>
+            </div>
+
+            {/* Product */}
+            <div>
+              <h4 className="text-xs font-semibold text-slate-300 uppercase tracking-wider mb-4">
+                Product
+              </h4>
+              <ul className="space-y-2.5 text-sm">
+                <li>
+                  <Link href="#features" className="text-slate-400 hover:text-white transition-colors">
+                    Features
+                  </Link>
+                </li>
+                <li>
+                  <Link href="#how-it-works" className="text-slate-400 hover:text-white transition-colors">
+                    How it works
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/pricing" className="text-slate-400 hover:text-white transition-colors">
+                    Pricing
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/signup" className="text-slate-400 hover:text-white transition-colors">
+                    Get started
+                  </Link>
+                </li>
+              </ul>
+            </div>
+
+            {/* Company */}
+            <div>
+              <h4 className="text-xs font-semibold text-slate-300 uppercase tracking-wider mb-4">
+                Company
+              </h4>
+              <ul className="space-y-2.5 text-sm">
+                <li>
+                  <a
+                    href="mailto:hello@pathforge.app"
+                    className="text-slate-400 hover:text-white transition-colors"
+                  >
+                    Contact
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href="mailto:support@pathforge.app"
+                    className="text-slate-400 hover:text-white transition-colors"
+                  >
+                    Support
+                  </a>
+                </li>
+              </ul>
+            </div>
+
+            {/* Legal */}
+            <div>
+              <h4 className="text-xs font-semibold text-slate-300 uppercase tracking-wider mb-4">
+                Legal
+              </h4>
+              <ul className="space-y-2.5 text-sm">
+                <li>
+                  <Link href="/terms" className="text-slate-400 hover:text-white transition-colors">
+                    Terms of Service
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/privacy" className="text-slate-400 hover:text-white transition-colors">
+                    Privacy Policy
+                  </Link>
+                </li>
+                <li>
+                  <a
+                    href="mailto:privacy@pathforge.app"
+                    className="text-slate-400 hover:text-white transition-colors"
+                  >
+                    Data requests
+                  </a>
+                </li>
+              </ul>
+            </div>
+          </div>
+
+          {/* Bottom bar */}
+          <div className="pt-8 border-t border-white/[0.06] flex flex-col sm:flex-row items-center justify-between gap-3">
+            <div className="text-xs text-slate-500">
+              © 2026 ZenForge Technologies. All rights reserved.
+            </div>
+            <div className="flex items-center gap-2 text-[11px] text-slate-500">
+              <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded bg-white/[0.04] border border-white/[0.08]">
+                <svg className="w-3 h-3 text-emerald-400" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12 2L1 7v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V7l-11-5z" opacity="0.3"/>
+                  <path d="M9 12l2 2 4-4" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+                DTI Registered · Philippines
+              </span>
+              <span>·</span>
+              <span>Made with ❤️ in PH</span>
+            </div>
           </div>
         </div>
       </footer>

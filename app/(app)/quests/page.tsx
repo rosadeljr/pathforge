@@ -27,6 +27,12 @@ import {
 import { getAllQuests } from "@/lib/data/quest-templates";
 import { QuestListShimmer } from "@/components/ui/Shimmer";
 import { track } from "@/lib/analytics/track";
+import {
+  celebrateQuestComplete,
+  celebrateLevelUp,
+  celebrateAchievement,
+  celebrateStreak,
+} from "@/lib/effects/celebration";
 
 interface Quest {
   id: string;
@@ -200,26 +206,29 @@ export default function Quests() {
       };
       await supabase.from("profiles").update(profileUpdates).eq("id", userId);
 
-      // 8. Show toasts
+      // 8. Show toasts + celebrations
       toast.success(`+${baseXp} XP earned`, { icon: "⚡" });
+      celebrateQuestComplete();
 
-      // Level up toast
+      // Level up
       if (finalLevelInfo.level > profile.current_level) {
         setTimeout(() => {
           toast.success(`Level up! You're now Level ${finalLevelInfo.level}`, {
             duration: 5000,
             icon: "🎉",
           });
+          celebrateLevelUp();
         }, 500);
       }
 
-      // Streak milestone toast
+      // Streak milestone
       if (streakResult?.isNewMilestone) {
         setTimeout(() => {
           toast.success(`${newStreak}-day streak! Unstoppable.`, {
             duration: 5000,
             icon: "🔥",
           });
+          celebrateStreak(newStreak);
         }, 1000);
       }
 
@@ -230,6 +239,7 @@ export default function Quests() {
             duration: 5000,
             icon: "🏆",
           });
+          celebrateAchievement();
         }, 1500 + i * 500);
       });
 

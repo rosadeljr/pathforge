@@ -811,6 +811,567 @@ const CONTENT_CREATOR_QUESTS: QuestTemplate[] = [
 ];
 
 // ============================================================
+// AI / ML ENGINEER
+// ============================================================
+const AI_ML_ENGINEER_QUESTS: QuestTemplate[] = [
+  {
+    title: "Set up Python + Jupyter environment",
+    description: "Install Python 3.11+, set up a virtual environment, install Jupyter. Run your first notebook with 'hello world'.",
+    difficulty: "easy",
+    xp_reward: 100,
+    time_estimate_minutes: 60,
+    skill_tag: "Setup",
+    career_impact: "Python is the lingua franca of ML. Get fluent in the basics first.",
+    proof_type: "screenshot",
+    proof_required: true,
+    resources: [
+      { label: "Python.org installer", url: "https://www.python.org/downloads/", type: "tool" },
+      { label: "Jupyter Notebook docs", url: "https://jupyter.org/install", type: "docs" },
+    ],
+  },
+  {
+    title: "Master NumPy + Pandas basics",
+    description: "Complete Kaggle's free Python + Pandas micro-courses. Load a CSV, do 5 transformations, compute summary stats.",
+    difficulty: "medium",
+    xp_reward: 350,
+    time_estimate_minutes: 240,
+    skill_tag: "Python",
+    career_impact: "These libraries are non-negotiable. Every ML job uses them daily.",
+    proof_type: "github",
+    proof_required: true,
+    resources: [
+      { label: "Kaggle Pandas", url: "https://www.kaggle.com/learn/pandas", type: "docs" },
+    ],
+  },
+  {
+    title: "Build a linear regression model from scratch",
+    description: "Use a public dataset. Build, train, evaluate. Write up your findings as a notebook.",
+    difficulty: "hard",
+    xp_reward: 600,
+    time_estimate_minutes: 240,
+    skill_tag: "ML Foundations",
+    career_impact: "Linear regression is the foundation. Master this before going to neural nets.",
+    proof_type: "github",
+    proof_required: true,
+    resources: [
+      { label: "scikit-learn", url: "https://scikit-learn.org/stable/getting_started.html", type: "docs" },
+    ],
+  },
+  {
+    title: "Train your first neural network with PyTorch",
+    description: "Use the MNIST or Fashion-MNIST dataset. Build a 2-layer network. Achieve >90% accuracy.",
+    difficulty: "hard",
+    xp_reward: 800,
+    time_estimate_minutes: 360,
+    skill_tag: "PyTorch",
+    career_impact: "PyTorch is the standard in industry research. Tensorflow is fading.",
+    proof_type: "github",
+    proof_required: true,
+    resources: [
+      { label: "PyTorch 60-min Blitz", url: "https://pytorch.org/tutorials/beginner/deep_learning_60min_blitz.html", type: "docs" },
+    ],
+  },
+  {
+    title: "Build a RAG chatbot with OpenAI API",
+    description: "Take 5 documents (PDFs/text). Build a chatbot that answers questions using them via embeddings.",
+    difficulty: "hard",
+    xp_reward: 900,
+    time_estimate_minutes: 480,
+    skill_tag: "LLMs",
+    career_impact: "RAG is the hottest skill in 2026. Every company wants this.",
+    proof_type: "github",
+    proof_required: true,
+    resources: [
+      { label: "OpenAI Cookbook", url: "https://cookbook.openai.com", type: "docs" },
+      { label: "LangChain RAG tutorial", url: "https://python.langchain.com/docs/use_cases/question_answering/", type: "docs" },
+    ],
+  },
+  {
+    title: "Read 'Attention is All You Need' paper",
+    description: "Read the transformer paper. Write a 500-word summary in plain English. Explain self-attention.",
+    difficulty: "medium",
+    xp_reward: 400,
+    time_estimate_minutes: 180,
+    skill_tag: "Theory",
+    career_impact: "This is THE foundational paper of modern AI. Understanding it = level up.",
+    proof_type: "url",
+    proof_required: true,
+    resources: [
+      { label: "The paper", url: "https://arxiv.org/abs/1706.03762", type: "article" },
+      { label: "Illustrated explanation", url: "http://jalammar.github.io/illustrated-transformer/", type: "article" },
+    ],
+  },
+  {
+    title: "Fine-tune an open-source LLM",
+    description: "Use Hugging Face. Fine-tune a small model (Mistral 7B or Llama) on a custom dataset. Document results.",
+    difficulty: "insane",
+    xp_reward: 1800,
+    time_estimate_minutes: 720,
+    skill_tag: "Fine-tuning",
+    career_impact: "BOSS QUEST. Fine-tuning is a niche but explosive-pay skill.",
+    proof_type: "github",
+    proof_required: true,
+    resources: [
+      { label: "HuggingFace Fine-tuning", url: "https://huggingface.co/docs/transformers/training", type: "docs" },
+    ],
+  },
+  {
+    title: "Build your AI portfolio site",
+    description: "Showcase 3 ML projects with notebooks, demos, and writeups. Deploy on Vercel or Hugging Face Spaces.",
+    difficulty: "hard",
+    xp_reward: 1200,
+    time_estimate_minutes: 360,
+    skill_tag: "Portfolio",
+    career_impact: "ML hiring is portfolio-heavy. Visible work beats certifications.",
+    proof_type: "url",
+    proof_required: true,
+    resources: [
+      { label: "Hugging Face Spaces", url: "https://huggingface.co/spaces", type: "tool" },
+    ],
+  },
+];
+
+// ============================================================
+// CYBERSECURITY SPECIALIST
+// ============================================================
+const CYBERSECURITY_QUESTS: QuestTemplate[] = [
+  {
+    title: "Set up a Kali Linux VM",
+    description: "Install VirtualBox or VMware. Download Kali Linux. Boot in. Run your first command.",
+    difficulty: "easy",
+    xp_reward: 150,
+    time_estimate_minutes: 90,
+    skill_tag: "Setup",
+    career_impact: "Kali is the cybersec swiss army knife. You'll live in it.",
+    proof_type: "screenshot",
+    proof_required: true,
+    resources: [
+      { label: "Kali Linux", url: "https://www.kali.org/get-kali/", type: "tool" },
+      { label: "VirtualBox", url: "https://www.virtualbox.org", type: "tool" },
+    ],
+  },
+  {
+    title: "Master Linux command line basics",
+    description: "Complete LinuxJourney's basic + sysadmin tracks. Be comfortable with grep, sed, awk, ps, netstat.",
+    difficulty: "medium",
+    xp_reward: 400,
+    time_estimate_minutes: 360,
+    skill_tag: "Linux",
+    career_impact: "Without Linux fluency, cybersec careers stall. Most attacks/defenses happen here.",
+    proof_type: "text",
+    proof_required: true,
+    resources: [
+      { label: "LinuxJourney", url: "https://linuxjourney.com", type: "docs" },
+    ],
+  },
+  {
+    title: "Complete TryHackMe 'Pre-Security' path",
+    description: "Free path covering networking, web, Linux, Windows fundamentals. Earn the badge.",
+    difficulty: "medium",
+    xp_reward: 500,
+    time_estimate_minutes: 600,
+    skill_tag: "Foundations",
+    career_impact: "TryHackMe is the gold standard learning platform. Recruiters check profiles.",
+    proof_type: "url",
+    proof_required: true,
+    resources: [
+      { label: "TryHackMe", url: "https://tryhackme.com/path/outline/presecurity", type: "tool" },
+    ],
+  },
+  {
+    title: "Learn networking deeply (OSI + TCP/IP)",
+    description: "Complete Professor Messer's free Network+ course on YouTube. Take notes. Understand subnetting.",
+    difficulty: "medium",
+    xp_reward: 400,
+    time_estimate_minutes: 480,
+    skill_tag: "Networking",
+    career_impact: "Networking knowledge separates real cybersec pros from script kiddies.",
+    proof_type: "text",
+    proof_required: true,
+    resources: [
+      { label: "Professor Messer", url: "https://www.professormesser.com/network-plus/n10-008/n10-008-training-course/", type: "video" },
+    ],
+  },
+  {
+    title: "Complete OverTheWire 'Bandit'",
+    description: "First 15 levels of OverTheWire's Bandit war-game. Learn Linux + basic security through play.",
+    difficulty: "hard",
+    xp_reward: 700,
+    time_estimate_minutes: 480,
+    skill_tag: "Practical",
+    career_impact: "Hands-on hacking practice. Far more valuable than passive courses.",
+    proof_type: "screenshot",
+    proof_required: true,
+    resources: [
+      { label: "OverTheWire Bandit", url: "https://overthewire.org/wargames/bandit/", type: "tool" },
+    ],
+  },
+  {
+    title: "Get CompTIA Security+ certified",
+    description: "Study for and pass the Sec+ exam. Industry-recognized entry-level credential.",
+    difficulty: "insane",
+    xp_reward: 2000,
+    time_estimate_minutes: 2400,
+    skill_tag: "Certification",
+    career_impact: "Sec+ is the most-requested cert in entry-level cybersec job postings. Worth ~₱60-100k pay bump.",
+    proof_type: "url",
+    proof_required: true,
+    resources: [
+      { label: "CompTIA Sec+", url: "https://www.comptia.org/certifications/security", type: "tool" },
+    ],
+  },
+  {
+    title: "Build a SOC analyst home lab",
+    description: "Set up a SIEM (Splunk free or ELK). Ingest sample logs. Build 3 alert rules.",
+    difficulty: "hard",
+    xp_reward: 1000,
+    time_estimate_minutes: 600,
+    skill_tag: "Blue Team",
+    career_impact: "SOC analyst is the most common entry point. Home lab proves you can do the job.",
+    proof_type: "screenshot",
+    proof_required: true,
+    resources: [
+      { label: "Splunk Free", url: "https://www.splunk.com/en_us/download/splunk-enterprise.html", type: "tool" },
+    ],
+  },
+  {
+    title: "Document a CTF writeup",
+    description: "Complete any CTF challenge. Write a detailed writeup of how you solved it. Publish on Medium or GitHub.",
+    difficulty: "medium",
+    xp_reward: 500,
+    time_estimate_minutes: 240,
+    skill_tag: "Documentation",
+    career_impact: "CTF writeups = public proof of skill. Recruiters Google your name and read these.",
+    proof_type: "url",
+    proof_required: true,
+    resources: [],
+  },
+];
+
+// ============================================================
+// MOBILE DEVELOPER
+// ============================================================
+const MOBILE_DEV_QUESTS: QuestTemplate[] = [
+  {
+    title: "Set up React Native + Expo",
+    description: "Install Node + Expo CLI. Create a new app. Run it on your phone via Expo Go. See 'Hello' on your device.",
+    difficulty: "easy",
+    xp_reward: 200,
+    time_estimate_minutes: 90,
+    skill_tag: "Setup",
+    career_impact: "Expo lets you ship to both iOS + Android without two codebases. Modern default.",
+    proof_type: "screenshot",
+    proof_required: true,
+    resources: [
+      { label: "Expo Docs", url: "https://docs.expo.dev/get-started/create-a-project/", type: "docs" },
+    ],
+  },
+  {
+    title: "Build a counter app",
+    description: "Two buttons, one number. Add useState. Increment/decrement. Style it nicely.",
+    difficulty: "easy",
+    xp_reward: 250,
+    time_estimate_minutes: 90,
+    skill_tag: "React Native",
+    career_impact: "The fundamental React pattern. Once this clicks, everything else does too.",
+    proof_type: "github",
+    proof_required: true,
+    resources: [],
+  },
+  {
+    title: "Build a todo app with AsyncStorage",
+    description: "Add tasks, mark complete, delete. Persist between sessions. Use FlatList.",
+    difficulty: "medium",
+    xp_reward: 500,
+    time_estimate_minutes: 240,
+    skill_tag: "React Native",
+    career_impact: "Lists + persistence = 80% of mobile app work. This proves you can build real apps.",
+    proof_type: "github",
+    proof_required: true,
+    resources: [
+      { label: "AsyncStorage docs", url: "https://react-native-async-storage.github.io/async-storage/", type: "docs" },
+    ],
+  },
+  {
+    title: "Add navigation with React Navigation",
+    description: "Build a 3-screen app (Home, Detail, Settings). Stack navigation with smooth transitions.",
+    difficulty: "medium",
+    xp_reward: 500,
+    time_estimate_minutes: 240,
+    skill_tag: "Navigation",
+    career_impact: "Every multi-screen mobile app needs this. Navigation is non-negotiable.",
+    proof_type: "github",
+    proof_required: true,
+    resources: [
+      { label: "React Navigation", url: "https://reactnavigation.org", type: "docs" },
+    ],
+  },
+  {
+    title: "Build a weather app with API + geolocation",
+    description: "Request location. Fetch weather from OpenWeather. Show 5-day forecast with icons.",
+    difficulty: "hard",
+    xp_reward: 800,
+    time_estimate_minutes: 360,
+    skill_tag: "APIs + Sensors",
+    career_impact: "Combines APIs, permissions, native modules. Portfolio gold.",
+    proof_type: "github",
+    proof_required: true,
+    resources: [
+      { label: "Expo Location", url: "https://docs.expo.dev/versions/latest/sdk/location/", type: "docs" },
+      { label: "OpenWeather API", url: "https://openweathermap.org/api", type: "tool" },
+    ],
+  },
+  {
+    title: "Publish to Expo Application Services (EAS)",
+    description: "Build and deploy your app to TestFlight (iOS) or Play Store internal testing. Share the link.",
+    difficulty: "hard",
+    xp_reward: 1000,
+    time_estimate_minutes: 480,
+    skill_tag: "Deployment",
+    career_impact: "Shipping to real app stores is what separates engineers from hobbyists.",
+    proof_type: "url",
+    proof_required: true,
+    resources: [
+      { label: "EAS Build", url: "https://docs.expo.dev/build/introduction/", type: "docs" },
+    ],
+  },
+  {
+    title: "Learn iOS-native via Swift basics",
+    description: "Complete Apple's free Swift Playgrounds intro. Build a basic SwiftUI 'Hello' app in Xcode.",
+    difficulty: "hard",
+    xp_reward: 700,
+    time_estimate_minutes: 360,
+    skill_tag: "Swift",
+    career_impact: "Native iOS skills are 2x the rate of React Native. Worth the side investment.",
+    proof_type: "screenshot",
+    proof_required: true,
+    resources: [
+      { label: "Swift Playgrounds", url: "https://www.apple.com/swift/playgrounds/", type: "tool" },
+    ],
+  },
+  {
+    title: "Build your mobile portfolio site",
+    description: "Showcase 3 mobile apps with screenshots, descriptions, App Store/Play Store links if live.",
+    difficulty: "hard",
+    xp_reward: 900,
+    time_estimate_minutes: 240,
+    skill_tag: "Portfolio",
+    career_impact: "Mobile recruiters want to see and try your apps. Make it easy.",
+    proof_type: "url",
+    proof_required: true,
+    resources: [],
+  },
+];
+
+// ============================================================
+// DATA SCIENTIST
+// ============================================================
+const DATA_SCIENTIST_QUESTS: QuestTemplate[] = [
+  {
+    title: "Refresh stats fundamentals",
+    description: "Complete Khan Academy's Statistics and Probability course. Take handwritten notes.",
+    difficulty: "medium",
+    xp_reward: 400,
+    time_estimate_minutes: 480,
+    skill_tag: "Statistics",
+    career_impact: "Data scientists who can't explain a p-value get filtered out. Don't be that.",
+    proof_type: "text",
+    proof_required: true,
+    resources: [
+      { label: "Khan Stats", url: "https://www.khanacademy.org/math/statistics-probability", type: "docs" },
+    ],
+  },
+  {
+    title: "Master pandas + numpy on Kaggle",
+    description: "Complete the Pandas + Intermediate Python micro-courses. Apply on a public dataset.",
+    difficulty: "medium",
+    xp_reward: 400,
+    time_estimate_minutes: 360,
+    skill_tag: "Python",
+    career_impact: "Data manipulation is 70% of DS work. Get fast at it.",
+    proof_type: "github",
+    proof_required: true,
+    resources: [
+      { label: "Kaggle Learn", url: "https://www.kaggle.com/learn", type: "docs" },
+    ],
+  },
+  {
+    title: "Win (or place top 25%) in a Kaggle competition",
+    description: "Pick a beginner-level competition. Submit at least 3 different model approaches. Document.",
+    difficulty: "insane",
+    xp_reward: 2000,
+    time_estimate_minutes: 1200,
+    skill_tag: "Kaggle",
+    career_impact: "Kaggle medals are recognized credentials. Top 25% in any competition is impressive.",
+    proof_type: "url",
+    proof_required: true,
+    resources: [
+      { label: "Kaggle Competitions", url: "https://www.kaggle.com/competitions", type: "tool" },
+    ],
+  },
+  {
+    title: "Build a deep learning image classifier",
+    description: "Use PyTorch or TensorFlow. Train on a small dataset (e.g., flowers, cats vs dogs). Hit >85% accuracy.",
+    difficulty: "hard",
+    xp_reward: 900,
+    time_estimate_minutes: 480,
+    skill_tag: "Deep Learning",
+    career_impact: "Computer vision basics. Demonstrates you can train and tune a real DL model.",
+    proof_type: "github",
+    proof_required: true,
+    resources: [
+      { label: "PyTorch tutorials", url: "https://pytorch.org/tutorials/", type: "docs" },
+    ],
+  },
+  {
+    title: "Create a Jupyter notebook portfolio",
+    description: "Compile 5 best notebooks (EDA, modeling, writeups). Publish on Kaggle or GitHub.",
+    difficulty: "hard",
+    xp_reward: 1000,
+    time_estimate_minutes: 360,
+    skill_tag: "Portfolio",
+    career_impact: "Recruiters click through notebooks. Show clean code + great storytelling.",
+    proof_type: "url",
+    proof_required: true,
+    resources: [],
+  },
+  {
+    title: "Take the Andrew Ng ML course",
+    description: "Complete Coursera's Machine Learning Specialization (audit for free). Even 4 weeks of it.",
+    difficulty: "hard",
+    xp_reward: 1500,
+    time_estimate_minutes: 1800,
+    skill_tag: "Theory",
+    career_impact: "The most respected ML course on the planet. Foundational knowledge.",
+    proof_type: "text",
+    proof_required: true,
+    resources: [
+      { label: "Coursera ML", url: "https://www.coursera.org/specializations/machine-learning-introduction", type: "docs" },
+    ],
+  },
+  {
+    title: "Write a data science blog post",
+    description: "Pick an analysis you've done. Write a 1500-word post on Medium or Towards Data Science.",
+    difficulty: "medium",
+    xp_reward: 500,
+    time_estimate_minutes: 240,
+    skill_tag: "Communication",
+    career_impact: "Writing about your work multiplies its reach. One viral post = job offers.",
+    proof_type: "url",
+    proof_required: true,
+    resources: [
+      { label: "Towards Data Science", url: "https://towardsdatascience.com", type: "tool" },
+    ],
+  },
+];
+
+// ============================================================
+// SOCIAL MEDIA MANAGER
+// ============================================================
+const SOCIAL_MEDIA_QUESTS: QuestTemplate[] = [
+  {
+    title: "Audit your own social media",
+    description: "Open your accounts. Look at bio, recent posts, engagement. Identify 5 things to fix. Write them down.",
+    difficulty: "easy",
+    xp_reward: 100,
+    time_estimate_minutes: 60,
+    skill_tag: "Strategy",
+    career_impact: "Self-awareness is step zero. Your accounts are the proof you can do this for others.",
+    proof_type: "text",
+    proof_required: true,
+    resources: [],
+  },
+  {
+    title: "Study 30 top creators in your niche",
+    description: "Pick 30 creators with 10k-1M followers. Save 5 best posts from each. Notice patterns. Build swipe file.",
+    difficulty: "medium",
+    xp_reward: 300,
+    time_estimate_minutes: 180,
+    skill_tag: "Research",
+    career_impact: "All great social media is borrowed structurally. Steal frameworks ethically.",
+    proof_type: "text",
+    proof_required: true,
+    resources: [],
+  },
+  {
+    title: "Learn Canva deeply",
+    description: "Complete Canva Design School free courses. Build 10 different post templates for your niche.",
+    difficulty: "easy",
+    xp_reward: 250,
+    time_estimate_minutes: 180,
+    skill_tag: "Design",
+    career_impact: "Canva is the social media designer's daily tool. Master it = save 5hrs/week.",
+    proof_type: "url",
+    proof_required: true,
+    resources: [
+      { label: "Canva Design School", url: "https://www.canva.com/designschool/", type: "docs" },
+    ],
+  },
+  {
+    title: "Master CapCut for short-form video",
+    description: "Edit 5 short videos (Reels/TikTok format). Master cuts, captions, transitions, music timing.",
+    difficulty: "medium",
+    xp_reward: 400,
+    time_estimate_minutes: 240,
+    skill_tag: "Video",
+    career_impact: "Short-form video is dominant. SMMs who can edit > SMMs who only schedule.",
+    proof_type: "url",
+    proof_required: true,
+    resources: [
+      { label: "CapCut", url: "https://www.capcut.com", type: "tool" },
+    ],
+  },
+  {
+    title: "Build a content calendar for a brand",
+    description: "Pick any local brand. Plan 30 days of content (mix of formats). Justify each post with strategy.",
+    difficulty: "hard",
+    xp_reward: 600,
+    time_estimate_minutes: 240,
+    skill_tag: "Strategy",
+    career_impact: "Content calendars are deliverables you bring to interviews. Show, don't tell.",
+    proof_type: "url",
+    proof_required: true,
+    resources: [],
+  },
+  {
+    title: "Grow an account to 1000 followers",
+    description: "Use your own niche account. Post 5x/week for 30+ days. Engage with 30 people daily. Track growth.",
+    difficulty: "insane",
+    xp_reward: 1800,
+    time_estimate_minutes: 1800,
+    skill_tag: "Growth",
+    career_impact: "BOSS QUEST. Real-world growth proof beats 100 certifications. Clients want this.",
+    proof_type: "url",
+    proof_required: true,
+    resources: [],
+  },
+  {
+    title: "Set up analytics tracking",
+    description: "Master Meta Business Suite, TikTok Analytics, Instagram Insights. Pull a sample report.",
+    difficulty: "medium",
+    xp_reward: 350,
+    time_estimate_minutes: 180,
+    skill_tag: "Analytics",
+    career_impact: "Numbers > opinions. Brands hire SMMs who can prove ROI.",
+    proof_type: "screenshot",
+    proof_required: true,
+    resources: [],
+  },
+  {
+    title: "Build your SMM portfolio",
+    description: "Create a Notion page or simple site. Showcase content calendars, growth case studies, design samples.",
+    difficulty: "hard",
+    xp_reward: 800,
+    time_estimate_minutes: 240,
+    skill_tag: "Portfolio",
+    career_impact: "Most SMMs apply with just a CV. A portfolio puts you in the top 10%.",
+    proof_type: "url",
+    proof_required: true,
+    resources: [],
+  },
+];
+
+// ============================================================
 // GENERIC / FALLBACK QUESTS (for paths without curated content yet)
 // ============================================================
 const GENERIC_QUESTS: QuestTemplate[] = [
@@ -882,20 +1443,20 @@ const GENERIC_QUESTS: QuestTemplate[] = [
 export const QUEST_LIBRARY: Record<string, QuestTemplate[]> = {
   // Engineering
   "00000000-0000-0000-0000-000000000001": SOFTWARE_ENGINEER_QUESTS, // Software Engineer
-  "00000000-0000-0000-0000-000000000005": SOFTWARE_ENGINEER_QUESTS, // AI/ML Engineer (reuse for now)
-  "00000000-0000-0000-0000-000000000006": SOFTWARE_ENGINEER_QUESTS, // Cybersecurity (reuse)
-  "00000000-0000-0000-0000-000000000007": SOFTWARE_ENGINEER_QUESTS, // Mobile
+  "00000000-0000-0000-0000-000000000005": AI_ML_ENGINEER_QUESTS, // AI/ML Engineer
+  "00000000-0000-0000-0000-000000000006": CYBERSECURITY_QUESTS, // Cybersecurity
+  "00000000-0000-0000-0000-000000000007": MOBILE_DEV_QUESTS, // Mobile Developer
 
   // Data & AI
   "00000000-0000-0000-0000-000000000002": DATA_ANALYST_QUESTS, // Data Analyst
-  "00000000-0000-0000-0000-000000000008": DATA_ANALYST_QUESTS, // Data Scientist
+  "00000000-0000-0000-0000-000000000008": DATA_SCIENTIST_QUESTS, // Data Scientist
 
   // Design
   "00000000-0000-0000-0000-000000000004": UI_UX_DESIGNER_QUESTS, // UI/UX Designer
 
   // Marketing & Content
   "00000000-0000-0000-0000-000000000011": DIGITAL_MARKETER_QUESTS, // Digital Marketer
-  "00000000-0000-0000-0000-000000000012": DIGITAL_MARKETER_QUESTS, // Social Media Manager
+  "00000000-0000-0000-0000-000000000012": SOCIAL_MEDIA_QUESTS, // Social Media Manager
   "00000000-0000-0000-0000-000000000013": CONTENT_CREATOR_QUESTS, // Content Creator
 
   // Remote & Freelance

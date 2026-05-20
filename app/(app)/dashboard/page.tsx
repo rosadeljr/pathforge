@@ -22,6 +22,7 @@ import Link from "next/link";
 import { CAREER_PATHS, RANK_META, formatPhp } from "@/lib/data/career-paths";
 import { WelcomeModal } from "@/components/onboarding/WelcomeModal";
 import { PageShimmer } from "@/components/ui/Shimmer";
+import { StreakHeatmap } from "@/components/dashboard/StreakHeatmap";
 
 interface Profile {
   id: string;
@@ -74,6 +75,7 @@ export default function Dashboard() {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [activeQuestCount, setActiveQuestCount] = useState(0);
   const [firstQuest, setFirstQuest] = useState<FirstQuest | null>(null);
+  const [completions, setCompletions] = useState<{ date: string; count: number }[]>([]);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
   const supabase = createClient();
@@ -138,7 +140,8 @@ export default function Dashboard() {
         setProfile(actualProfile);
 
         // Quests (non-blocking errors)
-        const [countResult, nextQuestResult] = await Promise.all([
+        const cutoff = new Date(Date.now() - 365 * 24 * 60 * 60 * 1000).toISOString();
+        const [countResult, nextQuestResult, completionsResult] = await Promise.all([
           supabase
             .from("quests")
             .select("id", { count: "exact", head: true })
@@ -153,10 +156,30 @@ export default function Dashboard() {
             .order("created_at", { ascending: true })
             .limit(1)
             .maybeSingle(),
+          supabase
+            .from("quests")
+            .select("completed_at")
+            .eq("user_id", userId)
+            .eq("status", "completed")
+            .not("completed_at", "is", null)
+            .gte("completed_at", cutoff),
         ]);
 
         if (countResult.count !== null) setActiveQuestCount(countResult.count);
         if (nextQuestResult.data) setFirstQuest(nextQuestResult.data);
+
+        // Aggregate completions by day
+        if (completionsResult.data) {
+          const dayMap = new Map<string, number>();
+          (completionsResult.data as any[]).forEach((q) => {
+            if (!q.completed_at) return;
+            const day = q.completed_at.slice(0, 10);
+            dayMap.set(day, (dayMap.get(day) || 0) + 1);
+          });
+          setCompletions(
+            Array.from(dayMap.entries()).map(([date, count]) => ({ date, count }))
+          );
+        }
       } catch (error) {
         console.error("[dashboard] Unexpected error:", error);
       } finally {
@@ -605,6 +628,16 @@ export default function Dashboard() {
             </div>
           </motion.div>
         )}
+
+        {/* Activity Heatmap */}
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.35 }}
+          className="relative overflow-hidden rounded-2xl border border-white/[0.06] bg-white/[0.02] p-5 lg:p-6"
+        >
+          <StreakHeatmap completions={completions} />
+        </motion.div>
       </div>
 
       {/* First-visit welcome modal */}

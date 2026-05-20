@@ -12,6 +12,7 @@ import {
   Compass,
   Trophy,
   Bot,
+  Crown,
   Settings as SettingsIcon,
   LogOut,
   Sparkles,
@@ -33,6 +34,7 @@ const navLinks = [
   { icon: Bot, label: "AI Mentor", href: "/mentor", description: "Talk to your mentor" },
   { icon: Trophy, label: "Portfolio", href: "/portfolio", description: "Show your work" },
   { icon: Sparkles, label: "Achievements", href: "/achievements", description: "Your trophies" },
+  { icon: Crown, label: "Leaderboard", href: "/leaderboard", description: "Top forgers" },
   { icon: SettingsIcon, label: "Settings", href: "/settings", description: "Preferences" },
 ];
 
