@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { CAREER_PATHS } from "@/lib/data/career-paths";
+import { PageShimmer } from "@/components/ui/Shimmer";
 
 interface RoadmapPhase {
   id: number;
@@ -98,9 +99,21 @@ function buildRoadmap(skills: string[], pathTitle: string): RoadmapPhase[] {
   ];
 }
 
+interface QuestStats {
+  total: number;
+  completed: number;
+  byDifficulty: {
+    easy: { total: number; completed: number };
+    medium: { total: number; completed: number };
+    hard: { total: number; completed: number };
+    insane: { total: number; completed: number };
+  };
+}
+
 export default function Roadmap() {
   const [careerPathId, setCareerPathId] = useState<string | null>(null);
   const [currentLevel, setCurrentLevel] = useState(1);
+  const [questStats, setQuestStats] = useState<QuestStats | null>(null);
   const [loading, setLoading] = useState(true);
   const supabase = createClient();
 
@@ -113,15 +126,47 @@ export default function Roadmap() {
           return;
         }
 
-        const { data } = await supabase
-          .from("profiles")
-          .select("selected_career_path_id, current_level")
-          .eq("id", session.user.id)
-          .single();
+        const [profileResult, questsResult] = await Promise.all([
+          supabase
+            .from("profiles")
+            .select("selected_career_path_id, current_level")
+            .eq("id", session.user.id)
+            .single(),
+          supabase
+            .from("quests")
+            .select("difficulty, status")
+            .eq("user_id", session.user.id),
+        ]);
 
-        if (data) {
-          setCareerPathId(data.selected_career_path_id);
-          setCurrentLevel(data.current_level || 1);
+        if (profileResult.data) {
+          setCareerPathId(profileResult.data.selected_career_path_id);
+          setCurrentLevel(profileResult.data.current_level || 1);
+        }
+
+        if (questsResult.data) {
+          const stats: QuestStats = {
+            total: 0,
+            completed: 0,
+            byDifficulty: {
+              easy: { total: 0, completed: 0 },
+              medium: { total: 0, completed: 0 },
+              hard: { total: 0, completed: 0 },
+              insane: { total: 0, completed: 0 },
+            },
+          };
+          for (const q of questsResult.data as any[]) {
+            if (q.status === "archived") continue;
+            stats.total++;
+            const diff = (q.difficulty || "medium") as keyof typeof stats.byDifficulty;
+            if (stats.byDifficulty[diff]) {
+              stats.byDifficulty[diff].total++;
+              if (q.status === "completed") {
+                stats.completed++;
+                stats.byDifficulty[diff].completed++;
+              }
+            }
+          }
+          setQuestStats(stats);
         }
       } catch (e) {
         console.error("Roadmap load error:", e);
@@ -133,11 +178,7 @@ export default function Roadmap() {
   }, [supabase]);
 
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="w-8 h-8 rounded-full border-2 border-white/10 border-t-white/60 animate-spin" />
-      </div>
-    );
+    return <PageShimmer />;
   }
 
   const careerPath = CAREER_PATHS.find((p) => p.id === careerPathId);
@@ -161,6 +202,24 @@ export default function Roadmap() {
   }
 
   const roadmap = buildRoadmap(careerPath.skills, careerPath.title);
+
+  // Map each phase to a difficulty bucket for progress calculation
+  const PHASE_TO_DIFFICULTY = ["easy", "medium", "hard", "insane"] as const;
+  const computePhaseProgress = (phaseIdx: number): { pct: number; completed: number; total: number } => {
+    if (!questStats) return { pct: 0, completed: 0, total: 0 };
+    const diff = PHASE_TO_DIFFICULTY[phaseIdx];
+    const bucket = questStats.byDifficulty[diff];
+    if (bucket.total === 0) return { pct: 0, completed: 0, total: 0 };
+    return {
+      pct: Math.round((bucket.completed / bucket.total) * 100),
+      completed: bucket.completed,
+      total: bucket.total,
+    };
+  };
+
+  const overallProgress = questStats && questStats.total > 0
+    ? Math.round((questStats.completed / questStats.total) * 100)
+    : 0;
 
   return (
     <div className="min-h-screen pb-12">
@@ -191,11 +250,42 @@ export default function Roadmap() {
           </div>
         </motion.div>
 
-        {/* Progression Stats */}
+        {/* Overall progress */}
         <motion.div
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.05 }}
+          className="relative overflow-hidden rounded-2xl border border-white/[0.06] bg-white/[0.02] p-5"
+        >
+          <div className="flex items-center justify-between mb-3">
+            <div>
+              <div className="text-[10px] uppercase tracking-wider text-slate-500 font-semibold mb-1">
+                Overall progress
+              </div>
+              <div className="text-3xl font-semibold tracking-tight tabular-nums">
+                {overallProgress}%
+              </div>
+            </div>
+            <div className="text-right text-xs text-slate-400">
+              <div>{questStats?.completed ?? 0} of {questStats?.total ?? 0} quests done</div>
+              <div className="mt-0.5">Level {currentLevel}</div>
+            </div>
+          </div>
+          <div className="h-2 rounded-full bg-white/[0.06] overflow-hidden">
+            <motion.div
+              initial={{ width: 0 }}
+              animate={{ width: `${overallProgress}%` }}
+              transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
+              className="h-full bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500"
+            />
+          </div>
+        </motion.div>
+
+        {/* Phase stats grid */}
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.08 }}
           className="grid grid-cols-3 gap-3"
         >
           {[
@@ -228,7 +318,9 @@ export default function Roadmap() {
         <div className="space-y-4">
           {roadmap.map((phase, index) => {
             const isUnlocked = currentLevel >= phase.unlockLevel;
-            const isCompleted = false; // Could compute from quest completion
+            const phaseProgress = computePhaseProgress(index);
+            const isCompleted = phaseProgress.total > 0 && phaseProgress.completed === phaseProgress.total;
+            const isInProgress = phaseProgress.completed > 0 && !isCompleted;
             return (
               <motion.div
                 key={phase.id}
@@ -283,6 +375,9 @@ export default function Roadmap() {
                         {isCompleted && (
                           <span className="text-[10px] text-emerald-400 font-medium">Completed</span>
                         )}
+                        {isUnlocked && isInProgress && (
+                          <span className="text-[10px] text-indigo-300 font-medium">In progress</span>
+                        )}
                       </div>
                       <h3 className="text-xl font-semibold tracking-tight mb-1">{phase.title}</h3>
                       <p className="text-sm text-slate-400">{phase.subtitle}</p>
@@ -298,6 +393,32 @@ export default function Roadmap() {
                       </div>
                     </div>
                   </div>
+
+                  {/* Phase progress bar */}
+                  {isUnlocked && phaseProgress.total > 0 && (
+                    <div className="mb-5">
+                      <div className="flex items-center justify-between text-xs mb-1.5">
+                        <span className="text-slate-400 font-medium">
+                          {isCompleted ? "Phase complete" : isInProgress ? "In progress" : "Not started"}
+                        </span>
+                        <span className="text-slate-300 tabular-nums">
+                          {phaseProgress.completed}/{phaseProgress.total} quests · {phaseProgress.pct}%
+                        </span>
+                      </div>
+                      <div className="h-1.5 rounded-full bg-white/[0.06] overflow-hidden">
+                        <motion.div
+                          initial={{ width: 0 }}
+                          animate={{ width: `${phaseProgress.pct}%` }}
+                          transition={{ duration: 0.8, delay: 0.1 + index * 0.1, ease: [0.16, 1, 0.3, 1] }}
+                          className={`h-full ${
+                            isCompleted
+                              ? "bg-gradient-to-r from-emerald-500 to-green-500"
+                              : `bg-gradient-to-r ${careerPath.gradient}`
+                          }`}
+                        />
+                      </div>
+                    </div>
+                  )}
 
                   {/* Skills */}
                   <div className="mb-5">

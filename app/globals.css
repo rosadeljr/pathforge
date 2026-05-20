@@ -285,6 +285,13 @@ textarea:focus-visible {
   box-shadow: 0 0 10px rgba(6, 182, 212, 0.5);
 }
 
+/* Skeleton shimmer (subtle, premium) */
+@keyframes shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
 /* Anime shimmer effect */
 @keyframes shimmer-anime {
   0% {

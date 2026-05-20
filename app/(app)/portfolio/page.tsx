@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { ACHIEVEMENT_IDS, awardAchievements } from "@/lib/gamification/progression";
+import { PageShimmer } from "@/components/ui/Shimmer";
 
 interface Project {
   id: string;
@@ -66,11 +67,7 @@ export default function Portfolio() {
   }, [supabase]);
 
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="w-8 h-8 rounded-full border-2 border-white/10 border-t-white/60 animate-spin" />
-      </div>
-    );
+    return <PageShimmer />;
   }
 
   const totalImpact = projects.reduce((sum, p) => sum + (p.readiness_impact || 0), 0);

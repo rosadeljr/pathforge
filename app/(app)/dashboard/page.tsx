@@ -20,6 +20,8 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { CAREER_PATHS, RANK_META, formatPhp } from "@/lib/data/career-paths";
+import { WelcomeModal } from "@/components/onboarding/WelcomeModal";
+import { PageShimmer } from "@/components/ui/Shimmer";
 
 interface Profile {
   id: string;
@@ -123,11 +125,7 @@ export default function Dashboard() {
   }, [loading, profile, router]);
 
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="w-8 h-8 rounded-full border-2 border-white/10 border-t-white/60 animate-spin" />
-      </div>
-    );
+    return <PageShimmer />;
   }
 
   if (!profile) return null;
@@ -508,6 +506,9 @@ export default function Dashboard() {
           </motion.div>
         )}
       </div>
+
+      {/* First-visit welcome modal */}
+      <WelcomeModal />
     </div>
   );
 }

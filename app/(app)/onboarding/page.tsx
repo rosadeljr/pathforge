@@ -22,7 +22,7 @@ import {
   formatPhp,
   type CareerCategory,
 } from "@/lib/data/career-paths";
-import { getStarterQuests } from "@/lib/data/quest-templates";
+import { getStarterQuests, getAllQuests } from "@/lib/data/quest-templates";
 import { Logo } from "@/components/brand/Logo";
 
 const GOAL_OPTIONS = [
@@ -507,6 +507,50 @@ export default function Onboarding() {
                 <div className="text-center py-12">
                   <p className="text-slate-400 text-sm">No paths match your search.</p>
                 </div>
+              )}
+
+              {/* Quest preview when path is selected */}
+              {selectedPath && selectedPathData && (
+                <motion.div
+                  initial={{ opacity: 0, y: 12 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.4 }}
+                  className="mt-8 relative overflow-hidden rounded-2xl border border-white/[0.08] bg-gradient-to-br from-white/[0.04] to-transparent p-5"
+                >
+                  <div
+                    className="absolute -top-12 -right-12 w-32 h-32 rounded-full opacity-20"
+                    style={{ background: `radial-gradient(circle, ${selectedPathData.accentColor}, transparent 70%)` }}
+                  />
+                  <div className="relative">
+                    <div className="flex items-center gap-2 mb-3">
+                      <Sparkles size={12} className="text-indigo-300" />
+                      <span className="text-[10px] uppercase tracking-wider text-slate-400 font-semibold">
+                        First quests waiting for you
+                      </span>
+                    </div>
+                    <div className="grid sm:grid-cols-3 gap-2">
+                      {getStarterQuests(selectedPath, 3).map((q, i) => (
+                        <div
+                          key={i}
+                          className="p-3 rounded-xl bg-white/[0.02] border border-white/[0.06]"
+                        >
+                          <div className="text-xs font-semibold mb-1 line-clamp-1">{q.title}</div>
+                          <div className="flex items-center gap-2 text-[10px]">
+                            <span className="text-indigo-300 font-semibold">+{q.xp_reward} XP</span>
+                            {q.time_estimate_minutes && (
+                              <span className="text-slate-500">
+                                {q.time_estimate_minutes < 60 ? `${q.time_estimate_minutes}m` : `${Math.round(q.time_estimate_minutes / 60)}h`}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                    <p className="text-[10px] text-slate-500 mt-3 text-center">
+                      + {Math.max(0, getAllQuests(selectedPath).length - 3)} more curated quests in this path
+                    </p>
+                  </div>
+                </motion.div>
               )}
             </motion.div>
           )}

@@ -16,9 +16,12 @@ import {
   Mail,
   Sparkles,
   ArrowRight,
+  Share2,
+  Copy,
 } from "lucide-react";
 import Link from "next/link";
 import { CAREER_PATHS, formatPhp } from "@/lib/data/career-paths";
+import { PageShimmer } from "@/components/ui/Shimmer";
 
 interface Profile {
   id: string;
@@ -100,11 +103,7 @@ export default function Settings() {
   };
 
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="w-8 h-8 rounded-full border-2 border-white/10 border-t-white/60 animate-spin" />
-      </div>
-    );
+    return <PageShimmer />;
   }
 
   if (!profile) return null;
@@ -294,6 +293,55 @@ export default function Settings() {
             </div>
           </div>
         </motion.section>
+
+        {/* Public Profile / Share */}
+        {profile.username && (
+          <motion.section
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.125 }}
+            className="rounded-2xl border border-white/[0.06] bg-white/[0.02] overflow-hidden"
+          >
+            <div className="px-6 py-4 border-b border-white/[0.06] flex items-center gap-2">
+              <Share2 size={14} className="text-slate-400" />
+              <h2 className="text-sm font-semibold uppercase tracking-wider text-slate-300">
+                Public Profile
+              </h2>
+            </div>
+            <div className="p-6 space-y-4">
+              <p className="text-sm text-slate-400">
+                Your public profile shows your level, rank, projects, and achievements. Share the
+                link with recruiters or post on LinkedIn.
+              </p>
+
+              <div className="flex items-center gap-2 p-3 rounded-lg bg-white/[0.02] border border-white/[0.06]">
+                <code className="flex-1 text-xs text-slate-300 truncate font-mono">
+                  {typeof window !== "undefined" ? window.location.origin : ""}/u/{profile.username}
+                </code>
+                <button
+                  onClick={() => {
+                    if (typeof window !== "undefined") {
+                      navigator.clipboard.writeText(`${window.location.origin}/u/${profile.username}`);
+                      toast.success("Link copied");
+                    }
+                  }}
+                  className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-white/[0.04] border border-white/[0.06] text-xs font-medium text-slate-300 hover:bg-white/[0.06] transition-colors flex-shrink-0"
+                >
+                  <Copy size={11} />
+                  Copy
+                </button>
+                <Link
+                  href={`/u/${profile.username}`}
+                  target="_blank"
+                  className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-white/[0.04] border border-white/[0.06] text-xs font-medium text-slate-300 hover:bg-white/[0.06] transition-colors flex-shrink-0"
+                >
+                  <ArrowRight size={11} />
+                  Open
+                </Link>
+              </div>
+            </div>
+          </motion.section>
+        )}
 
         {/* Subscription */}
         <motion.section

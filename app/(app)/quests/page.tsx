@@ -25,6 +25,7 @@ import {
   awardAchievements,
 } from "@/lib/gamification/progression";
 import { getAllQuests } from "@/lib/data/quest-templates";
+import { QuestListShimmer } from "@/components/ui/Shimmer";
 
 interface Quest {
   id: string;
@@ -318,8 +319,12 @@ export default function Quests() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="w-8 h-8 rounded-full border-2 border-white/10 border-t-white/60 animate-spin" />
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-10 space-y-8">
+        <div className="space-y-3">
+          <div className="w-24 h-5 bg-white/[0.04] rounded-md animate-pulse" />
+          <div className="w-64 h-9 bg-white/[0.04] rounded-md animate-pulse" />
+        </div>
+        <QuestListShimmer />
       </div>
     );
   }
