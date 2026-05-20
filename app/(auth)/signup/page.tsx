@@ -7,6 +7,7 @@ import { createClient } from "@/lib/supabase/client";
 import toast from "react-hot-toast";
 import Link from "next/link";
 import { Logo } from "@/components/brand/Logo";
+import { track } from "@/lib/analytics/track";
 import {
   AlertCircle,
   Mail,
@@ -202,6 +203,8 @@ export default function SignUp() {
       // Check if email confirmation is required
       if (data.session) {
         console.log("[signup] success with session - redirecting to /onboarding");
+        // Track signup event (fire-and-forget)
+        track(supabase, data.user.id, "signup", { payload: { username, email } });
         toast.success("Welcome to PathForge");
         // Hard navigation ensures cookies are fully established
         window.location.href = "/onboarding";

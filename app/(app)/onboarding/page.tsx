@@ -24,6 +24,7 @@ import {
 } from "@/lib/data/career-paths";
 import { getStarterQuests, getAllQuests } from "@/lib/data/quest-templates";
 import { Logo } from "@/components/brand/Logo";
+import { track } from "@/lib/analytics/track";
 
 const GOAL_OPTIONS = [
   { value: "land_first_job", label: "Land my first job", emoji: "🚀" },
@@ -221,6 +222,17 @@ export default function Onboarding() {
           console.error("Quest seeding failed (non-fatal):", seedErr);
         }
       }
+
+      // Track the event
+      track(supabase, user.id, isPathChanged ? "onboarding_changed_path" : "onboarding_completed", {
+        payload: {
+          career_path_id: selectedPath,
+          career_path_title: selectedPathData?.title,
+          timeline_months: timeline,
+          weekly_hours: availability,
+          primary_goal: primaryGoal,
+        },
+      });
 
       if (isPathChanged) {
         toast.success(`Path changed. ${changesRemaining - 1} change${changesRemaining - 1 === 1 ? "" : "s"} remaining.`);

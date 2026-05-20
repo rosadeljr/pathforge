@@ -23,6 +23,7 @@ interface Profile {
   current_xp: number;
   total_xp: number;
   streak_count: number;
+  is_admin?: boolean;
 }
 
 const navLinks = [
@@ -69,7 +70,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         // Load profile (non-blocking)
         supabase
           .from("profiles")
-          .select("username, current_level, current_xp, total_xp, streak_count")
+          .select("username, current_level, current_xp, total_xp, streak_count, is_admin")
           .eq("id", session.user.id)
           .single()
           .then(({ data }) => {
@@ -268,7 +269,19 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             </nav>
 
             {/* Footer */}
-            <div className="px-3 py-4 border-t border-white/[0.06]">
+            <div className="px-3 py-4 border-t border-white/[0.06] space-y-0.5">
+              {profile?.is_admin && (
+                <Link
+                  href="/admin"
+                  className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-rose-300 hover:bg-rose-500/[0.06] hover:text-rose-200 transition-all"
+                >
+                  <Sparkles size={17} strokeWidth={2} />
+                  <span className="font-medium">Admin</span>
+                  <span className="ml-auto text-[9px] font-bold tracking-wider px-1.5 py-0.5 rounded bg-rose-500/15 text-rose-300 border border-rose-500/30">
+                    STAFF
+                  </span>
+                </Link>
+              )}
               <button
                 onClick={handleSignOut}
                 className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-slate-400 hover:bg-white/[0.03] hover:text-white transition-all"

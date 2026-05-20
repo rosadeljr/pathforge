@@ -26,6 +26,7 @@ import {
 } from "@/lib/gamification/progression";
 import { getAllQuests } from "@/lib/data/quest-templates";
 import { QuestListShimmer } from "@/components/ui/Shimmer";
+import { track } from "@/lib/analytics/track";
 
 interface Quest {
   id: string;
@@ -232,7 +233,32 @@ export default function Quests() {
         }, 1500 + i * 500);
       });
 
-      // 9. Optimistic UI update
+      // 9. Track events
+      track(supabase, userId, "quest_completed", {
+        payload: {
+          quest_id: questId,
+          title: quest.title,
+          difficulty: quest.difficulty,
+          skill_tag: quest.skill_tag,
+        },
+        xpDelta: baseXp + bonusXp,
+      });
+      if (finalLevelInfo.level > profile.current_level) {
+        track(supabase, userId, "level_up", {
+          payload: { from: profile.current_level, to: finalLevelInfo.level },
+        });
+      }
+      if (streakResult?.isNewMilestone) {
+        track(supabase, userId, "streak_milestone", { payload: { streak: newStreak } });
+      }
+      newlyUnlocked.forEach((a) =>
+        track(supabase, userId, "achievement_unlocked", {
+          payload: { id: a.id, title: a.title },
+          xpDelta: a.xpBonus,
+        })
+      );
+
+      // 10. Optimistic UI update
       setQuests(quests.filter((q) => q.id !== questId));
       setCompletedQuests([{ ...quest, status: "completed" }, ...completedQuests].slice(0, 5));
     } catch (error: any) {
