@@ -202,7 +202,7 @@ export default function Landing() {
               <div>
                 <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/[0.04] border border-white/[0.08] mb-4">
                   <Sparkles size={11} className="text-indigo-400" />
-                  <span className="text-xs font-medium text-slate-300 tracking-wide">Solo Leveling-inspired</span>
+                  <span className="text-xs font-medium text-slate-300 tracking-wide">8-tier rank system</span>
                 </div>
                 <h2 className="text-3xl sm:text-4xl font-semibold tracking-tight mb-4">
                   Your career, ranked.
@@ -449,7 +449,7 @@ export default function Landing() {
       {/* Footer */}
       <footer className="relative z-10 border-t border-white/[0.06] bg-[#070710]">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-14">
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-10 mb-12">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-10 mb-12">
             {/* Brand */}
             <div>
               <Link href="/" className="inline-flex items-center gap-2.5 mb-4">
@@ -497,31 +497,6 @@ export default function Landing() {
               </ul>
             </div>
 
-            {/* Company */}
-            <div>
-              <h4 className="text-xs font-semibold text-slate-300 uppercase tracking-wider mb-4">
-                Company
-              </h4>
-              <ul className="space-y-2.5 text-sm">
-                <li>
-                  <a
-                    href="mailto:hello@pathforge.app"
-                    className="text-slate-400 hover:text-white transition-colors"
-                  >
-                    Contact
-                  </a>
-                </li>
-                <li>
-                  <a
-                    href="mailto:support@pathforge.app"
-                    className="text-slate-400 hover:text-white transition-colors"
-                  >
-                    Support
-                  </a>
-                </li>
-              </ul>
-            </div>
-
             {/* Legal */}
             <div>
               <h4 className="text-xs font-semibold text-slate-300 uppercase tracking-wider mb-4">
@@ -536,6 +511,11 @@ export default function Landing() {
                 <li>
                   <Link href="/privacy" className="text-slate-400 hover:text-white transition-colors">
                     Privacy Policy
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/cookies" className="text-slate-400 hover:text-white transition-colors">
+                    Cookie Policy
                   </Link>
                 </li>
                 <li>
@@ -564,7 +544,7 @@ export default function Landing() {
                 DTI Registered · Philippines
               </span>
               <span>·</span>
-              <span>Made with ❤️ in PH</span>
+              <span>NPC-compliant</span>
             </div>
           </div>
         </div>
