@@ -335,7 +335,7 @@ export default function Landing() {
               {
                 icon: Globe2,
                 title: "Remote-First Roles",
-                description: "16+ paths including VA, Copywriter, Customer Success — built for USD income from PH.",
+                description: "16 paths including VA, Copywriter, Customer Success — built for global remote work and freelance income.",
                 accent: "#06b6d4",
               },
               {
@@ -347,24 +347,39 @@ export default function Landing() {
             ].map((feature, i) => (
               <motion.div
                 key={i}
-                initial={{ opacity: 0, y: 12 }}
+                initial={{ opacity: 0, y: 16 }}
                 whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: i * 0.05 }}
-                className="group relative overflow-hidden p-5 rounded-2xl border border-white/[0.06] bg-white/[0.02] hover:bg-white/[0.04] hover:border-white/[0.12] transition-all"
+                viewport={{ once: true, margin: "-50px" }}
+                transition={{ duration: 0.6, delay: i * 0.06, ease: [0.16, 1, 0.3, 1] }}
+                whileHover={{ y: -4, scale: 1.01 }}
+                className="group relative overflow-hidden p-5 rounded-2xl border border-white/[0.06] bg-white/[0.02] hover:bg-white/[0.04] hover:border-white/[0.16] transition-all cursor-default"
+                style={{
+                  transition: "border-color 0.3s, background-color 0.3s",
+                }}
               >
                 <div
-                  className="absolute -top-12 -right-12 w-32 h-32 rounded-full opacity-10 group-hover:opacity-20 transition-opacity"
+                  className="absolute -top-12 -right-12 w-32 h-32 rounded-full opacity-10 group-hover:opacity-30 transition-opacity duration-500"
                   style={{ background: `radial-gradient(circle, ${feature.accent}, transparent 70%)` }}
                 />
+                {/* Animated border glow on hover */}
+                <div
+                  className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
+                  style={{
+                    background: `radial-gradient(400px circle at var(--mx, 50%) var(--my, 50%), ${feature.accent}10, transparent 40%)`,
+                  }}
+                />
                 <div className="relative">
-                  <div
+                  <motion.div
+                    whileHover={{ rotate: -6, scale: 1.08 }}
+                    transition={{ type: "spring", stiffness: 300, damping: 15 }}
                     className="w-10 h-10 rounded-xl flex items-center justify-center mb-4"
-                    style={{ background: `${feature.accent}15`, color: feature.accent }}
+                    style={{ background: `${feature.accent}15`, color: feature.accent, boxShadow: `0 0 24px ${feature.accent}10` }}
                   >
                     <feature.icon size={18} />
-                  </div>
-                  <h3 className="text-base font-semibold mb-2">{feature.title}</h3>
+                  </motion.div>
+                  <h3 className="text-base font-semibold mb-2 group-hover:text-white transition-colors">
+                    {feature.title}
+                  </h3>
                   <p className="text-sm text-slate-400 leading-relaxed">{feature.description}</p>
                 </div>
               </motion.div>
@@ -396,7 +411,7 @@ export default function Landing() {
               {
                 step: "01",
                 title: "Pick your path",
-                description: "Choose from 16+ careers — Software, AI, VA, Content Creator, and more.",
+                description: "Choose from 16 careers — Software, AI, VA, Content Creator, and more.",
               },
               {
                 step: "02",
