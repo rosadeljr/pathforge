@@ -115,7 +115,7 @@ export default function Landing() {
               <div className="absolute inset-0 w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping opacity-50" />
             </div>
             <span className="text-xs font-medium text-slate-300 tracking-wide">
-              Built for ambitious Filipinos
+              Built for the ambitious
             </span>
           </motion.div>
 
@@ -150,7 +150,7 @@ export default function Landing() {
             className="text-balance text-lg sm:text-xl text-slate-400 max-w-2xl mx-auto mb-10 leading-relaxed"
           >
             Personalized roadmaps, daily quests, and an AI mentor — all in one workspace.
-            Built for the next generation of remote Filipino talent.
+            Built for the next generation of remote talent — anywhere in the world.
           </motion.p>
 
           {/* CTAs */}
@@ -457,8 +457,8 @@ export default function Landing() {
                 <span className="text-base font-semibold tracking-tight">PathForge</span>
               </Link>
               <p className="text-xs text-slate-500 leading-relaxed mb-4 max-w-xs">
-                The career operating system built for ambitious Filipinos and the Gen Z
-                freelance economy.
+                The career operating system for the ambitious — built in the Philippines,
+                made for the world.
               </p>
               <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-md bg-white/[0.04] border border-white/[0.08]">
                 <div className="w-1.5 h-1.5 rounded-full bg-emerald-400" />

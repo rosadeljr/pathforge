@@ -542,7 +542,7 @@ export default function SignUp() {
           >
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/[0.04] border border-white/[0.06] mb-6">
               <div className="w-1.5 h-1.5 rounded-full bg-purple-400" />
-              <span className="text-xs font-medium text-slate-300 tracking-wide">For ambitious Filipinos</span>
+              <span className="text-xs font-medium text-slate-300 tracking-wide">For the ambitious</span>
             </div>
 
             <h1 className="text-5xl xl:text-6xl font-semibold tracking-tight leading-[1.05] mb-6">

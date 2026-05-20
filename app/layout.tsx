@@ -11,11 +11,11 @@ const inter = Inter({
 export const metadata = {
   title: "PathForge — Forge the career you actually want",
   description:
-    "Personalized roadmaps, daily quests, and an AI mentor. Built for ambitious Filipinos and the Gen Z freelance economy.",
+    "Personalized roadmaps, daily quests, and an AI mentor. Built for the ambitious — anywhere in the world.",
   openGraph: {
     title: "PathForge — Forge the career you actually want",
     description:
-      "Personalized roadmaps, daily quests, and an AI mentor. Built for ambitious Filipinos.",
+      "Personalized roadmaps, daily quests, and an AI mentor. Built for the ambitious.",
     siteName: "PathForge",
   },
 };

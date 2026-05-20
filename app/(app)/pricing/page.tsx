@@ -85,8 +85,8 @@ const FAQS = [
     a: "Anytime. We don't lock you in. If you cancel, you keep your account and progress — you just lose Pro/Elite features.",
   },
   {
-    q: "How does PathForge work for Filipino users?",
-    a: "Built for it. Salary ranges in PHP, remote-friendly career paths (VA, Copywriter, Customer Success), and quests designed for the PH freelance economy.",
+    q: "Who is PathForge for?",
+    a: "Designed with the global remote economy in mind. Salary ranges shown in PHP for the PH market, plus remote-friendly career paths (VA, Copywriter, Customer Success) that work from anywhere.",
   },
   {
     q: "Do I need to know how to code?",
