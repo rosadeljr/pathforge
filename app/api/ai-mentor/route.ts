@@ -1,11 +1,18 @@
 import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
-import { OpenAI } from "openai";
+import { generateMentorReply } from "@/lib/ai/smart-mentor";
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
-
+/**
+ * AI Mentor endpoint.
+ *
+ * Strategy:
+ * - Always works, even without OPENAI_API_KEY.
+ * - If OPENAI_API_KEY is set, uses GPT for free-form responses.
+ * - If not (or OpenAI errors), falls back to smart pattern-matching
+ *   that uses the user's actual context (career path, quests, level, streak).
+ *
+ * Never throws to the client. Always returns a usable reply.
+ */
 export async function POST(request: Request) {
   try {
     const supabase = await createClient();
@@ -15,116 +22,120 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { message } = await request.json();
-
-    if (!message || typeof message !== "string") {
-      return NextResponse.json(
-        { error: "Message is required" },
-        { status: 400 }
-      );
+    let body: any;
+    try {
+      body = await request.json();
+    } catch {
+      return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
     }
 
-    // Get user context for better responses
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("*")
-      .eq("id", user.id)
-      .single();
+    const message: string = (body?.message || "").toString().trim();
+    if (!message) {
+      return NextResponse.json({ error: "Message is required" }, { status: 400 });
+    }
 
-    const { data: quests } = await supabase
-      .from("quests")
-      .select("*")
-      .eq("user_id", user.id)
-      .eq("status", "active");
+    // Load context — use maybeSingle so missing profile doesn't crash
+    const [{ data: profile }, { data: activeQuests }, { count: completedCount }] = await Promise.all([
+      supabase
+        .from("profiles")
+        .select("current_level, total_xp, streak_count, readiness_score, selected_career_path_id")
+        .eq("id", user.id)
+        .maybeSingle(),
+      supabase
+        .from("quests")
+        .select("title, difficulty, skill_tag")
+        .eq("user_id", user.id)
+        .eq("status", "active")
+        .order("difficulty", { ascending: true })
+        .limit(5),
+      supabase
+        .from("quests")
+        .select("id", { count: "exact", head: true })
+        .eq("user_id", user.id)
+        .eq("status", "completed"),
+    ]);
 
-    // Save user message
-    await supabase.from("ai_messages").insert({
-      user_id: user.id,
-      role: "user",
-      content: message,
-    });
+    const ctx = {
+      level: profile?.current_level || 1,
+      totalXp: profile?.total_xp || 0,
+      streak: profile?.streak_count || 0,
+      readinessScore: profile?.readiness_score || 0,
+      selectedCareerPathId: profile?.selected_career_path_id || null,
+      activeQuests: (activeQuests || []).map((q: any) => ({
+        title: q.title,
+        difficulty: q.difficulty,
+        skill_tag: q.skill_tag,
+      })),
+      completedCount: completedCount || 0,
+    };
 
-    // Build context-aware prompt
-    const systemPrompt = `You are PathForge's AI Mentor - a supportive career coach helping users on their journey to becoming ${profile?.selected_career_path_id ? "a professional" : "career-ready"}. 
-
-User Context:
-- Level: ${profile?.current_level || 1}
-- XP: ${profile?.total_xp || 0}
-- Streak: ${profile?.streak_count || 0} days
-- Readiness Score: ${profile?.readiness_score || 0}%
-- Active Quests: ${quests?.length || 0}
-
-Your role:
-1. Provide personalized career advice based on their progress
-2. Motivate and encourage consistency
-3. Suggest next best actions for skill building
-4. Help with career strategy and planning
-5. Be supportive but direct - focus on real-world value
-
-Keep responses concise (2-3 sentences) and actionable. Focus on what they should do next.`;
-
-    // Call OpenAI API
-    let aiResponse = "";
-    
+    // Try OpenAI first if configured
+    let aiReply: string | null = null;
     if (process.env.OPENAI_API_KEY) {
-      const completion = await openai.chat.completions.create({
-        model: "gpt-3.5-turbo",
-        messages: [
-          {
-            role: "system",
-            content: systemPrompt,
-          },
-          {
-            role: "user",
-            content: message,
-          },
-        ],
-        temperature: 0.7,
-        max_tokens: 200,
-      });
+      try {
+        const { OpenAI } = await import("openai");
+        const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
-      aiResponse =
-        completion.choices[0]?.message?.content ||
-        "I'm here to help! What would you like to work on?";
-    } else {
-      // Fallback if no API key
-      const responses = [
-        `Great question! Based on your current level (${profile?.current_level}), I'd focus on completing more quests to build momentum.`,
-        `Your ${profile?.streak_count}-day streak shows great consistency! Keep it up and you'll reach your goal faster.`,
-        `To improve your readiness score to ${Math.min(profile?.readiness_score + 10, 100)}%, focus on shipping portfolio projects.`,
-        `You're making solid progress! The next milestone is reaching level ${(profile?.current_level || 1) + 5}.`,
-        `Your commitment is impressive. Let's keep building real skills with tangible portfolio proof.`,
-      ];
-      aiResponse = responses[Math.floor(Math.random() * responses.length)];
+        const systemPrompt = `You are PathForge's mentor — a no-fluff career coach for ambitious Filipinos and Gen Z. Be direct, specific, and warm.
+
+User context:
+- Level ${ctx.level}, ${ctx.totalXp} total XP
+- ${ctx.streak}-day streak (longest goal-setting signal)
+- Readiness: ${ctx.readinessScore}%
+- Career path: ${ctx.selectedCareerPathId || "not yet chosen"}
+- Active quests: ${ctx.activeQuests.map((q) => q.title).join(", ") || "none"}
+- Completed quests: ${ctx.completedCount}
+
+Rules:
+- 2-4 sentences max. Plain language. No corporate-speak.
+- Reference their actual context (level, quests, streak)
+- Give ONE specific next action they can do today
+- Tone: warm but direct. Like a friend who's been there.`;
+
+        const completion = await openai.chat.completions.create({
+          model: "gpt-4o-mini",
+          messages: [
+            { role: "system", content: systemPrompt },
+            { role: "user", content: message },
+          ],
+          temperature: 0.7,
+          max_tokens: 250,
+        });
+
+        aiReply = completion.choices[0]?.message?.content?.trim() || null;
+      } catch (openaiErr) {
+        console.warn("[ai-mentor] OpenAI failed, falling back:", openaiErr);
+      }
     }
 
-    // Save AI response
-    const { error: saveError } = await supabase.from("ai_messages").insert({
-      user_id: user.id,
-      role: "assistant",
-      content: aiResponse,
-    });
+    // Fallback to smart mentor if OpenAI not available or failed
+    const smart = generateMentorReply(message, ctx);
+    const reply = aiReply || smart.reply;
+    const suggestedActions = smart.suggestedActions;
 
-    if (saveError) throw saveError;
+    // Save messages (non-fatal — never block the response)
+    try {
+      await supabase.from("ai_messages").insert([
+        { user_id: user.id, role: "user", content: message },
+        { user_id: user.id, role: "assistant", content: reply },
+      ]);
+    } catch (saveErr) {
+      console.warn("[ai-mentor] Save failed (non-fatal):", saveErr);
+    }
 
-    return NextResponse.json({
-      reply: aiResponse,
-      suggestedActions: [
-        "Complete a quest",
-        "Add portfolio project",
-        "Check skill progress",
-      ],
-    });
+    return NextResponse.json({ reply, suggestedActions });
   } catch (error: any) {
-    console.error("AI Mentor error:", error);
-    return NextResponse.json(
-      { error: error.message || "Failed to get response" },
-      { status: 500 }
-    );
+    console.error("[ai-mentor] Unexpected error:", error);
+    // Last-resort fallback — even an unexpected error returns something useful
+    return NextResponse.json({
+      reply:
+        "I'm having trouble right now. Try refreshing, or check your Quests page for what to work on next — that's usually the right move.",
+      suggestedActions: ["Refresh and try again", "Go to quests"],
+    });
   }
 }
 
-export async function GET(request: Request) {
+export async function GET(_request: Request) {
   try {
     const supabase = await createClient();
     const { data: { user }, error: authError } = await supabase.auth.getUser();
@@ -133,18 +144,21 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { data: messages } = await supabase
+    const { data: messages, error } = await supabase
       .from("ai_messages")
       .select("*")
       .eq("user_id", user.id)
       .order("created_at", { ascending: true })
       .limit(50);
 
-    return NextResponse.json({ messages });
+    if (error) {
+      console.warn("[ai-mentor] History load failed:", error);
+      return NextResponse.json({ messages: [] });
+    }
+
+    return NextResponse.json({ messages: messages || [] });
   } catch (error: any) {
-    return NextResponse.json(
-      { error: error.message },
-      { status: 500 }
-    );
+    console.warn("[ai-mentor] History error:", error);
+    return NextResponse.json({ messages: [] });
   }
 }

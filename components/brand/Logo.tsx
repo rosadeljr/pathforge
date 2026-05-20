@@ -1,19 +1,17 @@
 /**
- * PathForge brand mark.
- * Geometric crystalline diamond with an upward chevron — represents
- * forging upward through paths. Distinctive, scalable, premium.
+ * PathForge brand mark — refined.
+ *
+ * Concept: A forged angular shield containing an upward path.
+ * The outer shape is sharper and more sophisticated than a plain diamond,
+ * with a subtle inner shadow that suggests forged metal depth.
+ *
+ * Looks like a premium logo at any size from 16px to 256px.
  */
 import { cn } from "@/lib/utils/cn";
 
 interface LogoProps {
   size?: number;
   className?: string;
-  /**
-   * Variant controls fill style.
-   * - "gradient" (default): indigo→purple→pink gradient
-   * - "mono": single white/current color
-   * - "outlined": transparent fill with stroke
-   */
   variant?: "gradient" | "mono" | "outlined";
   showWordmark?: boolean;
   wordmarkClassName?: string;
@@ -26,72 +24,99 @@ export function Logo({
   showWordmark = false,
   wordmarkClassName,
 }: LogoProps) {
-  const gradientId = "pf-logo-gradient";
+  const gid = "pf-grad";
+  const giid = "pf-grad-inner";
+  const shadowId = "pf-shadow";
 
   return (
     <div className={cn("inline-flex items-center gap-2.5", className)}>
       <svg
         width={size}
         height={size}
-        viewBox="0 0 32 32"
+        viewBox="0 0 40 40"
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
         className="flex-shrink-0"
       >
         {variant === "gradient" && (
           <defs>
-            <linearGradient id={gradientId} x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#6366f1" />
+            {/* Main gradient — indigo → purple → pink (brand) */}
+            <linearGradient id={gid} x1="20%" y1="0%" x2="80%" y2="100%">
+              <stop offset="0%" stopColor="#818cf8" />
               <stop offset="50%" stopColor="#a855f7" />
               <stop offset="100%" stopColor="#ec4899" />
             </linearGradient>
-            <linearGradient id={`${gradientId}-highlight`} x1="50%" y1="0%" x2="50%" y2="100%">
-              <stop offset="0%" stopColor="rgba(255,255,255,0.25)" />
-              <stop offset="100%" stopColor="rgba(255,255,255,0)" />
+            {/* Inner subtle gradient for the chevron — slight darker rose at bottom */}
+            <linearGradient id={giid} x1="50%" y1="0%" x2="50%" y2="100%">
+              <stop offset="0%" stopColor="rgba(255,255,255,0.95)" />
+              <stop offset="100%" stopColor="rgba(255,255,255,0.7)" />
             </linearGradient>
+            {/* Inner highlight (top edge) */}
+            <linearGradient id={`${gid}-light`} x1="50%" y1="0%" x2="50%" y2="100%">
+              <stop offset="0%" stopColor="rgba(255,255,255,0.35)" />
+              <stop offset="40%" stopColor="rgba(255,255,255,0)" />
+            </linearGradient>
+            {/* Soft shadow filter */}
+            <filter id={shadowId} x="-20%" y="-20%" width="140%" height="140%">
+              <feGaussianBlur in="SourceAlpha" stdDeviation="0.5" />
+              <feOffset dx="0" dy="0.5" result="offsetblur" />
+              <feComponentTransfer>
+                <feFuncA type="linear" slope="0.3" />
+              </feComponentTransfer>
+              <feMerge>
+                <feMergeNode />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
           </defs>
         )}
 
-        {/* Outer diamond */}
+        {/* Outer angular shield — refined hexagonal-diamond hybrid */}
         <path
-          d="M16 2 L30 16 L16 30 L2 16 Z"
+          d="M20 2.5
+             L34.5 11
+             L34.5 29
+             L20 37.5
+             L5.5 29
+             L5.5 11
+             Z"
           fill={
             variant === "gradient"
-              ? `url(#${gradientId})`
+              ? `url(#${gid})`
               : variant === "mono"
               ? "currentColor"
               : "none"
           }
           stroke={variant === "outlined" ? "currentColor" : "none"}
-          strokeWidth={variant === "outlined" ? 2 : 0}
+          strokeWidth={variant === "outlined" ? 2.5 : 0}
           strokeLinejoin="round"
         />
 
-        {/* Subtle top highlight for premium feel */}
+        {/* Top highlight to give it depth */}
         {variant === "gradient" && (
           <path
-            d="M16 2 L30 16 L16 16 Z"
-            fill={`url(#${gradientId}-highlight)`}
+            d="M20 2.5
+               L34.5 11
+               L20 19
+               L5.5 11
+               Z"
+            fill={`url(#${gid}-light)`}
           />
         )}
 
-        {/* Inner chevron (upward path) */}
-        <path
-          d="M8.5 18.5 L16 11 L23.5 18.5"
+        {/* Inner ascending chevron — the "path" */}
+        <g
+          fill="none"
           stroke={variant === "outlined" ? "currentColor" : "white"}
-          strokeWidth={2.5}
+          strokeWidth={2.8}
           strokeLinecap="round"
           strokeLinejoin="round"
-          fill="none"
-        />
-
-        {/* Vertical spine */}
-        <path
-          d="M16 11 L16 22.5"
-          stroke={variant === "outlined" ? "currentColor" : "white"}
-          strokeWidth={2.5}
-          strokeLinecap="round"
-        />
+        >
+          {/* Upper chevron (the peak) */}
+          <path d="M12 23 L20 14 L28 23" />
+          {/* Lower chevron (echoes upward motion) */}
+          <path d="M14.5 28.5 L20 23 L25.5 28.5" opacity="0.55" />
+        </g>
       </svg>
 
       {showWordmark && (

@@ -15,30 +15,52 @@ import {
 } from "lucide-react";
 import { Logo } from "@/components/brand/Logo";
 import { PrimaryLinkButton } from "@/components/ui/PrimaryButton";
+import { HeroPreview } from "@/components/landing/HeroPreview";
 
 export default function Landing() {
   return (
     <div className="min-h-screen bg-[#0a0a0f] text-white relative overflow-hidden">
-      {/* Ambient background */}
+      {/* Ambient background — refined for premium feel */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        {/* Top center spotlight */}
         <div
-          className="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[600px] rounded-full opacity-30"
-          style={{ background: "radial-gradient(ellipse, rgba(99,102,241,0.3), transparent 70%)" }}
+          className="absolute top-0 left-1/2 -translate-x-1/2 w-[1200px] h-[700px] rounded-full opacity-40"
+          style={{ background: "radial-gradient(ellipse at top, rgba(99,102,241,0.4), rgba(168,85,247,0.15), transparent 70%)" }}
         />
+        {/* Left edge violet */}
         <div
-          className="absolute top-1/3 -left-40 w-[500px] h-[500px] rounded-full opacity-20"
-          style={{ background: "radial-gradient(circle, rgba(168,85,247,0.4), transparent 70%)" }}
+          className="absolute top-1/4 -left-32 w-[500px] h-[500px] rounded-full opacity-25"
+          style={{ background: "radial-gradient(circle, rgba(168,85,247,0.5), transparent 70%)" }}
         />
+        {/* Right edge pink */}
         <div
-          className="absolute top-1/3 -right-40 w-[500px] h-[500px] rounded-full opacity-20"
-          style={{ background: "radial-gradient(circle, rgba(236,72,153,0.4), transparent 70%)" }}
+          className="absolute top-1/4 -right-32 w-[500px] h-[500px] rounded-full opacity-25"
+          style={{ background: "radial-gradient(circle, rgba(236,72,153,0.5), transparent 70%)" }}
         />
+        {/* Conic gradient accent (subtle prism effect) */}
+        <div
+          className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] opacity-[0.04]"
+          style={{
+            background:
+              "conic-gradient(from 90deg at 50% 50%, #6366f1, #a855f7, #ec4899, #f59e0b, #6366f1)",
+            filter: "blur(60px)",
+          }}
+        />
+        {/* Subtle grid */}
         <div
           className="absolute inset-0 opacity-[0.015]"
           style={{
             backgroundImage: `linear-gradient(rgba(255,255,255,1) 1px, transparent 1px),
                               linear-gradient(90deg, rgba(255,255,255,1) 1px, transparent 1px)`,
             backgroundSize: "64px 64px",
+          }}
+        />
+        {/* Vignette to focus attention center */}
+        <div
+          className="absolute inset-0"
+          style={{
+            background:
+              "radial-gradient(ellipse at center, transparent 0%, rgba(0,0,0,0.5) 100%)",
           }}
         />
       </div>
@@ -79,48 +101,64 @@ export default function Landing() {
       </nav>
 
       {/* Hero */}
-      <section className="relative z-10 pt-20 lg:pt-32 pb-24">
+      <section className="relative z-10 pt-20 lg:pt-28 pb-16 lg:pb-24">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          {/* Eyebrow */}
           <motion.div
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
-            className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/[0.04] border border-white/[0.08] mb-6"
+            className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/[0.04] border border-white/[0.08] mb-7 shadow-lg shadow-black/40"
           >
-            <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+            <div className="relative">
+              <div className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+              <div className="absolute inset-0 w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping opacity-50" />
+            </div>
             <span className="text-xs font-medium text-slate-300 tracking-wide">
               Built for ambitious Filipinos
             </span>
           </motion.div>
 
+          {/* Headline */}
           <motion.h1
-            initial={{ opacity: 0, y: 16 }}
+            initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, delay: 0.05 }}
-            className="text-5xl sm:text-6xl lg:text-7xl font-semibold tracking-tight leading-[1.05] max-w-4xl mx-auto mb-6"
+            transition={{ duration: 0.8, delay: 0.05, ease: [0.16, 1, 0.3, 1] }}
+            className="font-display text-balance text-5xl sm:text-6xl lg:text-7xl xl:text-[5.5rem] font-semibold tracking-tighter leading-[1.02] max-w-5xl mx-auto mb-7"
           >
-            Forge the career
+            <span className="text-white">Forge the career</span>
             <br />
-            <span className="bg-gradient-to-r from-indigo-300 via-purple-300 to-pink-300 bg-clip-text text-transparent">
-              you actually want.
+            <span className="relative inline-block">
+              <span className="bg-gradient-to-r from-indigo-300 via-purple-300 to-pink-300 bg-clip-text text-transparent">
+                you actually want.
+              </span>
+              {/* Subtle glow under the gradient text */}
+              <span
+                aria-hidden
+                className="absolute inset-0 blur-2xl opacity-40 bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 bg-clip-text text-transparent"
+              >
+                you actually want.
+              </span>
             </span>
           </motion.h1>
 
+          {/* Subtitle */}
           <motion.p
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, delay: 0.1 }}
-            className="text-lg text-slate-400 max-w-2xl mx-auto mb-10 leading-relaxed"
+            transition={{ duration: 0.7, delay: 0.15 }}
+            className="text-balance text-lg sm:text-xl text-slate-400 max-w-2xl mx-auto mb-10 leading-relaxed"
           >
-            Personalized roadmaps, daily quests, and an AI mentor — all in one place.
-            Built for Gen Z and the PH freelance economy.
+            Personalized roadmaps, daily quests, and an AI mentor — all in one workspace.
+            Built for the next generation of remote Filipino talent.
           </motion.p>
 
+          {/* CTAs */}
           <motion.div
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, delay: 0.15 }}
-            className="flex flex-col sm:flex-row items-center justify-center gap-3"
+            transition={{ duration: 0.7, delay: 0.2 }}
+            className="flex flex-col sm:flex-row items-center justify-center gap-3 mb-6"
           >
             <PrimaryLinkButton href="/signup" size="lg">
               Start your path — free
@@ -128,33 +166,32 @@ export default function Landing() {
             </PrimaryLinkButton>
             <Link
               href="#how-it-works"
-              className="inline-flex items-center gap-2 px-5 py-3 rounded-lg text-sm font-medium text-slate-300 hover:text-white border border-white/[0.08] hover:border-white/[0.16] hover:bg-white/[0.03] transition-all"
+              className="inline-flex items-center gap-2 px-5 py-3 rounded-xl text-sm font-medium text-slate-300 hover:text-white border border-white/[0.08] hover:border-white/[0.16] hover:bg-white/[0.03] transition-all"
             >
               See how it works
             </Link>
           </motion.div>
 
-          {/* Trust strip */}
-          <motion.div
+          {/* Trust micro */}
+          <motion.p
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ duration: 0.7, delay: 0.3 }}
-            className="mt-16 grid grid-cols-3 gap-8 max-w-2xl mx-auto"
+            transition={{ duration: 0.7, delay: 0.35 }}
+            className="text-xs text-slate-500"
           >
-            {[
-              { value: "16+", label: "Career paths" },
-              { value: "AI-powered", label: "Mentor & quests" },
-              { value: "100%", label: "Free to start" },
-            ].map((stat, i) => (
-              <div key={i}>
-                <div className="text-2xl sm:text-3xl font-semibold tracking-tight tabular-nums">
-                  {stat.value}
-                </div>
-                <div className="text-xs text-slate-500 mt-1">{stat.label}</div>
-              </div>
-            ))}
-          </motion.div>
+            Free forever · No credit card · Cancel anytime
+          </motion.p>
         </div>
+
+        {/* Live Product Preview Card (Hero visual) */}
+        <motion.div
+          initial={{ opacity: 0, y: 40 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 1, delay: 0.4, ease: [0.16, 1, 0.3, 1] }}
+          className="relative max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 mt-16 lg:mt-20"
+        >
+          <HeroPreview />
+        </motion.div>
       </section>
 
       {/* Product Preview - Rank Ladder */}
