@@ -113,12 +113,23 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
   const authenticated = authState === "authenticated";
 
-  // Show nothing during loading — prevents flash of unauthenticated UI
-  // and prevents the redirect-to-login from firing too early.
+  // Show shimmer during initial auth check
   if (authState === "loading") {
     return (
       <div className="min-h-screen bg-[#0a0a0f] flex items-center justify-center">
         <div className="w-8 h-8 rounded-full border-2 border-white/10 border-t-white/60 animate-spin" />
+      </div>
+    );
+  }
+
+  // Show redirect-in-progress state instead of flashing unauthenticated content
+  if (authState === "unauthenticated") {
+    return (
+      <div className="min-h-screen bg-[#0a0a0f] flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-8 h-8 rounded-full border-2 border-white/10 border-t-white/60 animate-spin mx-auto mb-3" />
+          <p className="text-xs text-slate-500">Redirecting to sign in…</p>
+        </div>
       </div>
     );
   }

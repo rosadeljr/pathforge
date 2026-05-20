@@ -128,9 +128,60 @@ export default function Dashboard() {
     return <PageShimmer />;
   }
 
-  if (!profile) return null;
-  // Don't render dashboard while redirecting to onboarding
-  if (!profile.selected_career_path_id) return null;
+  // Profile failed to load — show error with retry instead of blank screen
+  if (!profile) {
+    return (
+      <div className="max-w-md mx-auto px-4 sm:px-6 lg:px-8 py-12 text-center">
+        <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-rose-500/[0.08] border border-rose-500/30 mb-5">
+          <Sparkles size={22} className="text-rose-400" />
+        </div>
+        <h2 className="text-xl font-semibold tracking-tight mb-2">Couldn't load your profile</h2>
+        <p className="text-sm text-slate-400 mb-6">
+          This usually means your session expired or the database is unreachable.
+        </p>
+        <div className="flex items-center justify-center gap-2">
+          <button
+            onClick={() => window.location.reload()}
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-white text-slate-900 text-sm font-semibold hover:bg-slate-100 transition-colors"
+          >
+            Reload
+          </button>
+          <Link
+            href="/login"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-white/[0.08] text-sm font-medium text-slate-300 hover:bg-white/[0.03] transition-colors"
+          >
+            Sign in again
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  // Redirecting to onboarding — show a friendly loading state instead of blank
+  if (!profile.selected_career_path_id) {
+    return (
+      <div className="min-h-[80vh] flex items-center justify-center px-4">
+        <div className="text-center max-w-sm">
+          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-indigo-500/[0.08] border border-indigo-500/30 mb-5">
+            <Sparkles size={22} className="text-indigo-300" />
+          </div>
+          <h2 className="text-xl font-semibold tracking-tight mb-2">
+            Let's set up your path
+          </h2>
+          <p className="text-sm text-slate-400 mb-5">
+            One quick setup — career goals, then you're forging.
+          </p>
+          <Link
+            href="/onboarding"
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-white text-slate-900 text-sm font-semibold hover:bg-slate-100 transition-colors"
+          >
+            Start onboarding
+            <ArrowRight size={14} />
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   const username = profile.username || "Hunter";
   const level = profile.current_level;

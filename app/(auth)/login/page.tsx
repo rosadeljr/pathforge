@@ -193,9 +193,9 @@ export default function Login() {
             {/* Stats */}
             <div className="mt-12 grid grid-cols-3 gap-8 max-w-md">
               {[
-                { value: "10k+", label: "Career paths" },
-                { value: "98%", label: "Satisfaction" },
-                { value: "24/7", label: "AI mentor" },
+                { value: "16", label: "Career paths" },
+                { value: "60+", label: "Curated quests" },
+                { value: "Free", label: "To start" },
               ].map((stat, i) => (
                 <motion.div
                   key={i}
@@ -354,7 +354,7 @@ export default function Login() {
               <button
                 type="submit"
                 disabled={loading || configError}
-                className="group relative w-full py-2.5 rounded-lg font-medium text-sm bg-white text-slate-900 hover:bg-slate-100 active:bg-slate-200 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 flex items-center justify-center gap-2 shadow-lg shadow-white/5"
+                className="group relative w-full py-2.5 rounded-lg font-semibold text-sm text-white disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 flex items-center justify-center gap-2 overflow-hidden bg-[linear-gradient(110deg,#6366f1,#a855f7,#ec4899,#a855f7,#6366f1)] bg-[length:200%_100%] hover:bg-[position:100%_0] shadow-[0_8px_24px_-4px_rgba(99,102,241,0.4),inset_0_1px_0_rgba(255,255,255,0.15)] hover:shadow-[0_12px_32px_-4px_rgba(99,102,241,0.55),inset_0_1px_0_rgba(255,255,255,0.2)] active:scale-[0.98]"
               >
                 {loading ? (
                   <>

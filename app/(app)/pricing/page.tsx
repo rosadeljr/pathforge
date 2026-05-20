@@ -142,8 +142,7 @@ export default function Pricing() {
             </span>
           </h1>
           <p className="text-base text-slate-400 max-w-2xl mx-auto">
-            Most users get hired or land freelance work on Pro within the first 90 days.
-            Cancel anytime.
+            Start free. Upgrade only if PathForge becomes your edge. Cancel anytime.
           </p>
         </motion.div>
 

@@ -483,7 +483,7 @@ export default function SignUp() {
               <button
                 type="submit"
                 disabled={loading || configError}
-                className="group relative w-full py-2.5 mt-2 rounded-lg font-medium text-sm bg-white text-slate-900 hover:bg-slate-100 active:bg-slate-200 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 flex items-center justify-center gap-2 shadow-lg shadow-white/5"
+                className="group relative w-full py-2.5 mt-2 rounded-lg font-semibold text-sm text-white disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 flex items-center justify-center gap-2 overflow-hidden bg-[linear-gradient(110deg,#6366f1,#a855f7,#ec4899,#a855f7,#6366f1)] bg-[length:200%_100%] hover:bg-[position:100%_0] shadow-[0_8px_24px_-4px_rgba(99,102,241,0.4),inset_0_1px_0_rgba(255,255,255,0.15)] hover:shadow-[0_12px_32px_-4px_rgba(99,102,241,0.55),inset_0_1px_0_rgba(255,255,255,0.2)] active:scale-[0.98]"
               >
                 {loading ? (
                   <>
@@ -542,7 +542,7 @@ export default function SignUp() {
           >
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/[0.04] border border-white/[0.06] mb-6">
               <div className="w-1.5 h-1.5 rounded-full bg-purple-400" />
-              <span className="text-xs font-medium text-slate-300 tracking-wide">Join 10,000+ ambitious people</span>
+              <span className="text-xs font-medium text-slate-300 tracking-wide">For ambitious Filipinos</span>
             </div>
 
             <h1 className="text-5xl xl:text-6xl font-semibold tracking-tight leading-[1.05] mb-6">

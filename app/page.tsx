@@ -14,6 +14,7 @@ import {
   Check,
 } from "lucide-react";
 import { Logo } from "@/components/brand/Logo";
+import { PrimaryLinkButton } from "@/components/ui/PrimaryButton";
 
 export default function Landing() {
   return (
@@ -69,13 +70,10 @@ export default function Landing() {
             >
               Sign in
             </Link>
-            <Link
-              href="/signup"
-              className="inline-flex items-center gap-1.5 text-sm font-medium bg-white text-slate-900 hover:bg-slate-100 px-3.5 py-1.5 rounded-lg transition-colors"
-            >
+            <PrimaryLinkButton href="/signup" size="sm">
               Get started
               <ArrowRight size={12} />
-            </Link>
+            </PrimaryLinkButton>
           </div>
         </div>
       </nav>
@@ -124,13 +122,10 @@ export default function Landing() {
             transition={{ duration: 0.7, delay: 0.15 }}
             className="flex flex-col sm:flex-row items-center justify-center gap-3"
           >
-            <Link
-              href="/signup"
-              className="group inline-flex items-center gap-2 bg-white text-slate-900 hover:bg-slate-100 px-5 py-3 rounded-lg text-sm font-semibold transition-all shadow-2xl shadow-white/10"
-            >
+            <PrimaryLinkButton href="/signup" size="lg">
               Start your path — free
               <ArrowRight size={14} className="group-hover:translate-x-0.5 transition-transform" />
-            </Link>
+            </PrimaryLinkButton>
             <Link
               href="#how-it-works"
               className="inline-flex items-center gap-2 px-5 py-3 rounded-lg text-sm font-medium text-slate-300 hover:text-white border border-white/[0.08] hover:border-white/[0.16] hover:bg-white/[0.03] transition-all"
@@ -414,13 +409,10 @@ export default function Landing() {
               <p className="text-base text-slate-400 mb-8 max-w-md mx-auto">
                 Free to start. No credit card. Your first quest is waiting.
               </p>
-              <Link
-                href="/signup"
-                className="group inline-flex items-center gap-2 bg-white text-slate-900 hover:bg-slate-100 px-6 py-3 rounded-lg text-sm font-semibold transition-all shadow-2xl shadow-white/10"
-              >
+              <PrimaryLinkButton href="/signup" size="lg">
                 Create your account
                 <ArrowRight size={14} className="group-hover:translate-x-0.5 transition-transform" />
-              </Link>
+              </PrimaryLinkButton>
             </div>
           </motion.div>
         </div>

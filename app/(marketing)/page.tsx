@@ -84,7 +84,7 @@ export default function Landing() {
       {/* CTA */}
       <section className="max-w-4xl mx-auto px-4 py-20 text-center border-t border-slate-800">
         <h2 className="text-3xl font-bold mb-6">Ready to Forge Your Path?</h2>
-        <p className="text-slate-400 mb-8">Join thousands building real skills, real portfolios, and real careers.</p>
+        <p className="text-slate-400 mb-8">Build real skills, ship real projects, and forge a career that lasts.</p>
         <Link href="/signup" className="inline-block bg-gradient-to-r from-cyan-500 to-violet-600 hover:shadow-lg hover:shadow-cyan-500/50 text-slate-950 px-8 py-3 rounded-lg font-semibold transition-all">
           Start Your Free Journey →
         </Link>
