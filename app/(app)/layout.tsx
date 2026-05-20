@@ -14,8 +14,6 @@ import {
   Bot,
   Settings as SettingsIcon,
   LogOut,
-  Menu,
-  X,
   Sparkles,
 } from "lucide-react";
 
@@ -36,6 +34,15 @@ const navLinks = [
   { icon: SettingsIcon, label: "Settings", href: "/settings", description: "Preferences" },
 ];
 
+// Mobile bottom nav shows the 5 most-used routes
+const mobileNavLinks = [
+  { icon: LayoutDashboard, label: "Home", href: "/dashboard" },
+  { icon: Swords, label: "Quests", href: "/quests" },
+  { icon: Bot, label: "Mentor", href: "/mentor" },
+  { icon: Trophy, label: "Portfolio", href: "/portfolio" },
+  { icon: SettingsIcon, label: "Settings", href: "/settings" },
+];
+
 // Onboarding doesn't show the sidebar
 const FULLSCREEN_ROUTES = ["/onboarding"];
 
@@ -44,7 +51,6 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const [authState, setAuthState] = useState<"loading" | "authenticated" | "unauthenticated">("loading");
   const [profile, setProfile] = useState<Profile | null>(null);
-  const [mobileOpen, setMobileOpen] = useState(false);
 
   // createClient() is now a singleton — same instance across renders
   const supabase = createClient();
@@ -149,12 +155,25 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
               <Logo size={28} />
               <span className="font-semibold tracking-tight">PathForge</span>
             </Link>
-            <button
-              onClick={() => setMobileOpen(!mobileOpen)}
-              className="p-2 -mr-2 text-slate-300 hover:text-white"
+            {/* Compact level pill */}
+            <Link
+              href="/dashboard"
+              className="flex items-center gap-2 px-2.5 py-1 rounded-lg bg-white/[0.04] border border-white/[0.06]"
             >
-              {mobileOpen ? <X size={20} /> : <Menu size={20} />}
-            </button>
+              <div className="w-5 h-5 rounded-md bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-[10px] font-bold">
+                {level}
+              </div>
+              <span className="text-[10px] text-slate-300 tabular-nums">
+                {xp.toLocaleString()} XP
+              </span>
+            </Link>
+          </div>
+          {/* Mobile XP progress bar */}
+          <div className="h-0.5 bg-white/[0.04]">
+            <div
+              className="h-full bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 transition-all"
+              style={{ width: `${xpProgress}%` }}
+            />
           </div>
         </div>
       )}
@@ -260,89 +279,48 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           </aside>
         )}
 
-        {/* Mobile Sidebar Drawer */}
-        {authenticated && mobileOpen && (
-          <motion.aside
-            initial={{ x: "-100%" }}
-            animate={{ x: 0 }}
-            exit={{ x: "-100%" }}
-            transition={{ type: "spring", damping: 25 }}
-            className="md:hidden fixed inset-y-0 left-0 z-40 w-72 bg-[#0a0a0f] border-r border-white/[0.06] flex flex-col"
-          >
-            {/* User card */}
-            <div className="px-4 pt-16 pb-4">
-              <div className="p-3 rounded-xl bg-gradient-to-br from-white/[0.04] to-transparent border border-white/[0.06]">
-                <div className="flex items-center gap-3 mb-3">
-                  <div className="relative">
-                    <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-sm font-bold">
-                      {initials}
-                    </div>
-                    <div className="absolute -bottom-1 -right-1 w-5 h-5 rounded-md bg-amber-500 border-2 border-[#0a0a0f] flex items-center justify-center text-[9px] font-bold text-slate-900">
-                      {level}
-                    </div>
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="text-sm font-semibold truncate">{username}</div>
-                    <div className="text-[10px] text-slate-500 uppercase tracking-wider">
-                      Level {level}
-                    </div>
-                  </div>
-                </div>
-                <div className="h-1.5 rounded-full bg-white/[0.06] overflow-hidden">
-                  <div
-                    className="h-full bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 transition-all"
-                    style={{ width: `${xpProgress}%` }}
-                  />
-                </div>
-              </div>
-            </div>
-
-            <nav className="flex-1 px-3 space-y-0.5 overflow-y-auto">
-              {navLinks.map(({ icon: Icon, label, href }) => {
-                const isActive = pathname === href;
-                return (
-                  <Link
-                    key={href}
-                    href={href}
-                    onClick={() => setMobileOpen(false)}
-                    className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all ${
-                      isActive
-                        ? "bg-white/[0.06] text-white"
-                        : "text-slate-400 hover:bg-white/[0.03] hover:text-white"
-                    }`}
-                  >
-                    <Icon size={17} strokeWidth={isActive ? 2.5 : 2} />
-                    <span className="font-medium">{label}</span>
-                  </Link>
-                );
-              })}
-            </nav>
-
-            <div className="px-3 py-4 border-t border-white/[0.06]">
-              <button
-                onClick={handleSignOut}
-                className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-slate-400 hover:bg-white/[0.03] hover:text-white"
-              >
-                <LogOut size={17} />
-                <span className="font-medium">Sign out</span>
-              </button>
-            </div>
-          </motion.aside>
-        )}
-
-        {/* Backdrop for mobile drawer */}
-        {authenticated && mobileOpen && (
-          <div
-            onClick={() => setMobileOpen(false)}
-            className="md:hidden fixed inset-0 z-30 bg-black/60 backdrop-blur-sm"
-          />
-        )}
-
         {/* Main content */}
-        <main className={`flex-1 ${authenticated ? "md:ml-64 lg:ml-72" : ""} min-w-0`}>
+        <main className={`flex-1 ${authenticated ? "md:ml-64 lg:ml-72" : ""} min-w-0 pb-20 md:pb-0`}>
           {children}
         </main>
       </div>
+
+      {/* Mobile Bottom Tab Bar */}
+      {authenticated && (
+        <nav className="md:hidden fixed bottom-0 inset-x-0 z-40 bg-[#0a0a0f]/95 backdrop-blur-xl border-t border-white/[0.06]">
+          <div className="flex items-stretch justify-around h-16 px-2 pb-safe">
+            {mobileNavLinks.map(({ icon: Icon, label, href }) => {
+              const isActive = pathname === href;
+              return (
+                <Link
+                  key={href}
+                  href={href}
+                  className="relative flex-1 flex flex-col items-center justify-center gap-0.5 py-1.5 group"
+                >
+                  {isActive && (
+                    <motion.div
+                      layoutId="mobile-active-indicator"
+                      className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-0.5 bg-gradient-to-r from-indigo-400 to-purple-500 rounded-full"
+                    />
+                  )}
+                  <Icon
+                    size={20}
+                    strokeWidth={isActive ? 2.5 : 2}
+                    className={isActive ? "text-white" : "text-slate-500 group-hover:text-slate-300 transition-colors"}
+                  />
+                  <span
+                    className={`text-[10px] font-medium ${
+                      isActive ? "text-white" : "text-slate-500 group-hover:text-slate-300 transition-colors"
+                    }`}
+                  >
+                    {label}
+                  </span>
+                </Link>
+              );
+            })}
+          </div>
+        </nav>
+      )}
     </div>
   );
 }

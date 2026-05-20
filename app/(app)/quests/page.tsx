@@ -18,6 +18,13 @@ import {
   ChevronRight,
 } from "lucide-react";
 import { QuestDetailModal } from "@/components/quests/QuestDetailModal";
+import {
+  calculateLevelFromTotalXP,
+  computeNextStreak,
+  checkAchievements,
+  awardAchievements,
+} from "@/lib/gamification/progression";
+import { getAllQuests } from "@/lib/data/quest-templates";
 
 interface Quest {
   id: string;
@@ -111,10 +118,12 @@ export default function Quests() {
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session?.user) return;
+      const userId = session.user.id;
 
       const quest = quests.find((q) => q.id === questId);
       if (!quest) return;
 
+      // 1. Mark quest completed
       await supabase
         .from("quests")
         .update({
@@ -125,39 +134,185 @@ export default function Quests() {
         })
         .eq("id", questId);
 
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("total_xp, current_xp, current_level")
-        .eq("id", session.user.id)
-        .single();
+      // 2. Load current profile + counts + achievements in parallel
+      const [profileResult, completedCountResult, achievementsResult] = await Promise.all([
+        supabase
+          .from("profiles")
+          .select("total_xp, current_xp, current_level, streak_count, longest_streak, last_quest_completed_at")
+          .eq("id", userId)
+          .single(),
+        supabase
+          .from("quests")
+          .select("id", { count: "exact", head: true })
+          .eq("user_id", userId)
+          .eq("status", "completed"),
+        supabase
+          .from("user_achievements")
+          .select("achievement_id")
+          .eq("user_id", userId),
+      ]);
 
-      if (profile) {
-        const newTotalXp = (profile.total_xp || 0) + quest.xp_reward;
-        const newCurrentXp = (profile.current_xp || 0) + quest.xp_reward;
-        const xpForNextLevel = profile.current_level * 1000;
+      const profile = profileResult.data;
+      const questCompletedCount = (completedCountResult.count || 0);
+      const alreadyUnlocked = new Set(
+        (achievementsResult.data || []).map((a: any) => a.achievement_id)
+      );
 
-        const updates: any = { total_xp: newTotalXp, current_xp: newCurrentXp };
+      if (!profile) return;
 
-        // Level up check
-        if (newCurrentXp >= xpForNextLevel) {
-          updates.current_level = profile.current_level + 1;
-          updates.current_xp = newCurrentXp - xpForNextLevel;
-          toast.success(`Level up! You're now Level ${profile.current_level + 1}`, { duration: 5000 });
-        }
+      // 3. Calculate XP/level
+      const baseXp = quest.xp_reward;
+      const newTotalXpBase = (profile.total_xp || 0) + baseXp;
+      const levelInfo = calculateLevelFromTotalXP(newTotalXpBase);
 
-        await supabase.from("profiles").update(updates).eq("id", session.user.id);
+      // 4. Calculate streak
+      const streakResult = computeNextStreak(
+        profile.streak_count || 0,
+        profile.last_quest_completed_at
+      );
+      const newStreak = streakResult?.newStreak ?? (profile.streak_count || 0);
+      const newLongestStreak = Math.max(profile.longest_streak || 0, newStreak);
+
+      // 5. Check achievements
+      const newlyUnlocked = checkAchievements({
+        questCompletedCount,
+        newLevel: levelInfo.level,
+        newStreak,
+        justCompletedInsane: quest.difficulty === "insane",
+        alreadyUnlocked,
+      });
+
+      // 6. Award achievements (DB insert + sum bonus XP)
+      const bonusXp = await awardAchievements(supabase, userId, newlyUnlocked);
+      const finalTotalXp = newTotalXpBase + bonusXp;
+      const finalLevelInfo = calculateLevelFromTotalXP(finalTotalXp);
+
+      // 7. Update profile with all new stats
+      const profileUpdates: any = {
+        total_xp: finalTotalXp,
+        current_xp: finalLevelInfo.currentXp,
+        current_level: finalLevelInfo.level,
+        streak_count: newStreak,
+        longest_streak: newLongestStreak,
+        last_quest_completed_at: new Date().toISOString(),
+      };
+      await supabase.from("profiles").update(profileUpdates).eq("id", userId);
+
+      // 8. Show toasts
+      toast.success(`+${baseXp} XP earned`, { icon: "⚡" });
+
+      // Level up toast
+      if (finalLevelInfo.level > profile.current_level) {
+        setTimeout(() => {
+          toast.success(`Level up! You're now Level ${finalLevelInfo.level}`, {
+            duration: 5000,
+            icon: "🎉",
+          });
+        }, 500);
       }
 
-      toast.success(`+${quest.xp_reward} XP earned`, { icon: "⚡" });
+      // Streak milestone toast
+      if (streakResult?.isNewMilestone) {
+        setTimeout(() => {
+          toast.success(`${newStreak}-day streak! Unstoppable.`, {
+            duration: 5000,
+            icon: "🔥",
+          });
+        }, 1000);
+      }
 
-      // Optimistic update
+      // Achievement toasts
+      newlyUnlocked.forEach((a, i) => {
+        setTimeout(() => {
+          toast.success(`Achievement: ${a.title} (+${a.xpBonus} XP)`, {
+            duration: 5000,
+            icon: "🏆",
+          });
+        }, 1500 + i * 500);
+      });
+
+      // 9. Optimistic UI update
       setQuests(quests.filter((q) => q.id !== questId));
       setCompletedQuests([{ ...quest, status: "completed" }, ...completedQuests].slice(0, 5));
-    } catch (error) {
+    } catch (error: any) {
       console.error("Complete quest error:", error);
-      toast.error("Failed to complete quest");
+      toast.error(error?.message || "Failed to complete quest");
     } finally {
       setCompletingId(null);
+    }
+  };
+
+  // Generate more quests from the template library
+  const generateMoreQuests = async () => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.user) return;
+      const userId = session.user.id;
+
+      // Get user's career path + existing quest titles to avoid duplicates
+      const [profileResult, allQuestsResult] = await Promise.all([
+        supabase
+          .from("profiles")
+          .select("selected_career_path_id")
+          .eq("id", userId)
+          .single(),
+        supabase
+          .from("quests")
+          .select("title")
+          .eq("user_id", userId),
+      ]);
+
+      const careerPathId = profileResult.data?.selected_career_path_id;
+      if (!careerPathId) {
+        toast.error("Pick a career path first");
+        return;
+      }
+
+      const existingTitles = new Set(
+        (allQuestsResult.data || []).map((q: any) => q.title)
+      );
+      const allTemplates = getAllQuests(careerPathId);
+      const newTemplates = allTemplates
+        .filter((t) => !existingTitles.has(t.title))
+        .slice(0, 5);
+
+      if (newTemplates.length === 0) {
+        toast("You've unlocked all curated quests for your path. New ones coming soon.", {
+          icon: "🎉",
+          duration: 5000,
+        });
+        return;
+      }
+
+      const questRows = newTemplates.map((q) => ({
+        user_id: userId,
+        career_path_id: careerPathId,
+        title: q.title,
+        description: q.description,
+        difficulty: q.difficulty,
+        xp_reward: q.xp_reward,
+        time_estimate_minutes: q.time_estimate_minutes,
+        skill_tag: q.skill_tag,
+        career_impact: q.career_impact,
+        proof_required: q.proof_required,
+        proof_type: q.proof_type,
+        status: "active",
+        generated_by: "system",
+        quest_type: "learning",
+      }));
+
+      const { data: inserted, error } = await supabase
+        .from("quests")
+        .insert(questRows)
+        .select();
+
+      if (error) throw error;
+
+      toast.success(`Added ${newTemplates.length} new quest${newTemplates.length > 1 ? "s" : ""}`);
+      if (inserted) setQuests([...quests, ...(inserted as Quest[])]);
+    } catch (error: any) {
+      console.error("Generate quests error:", error);
+      toast.error(error?.message || "Failed to generate quests");
     }
   };
 
@@ -216,7 +371,7 @@ export default function Quests() {
           </div>
         </motion.div>
 
-        {/* Filters */}
+        {/* Filters + Generate */}
         <motion.div
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
@@ -237,6 +392,13 @@ export default function Quests() {
               {f.label}
             </button>
           ))}
+          <button
+            onClick={generateMoreQuests}
+            className="ml-auto inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-white/[0.03] border border-white/[0.06] text-slate-300 hover:bg-white/[0.06] hover:text-white transition-all"
+          >
+            <Sparkles size={12} />
+            Generate more
+          </button>
         </motion.div>
 
         {/* Quests List */}
@@ -254,21 +416,21 @@ export default function Quests() {
                 <Sparkles size={20} className="text-indigo-300" />
               </div>
               <h3 className="text-lg font-semibold mb-1">
-                {activeFilter === "all" ? "Quest log empty" : "No quests at this difficulty"}
+                {activeFilter === "all" ? "All caught up!" : "No quests at this difficulty"}
               </h3>
               <p className="text-sm text-slate-400 max-w-sm mx-auto">
                 {activeFilter === "all"
-                  ? "Looks like you haven't set your career path yet. Complete onboarding to get your starter quests."
+                  ? "You've cleared your active quests. Generate more to keep the momentum."
                   : "Try a different filter or complete some easier quests first."}
               </p>
               {activeFilter === "all" && (
                 <div className="flex items-center justify-center gap-2 mt-5 flex-wrap">
                   <button
-                    onClick={() => router.push("/onboarding")}
+                    onClick={generateMoreQuests}
                     className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-white text-slate-900 text-sm font-semibold hover:bg-slate-100 transition-colors"
                   >
-                    Choose your path
-                    <ArrowRight size={14} />
+                    <Sparkles size={14} />
+                    Generate more quests
                   </button>
                   <button
                     onClick={() => router.push("/mentor")}

@@ -16,6 +16,7 @@ import {
   Loader2,
 } from "lucide-react";
 import Link from "next/link";
+import { ACHIEVEMENT_IDS, awardAchievements } from "@/lib/gamification/progression";
 
 interface Project {
   id: string;
@@ -337,6 +338,54 @@ function AddProjectModal({
         .single();
 
       if (error) throw error;
+
+      // Check + award "Portfolio Builder" achievement (first project)
+      try {
+        const { count: projectCount } = await supabase
+          .from("projects")
+          .select("id", { count: "exact", head: true })
+          .eq("user_id", session.user.id);
+
+        if (projectCount === 1) {
+          const { data: existing } = await supabase
+            .from("user_achievements")
+            .select("achievement_id")
+            .eq("user_id", session.user.id)
+            .eq("achievement_id", ACHIEVEMENT_IDS.PORTFOLIO_BUILDER);
+
+          if (!existing || existing.length === 0) {
+            await awardAchievements(supabase, session.user.id, [
+              {
+                id: ACHIEVEMENT_IDS.PORTFOLIO_BUILDER,
+                title: "Portfolio Builder",
+                description: "Added your first project",
+                xpBonus: 100,
+                rarity: "rare",
+              },
+            ]);
+            // Update total XP
+            const { data: profile } = await supabase
+              .from("profiles")
+              .select("total_xp")
+              .eq("id", session.user.id)
+              .single();
+            if (profile) {
+              await supabase
+                .from("profiles")
+                .update({ total_xp: (profile.total_xp || 0) + 100 })
+                .eq("id", session.user.id);
+            }
+            setTimeout(() => {
+              toast.success("Achievement: Portfolio Builder (+100 XP)", {
+                duration: 5000,
+                icon: "🏆",
+              });
+            }, 500);
+          }
+        }
+      } catch (achErr) {
+        console.warn("Achievement check (non-fatal):", achErr);
+      }
 
       toast.success("Project added");
       onAdd(data as Project);

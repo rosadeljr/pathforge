@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { createClient } from "@/lib/supabase/client";
@@ -48,6 +48,8 @@ const AVAILABILITY_OPTIONS = [
   { hours: 35, label: "All-in", description: "35+ hrs/week" },
 ];
 
+const MAX_CAREER_CHANGES = 3;
+
 export default function Onboarding() {
   const [step, setStep] = useState(1);
   const [selectedPath, setSelectedPath] = useState<string>("");
@@ -58,8 +60,51 @@ export default function Onboarding() {
   const [availability, setAvailability] = useState(10);
   const [loading, setLoading] = useState(false);
 
+  // Change mode: when user already has a path and is updating
+  const [existingPath, setExistingPath] = useState<string | null>(null);
+  const [changesUsed, setChangesUsed] = useState(0);
+  const [loadingProfile, setLoadingProfile] = useState(true);
+
   const router = useRouter();
   const supabase = createClient();
+
+  const isChangingPath = !!existingPath;
+  const changesRemaining = MAX_CAREER_CHANGES - changesUsed;
+  const canChangePath = !isChangingPath || changesRemaining > 0;
+  const isPathChanged = isChangingPath && selectedPath && selectedPath !== existingPath;
+
+  // Load existing profile to detect "change mode"
+  useEffect(() => {
+    async function loadProfile() {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session?.user) {
+          setLoadingProfile(false);
+          return;
+        }
+        const { data } = await supabase
+          .from("profiles")
+          .select("selected_career_path_id, target_timeline_months, weekly_availability_hours, primary_goal, career_path_changes_count")
+          .eq("id", session.user.id)
+          .single();
+        if (data) {
+          if (data.selected_career_path_id) {
+            setExistingPath(data.selected_career_path_id);
+            setSelectedPath(data.selected_career_path_id);
+            setChangesUsed(data.career_path_changes_count || 0);
+          }
+          if (data.target_timeline_months) setTimeline(data.target_timeline_months);
+          if (data.weekly_availability_hours) setAvailability(data.weekly_availability_hours);
+          if (data.primary_goal) setPrimaryGoal(data.primary_goal);
+        }
+      } catch (e) {
+        console.error("Profile load (non-fatal):", e);
+      } finally {
+        setLoadingProfile(false);
+      }
+    }
+    loadProfile();
+  }, [supabase]);
 
   const filteredPaths = useMemo(() => {
     let paths = CAREER_PATHS;
@@ -87,6 +132,12 @@ export default function Onboarding() {
       return;
     }
 
+    // Block change if at limit
+    if (isPathChanged && changesRemaining <= 0) {
+      toast.error(`You've used all ${MAX_CAREER_CHANGES} career path changes. Stay focused.`);
+      return;
+    }
+
     setLoading(true);
     try {
       const {
@@ -98,48 +149,84 @@ export default function Onboarding() {
         ? { target_salary_min: selectedPathData.salaryMinPhp, target_salary_max: selectedPathData.salaryMaxPhp }
         : {};
 
+      const updates: any = {
+        selected_career_path_id: selectedPath,
+        target_timeline_months: timeline,
+        weekly_availability_hours: availability,
+        primary_goal: primaryGoal,
+        ...salaryData,
+      };
+
+      // If changing path (not initial setup), increment the counter
+      if (isPathChanged) {
+        updates.career_path_changes_count = changesUsed + 1;
+      }
+
       const { error } = await supabase
         .from("profiles")
-        .update({
-          selected_career_path_id: selectedPath,
-          target_timeline_months: timeline,
-          weekly_availability_hours: availability,
-          primary_goal: primaryGoal,
-          ...salaryData,
-        })
+        .update(updates)
         .eq("id", user.id);
 
       if (error) throw error;
 
-      // Auto-seed starter quests for this career path
-      try {
-        const starterQuests = getStarterQuests(selectedPath, 8);
-        if (starterQuests.length > 0) {
-          const questRows = starterQuests.map((q) => ({
-            user_id: user.id,
-            career_path_id: selectedPath,
-            title: q.title,
-            description: q.description,
-            difficulty: q.difficulty,
-            xp_reward: q.xp_reward,
-            time_estimate_minutes: q.time_estimate_minutes,
-            skill_tag: q.skill_tag,
-            career_impact: q.career_impact,
-            proof_required: q.proof_required,
-            proof_type: q.proof_type,
-            status: "active",
-            generated_by: "system",
-            quest_type: "learning",
-          }));
-          const { error: qError } = await supabase.from("quests").insert(questRows);
-          if (qError) console.error("Quest seed error (non-fatal):", qError);
+      // When changing paths: archive existing active quests (no XP lost, they're just hidden)
+      if (isPathChanged) {
+        try {
+          await supabase
+            .from("quests")
+            .update({ status: "archived" })
+            .eq("user_id", user.id)
+            .eq("status", "active");
+        } catch (archiveErr) {
+          console.error("Quest archive failed (non-fatal):", archiveErr);
         }
-      } catch (seedErr) {
-        console.error("Quest seeding failed (non-fatal):", seedErr);
       }
 
-      toast.success("Path forged. Your first quests are ready.");
-      // Hard navigation ensures fresh server state
+      // Seed starter quests if first time OR if changing to a new path (need fresh quests)
+      const shouldSeed = !isChangingPath || isPathChanged;
+      if (shouldSeed) {
+        try {
+          // Check for any existing quests for this path to avoid duplicates
+          const { data: existingQuests } = await supabase
+            .from("quests")
+            .select("title")
+            .eq("user_id", user.id)
+            .eq("career_path_id", selectedPath);
+          const existingTitles = new Set((existingQuests || []).map((q: any) => q.title));
+
+          const starterQuests = getStarterQuests(selectedPath, 8).filter(
+            (q) => !existingTitles.has(q.title)
+          );
+          if (starterQuests.length > 0) {
+            const questRows = starterQuests.map((q) => ({
+              user_id: user.id,
+              career_path_id: selectedPath,
+              title: q.title,
+              description: q.description,
+              difficulty: q.difficulty,
+              xp_reward: q.xp_reward,
+              time_estimate_minutes: q.time_estimate_minutes,
+              skill_tag: q.skill_tag,
+              career_impact: q.career_impact,
+              proof_required: q.proof_required,
+              proof_type: q.proof_type,
+              status: "active",
+              generated_by: "system",
+              quest_type: "learning",
+            }));
+            const { error: qError } = await supabase.from("quests").insert(questRows);
+            if (qError) console.error("Quest seed error (non-fatal):", qError);
+          }
+        } catch (seedErr) {
+          console.error("Quest seeding failed (non-fatal):", seedErr);
+        }
+      }
+
+      if (isPathChanged) {
+        toast.success(`Path changed. ${changesRemaining - 1} change${changesRemaining - 1 === 1 ? "" : "s"} remaining.`);
+      } else {
+        toast.success("Path forged. Your first quests are ready.");
+      }
       window.location.href = "/dashboard";
     } catch (error: any) {
       console.error("Onboarding error:", error);
@@ -150,7 +237,7 @@ export default function Onboarding() {
   };
 
   const canProceed = () => {
-    if (step === 1) return !!selectedPath;
+    if (step === 1) return !!selectedPath && canChangePath;
     if (step === 2) return !!primaryGoal;
     if (step === 3) return timeline > 0 && availability > 0;
     return false;
@@ -205,6 +292,31 @@ export default function Onboarding() {
               className="h-full bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500"
             />
           </div>
+
+          {/* Change mode banner */}
+          {isChangingPath && (
+            <motion.div
+              initial={{ opacity: 0, y: -8 }}
+              animate={{ opacity: 1, y: 0 }}
+              className={`mt-4 p-3.5 rounded-xl border flex items-center gap-3 ${
+                changesRemaining > 0
+                  ? "bg-amber-500/[0.06] border-amber-500/20"
+                  : "bg-rose-500/[0.06] border-rose-500/20"
+              }`}
+            >
+              <Sparkles size={14} className={changesRemaining > 0 ? "text-amber-300" : "text-rose-300"} />
+              <div className="flex-1 text-xs">
+                <span className={changesRemaining > 0 ? "text-amber-200 font-semibold" : "text-rose-200 font-semibold"}>
+                  Changing your path
+                </span>
+                <span className="text-slate-400 ml-2">
+                  {changesRemaining > 0
+                    ? `${changesRemaining} of ${MAX_CAREER_CHANGES} changes remaining. Your active quests will be archived.`
+                    : `You've used all ${MAX_CAREER_CHANGES} changes. Choose carefully — this is locked in.`}
+                </span>
+              </div>
+            </motion.div>
+          )}
         </div>
 
         {/* Step content */}
@@ -610,7 +722,7 @@ export default function Onboarding() {
               </>
             ) : step === totalSteps ? (
               <>
-                Enter Dashboard
+                {isChangingPath ? "Confirm change" : "Enter Dashboard"}
                 <ArrowRight size={14} className="group-hover:translate-x-0.5 transition-transform" />
               </>
             ) : (

@@ -32,7 +32,10 @@ interface Profile {
   weekly_availability_hours: number | null;
   primary_goal: string | null;
   subscription_tier: string | null;
+  career_path_changes_count: number | null;
 }
+
+const MAX_CAREER_CHANGES = 3;
 
 export default function Settings() {
   const [profile, setProfile] = useState<Profile | null>(null);
@@ -266,13 +269,29 @@ export default function Settings() {
               </div>
             </div>
 
-            <Link
-              href="/onboarding"
-              className="inline-flex items-center gap-2 text-xs font-medium text-indigo-300 hover:text-indigo-200 transition-colors"
-            >
-              Update goals
-              <ArrowRight size={12} />
-            </Link>
+            <div className="flex items-center justify-between gap-3 pt-2 border-t border-white/[0.06] flex-wrap">
+              <div className="text-xs text-slate-500">
+                {(() => {
+                  const used = profile.career_path_changes_count || 0;
+                  const remaining = MAX_CAREER_CHANGES - used;
+                  if (remaining > 0) {
+                    return `${remaining} of ${MAX_CAREER_CHANGES} path changes remaining`;
+                  }
+                  return "You've used all your path changes";
+                })()}
+              </div>
+              <Link
+                href="/onboarding"
+                className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
+                  (profile.career_path_changes_count || 0) < MAX_CAREER_CHANGES
+                    ? "bg-white/[0.04] border border-white/[0.08] text-slate-300 hover:bg-white/[0.06] hover:text-white"
+                    : "border border-white/[0.04] text-slate-600 cursor-not-allowed pointer-events-none"
+                }`}
+              >
+                Change career path
+                <ArrowRight size={11} />
+              </Link>
+            </div>
           </div>
         </motion.section>
 
