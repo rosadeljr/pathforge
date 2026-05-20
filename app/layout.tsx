@@ -1,6 +1,7 @@
 import "./globals.css";
 import { Analytics } from "@vercel/analytics/react";
 import { Inter } from "next/font/google";
+import { AppToaster } from "@/components/ui/AppToaster";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -25,6 +26,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en" className={`dark ${inter.variable}`}>
       <body className="font-sans antialiased">
         {children}
+        <AppToaster />
         <Analytics />
       </body>
     </html>

@@ -16,6 +16,7 @@ import {
 import { Logo } from "@/components/brand/Logo";
 import { PrimaryLinkButton } from "@/components/ui/PrimaryButton";
 import { HeroPreview } from "@/components/landing/HeroPreview";
+import { StickyCTA } from "@/components/landing/StickyCTA";
 
 export default function Landing() {
   return (
@@ -184,7 +185,10 @@ export default function Landing() {
           transition={{ duration: 1, delay: 0.4, ease: [0.16, 1, 0.3, 1] }}
           className="relative max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 mt-16 lg:mt-20"
         >
-          <HeroPreview />
+          {/* Reserve space for the preview so layout doesn't shift if it loads slow */}
+          <div className="min-h-[420px]">
+            <HeroPreview />
+          </div>
         </motion.div>
       </section>
 
@@ -552,6 +556,9 @@ export default function Landing() {
           </div>
         </div>
       </footer>
+
+      {/* Sticky CTA appears after scroll */}
+      <StickyCTA />
     </div>
   );
 }

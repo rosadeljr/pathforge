@@ -88,6 +88,47 @@ body {
   color: white;
 }
 
+/* Accessibility: respect user reduced-motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Focus visible — keyboard accessibility */
+:focus-visible {
+  outline: 2px solid rgba(168, 85, 247, 0.6);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Remove default outline (we use :focus-visible for keyboard-only) */
+:focus:not(:focus-visible) {
+  outline: none;
+}
+
+/* Buttons and links get a glow on keyboard focus */
+button:focus-visible,
+a:focus-visible,
+[role="button"]:focus-visible {
+  outline: 2px solid rgba(168, 85, 247, 0.7);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 4px rgba(168, 85, 247, 0.15);
+}
+
+/* Inputs get a colored border + ring on focus */
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  outline: none;
+  /* Most inputs already have their own focus ring; this is a fallback */
+}
+
 /* Typography */
 h1, h2, h3, h4, h5, h6 {
   @apply font-bold tracking-tight;

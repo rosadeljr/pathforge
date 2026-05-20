@@ -24,6 +24,7 @@ import {
 } from "@/lib/data/career-paths";
 import { getStarterQuests, getAllQuests } from "@/lib/data/quest-templates";
 import { Logo } from "@/components/brand/Logo";
+import { RecommendQuiz } from "@/components/onboarding/RecommendQuiz";
 import { track } from "@/lib/analytics/track";
 
 const GOAL_OPTIONS = [
@@ -65,6 +66,7 @@ export default function Onboarding() {
   const [existingPath, setExistingPath] = useState<string | null>(null);
   const [changesUsed, setChangesUsed] = useState(0);
   const [loadingProfile, setLoadingProfile] = useState(true);
+  const [showQuiz, setShowQuiz] = useState(false);
 
   const router = useRouter();
   const supabase = createClient();
@@ -372,6 +374,14 @@ export default function Onboarding() {
                     className="w-full pl-10 pr-4 py-2.5 bg-white/[0.03] border border-white/[0.06] rounded-lg text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500/50 transition-all"
                   />
                 </div>
+                {/* Help me decide */}
+                <button
+                  onClick={() => setShowQuiz(true)}
+                  className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold text-white bg-[linear-gradient(110deg,#6366f1,#a855f7,#ec4899,#a855f7,#6366f1)] bg-[length:200%_100%] hover:bg-[position:100%_0] transition-all shadow-lg shadow-indigo-500/20 whitespace-nowrap"
+                >
+                  <Sparkles size={14} />
+                  Help me decide
+                </button>
               </div>
 
               {/* Category pills */}
@@ -790,6 +800,23 @@ export default function Onboarding() {
           </button>
         </div>
       </div>
+
+      {/* Help-me-decide quiz */}
+      <AnimatePresence>
+        {showQuiz && (
+          <RecommendQuiz
+            onClose={() => setShowQuiz(false)}
+            onRecommend={(id) => {
+              setSelectedPath(id);
+              setShowQuiz(false);
+              // Scroll to top of the path grid so user can confirm
+              if (typeof window !== "undefined") {
+                window.scrollTo({ top: 0, behavior: "smooth" });
+              }
+            }}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 }
