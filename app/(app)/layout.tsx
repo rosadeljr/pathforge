@@ -63,22 +63,45 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     let mounted = true;
 
     // Initial session check
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
       if (!mounted) return;
-      if (session?.user) {
-        setAuthState("authenticated");
-        // Load profile (non-blocking)
-        supabase
-          .from("profiles")
-          .select("username, current_level, current_xp, total_xp, streak_count, is_admin")
-          .eq("id", session.user.id)
-          .single()
-          .then(({ data }) => {
-            if (mounted && data) setProfile(data);
-          });
-      } else {
+      if (!session?.user) {
         setAuthState("unauthenticated");
+        return;
       }
+
+      setAuthState("authenticated");
+      const userId = session.user.id;
+
+      // Try to load profile (use maybeSingle so 0 rows doesn't throw)
+      const { data: existing } = await supabase
+        .from("profiles")
+        .select("username, current_level, current_xp, total_xp, streak_count, is_admin")
+        .eq("id", userId)
+        .maybeSingle();
+
+      if (existing) {
+        if (mounted) setProfile(existing as Profile);
+        return;
+      }
+
+      // Self-heal: create profile if missing
+      const meta = session.user.user_metadata as any;
+      const fallbackUsername =
+        meta?.username ||
+        session.user.email?.split("@")[0] ||
+        `user_${userId.slice(0, 8)}`;
+      const { data: created } = await supabase
+        .from("profiles")
+        .insert({
+          id: userId,
+          email: session.user.email,
+          username: fallbackUsername,
+          full_name: meta?.full_name || null,
+        })
+        .select("username, current_level, current_xp, total_xp, streak_count, is_admin")
+        .single();
+      if (mounted && created) setProfile(created as Profile);
     });
 
     // Subscribe to auth changes (handles login/logout/token refresh reliably)

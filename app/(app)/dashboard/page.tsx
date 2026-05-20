@@ -81,23 +81,73 @@ export default function Dashboard() {
   useEffect(() => {
     async function loadData() {
       try {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (!session?.user) {
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+        if (sessionError) {
+          console.error("[dashboard] Session error:", sessionError);
           setLoading(false);
           return;
         }
+        if (!session?.user) {
+          console.warn("[dashboard] No active session");
+          setLoading(false);
+          return;
+        }
+        const userId = session.user.id;
 
-        const [profileResult, countResult, nextQuestResult] = await Promise.all([
-          supabase.from("profiles").select("*").eq("id", session.user.id).single(),
+        // Use maybeSingle so 0 rows don't throw
+        const { data: existing, error: fetchError } = await supabase
+          .from("profiles")
+          .select("*")
+          .eq("id", userId)
+          .maybeSingle();
+
+        if (fetchError) {
+          console.error("[dashboard] Profile fetch error:", fetchError);
+        }
+
+        let actualProfile: Profile | null = existing as Profile | null;
+
+        // Self-heal: if profile missing (orphaned signup, failed trigger, etc.), create one
+        if (!actualProfile) {
+          console.warn("[dashboard] Profile missing, auto-creating");
+          const meta = session.user.user_metadata as any;
+          const fallbackUsername =
+            meta?.username ||
+            session.user.email?.split("@")[0] ||
+            `user_${userId.slice(0, 8)}`;
+
+          const { data: created, error: createError } = await supabase
+            .from("profiles")
+            .insert({
+              id: userId,
+              email: session.user.email,
+              username: fallbackUsername,
+              full_name: meta?.full_name || null,
+            })
+            .select()
+            .single();
+
+          if (createError) {
+            console.error("[dashboard] Profile auto-create failed:", createError);
+            setLoading(false);
+            return;
+          }
+          actualProfile = created as Profile;
+        }
+
+        setProfile(actualProfile);
+
+        // Quests (non-blocking errors)
+        const [countResult, nextQuestResult] = await Promise.all([
           supabase
             .from("quests")
             .select("id", { count: "exact", head: true })
-            .eq("user_id", session.user.id)
+            .eq("user_id", userId)
             .eq("status", "active"),
           supabase
             .from("quests")
             .select("id, title, difficulty, xp_reward, time_estimate_minutes, skill_tag")
-            .eq("user_id", session.user.id)
+            .eq("user_id", userId)
             .eq("status", "active")
             .order("difficulty", { ascending: true })
             .order("created_at", { ascending: true })
@@ -105,11 +155,10 @@ export default function Dashboard() {
             .maybeSingle(),
         ]);
 
-        if (profileResult.data) setProfile(profileResult.data);
         if (countResult.count !== null) setActiveQuestCount(countResult.count);
         if (nextQuestResult.data) setFirstQuest(nextQuestResult.data);
       } catch (error) {
-        console.error("Error loading dashboard:", error);
+        console.error("[dashboard] Unexpected error:", error);
       } finally {
         setLoading(false);
       }
