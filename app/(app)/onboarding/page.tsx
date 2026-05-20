@@ -22,6 +22,7 @@ import {
   formatPhp,
   type CareerCategory,
 } from "@/lib/data/career-paths";
+import { getStarterQuests } from "@/lib/data/quest-templates";
 import { Logo } from "@/components/brand/Logo";
 
 const GOAL_OPTIONS = [
@@ -110,9 +111,36 @@ export default function Onboarding() {
 
       if (error) throw error;
 
-      toast.success("Path forged. Let's go.");
-      router.refresh();
-      router.push("/dashboard");
+      // Auto-seed starter quests for this career path
+      try {
+        const starterQuests = getStarterQuests(selectedPath, 8);
+        if (starterQuests.length > 0) {
+          const questRows = starterQuests.map((q) => ({
+            user_id: user.id,
+            career_path_id: selectedPath,
+            title: q.title,
+            description: q.description,
+            difficulty: q.difficulty,
+            xp_reward: q.xp_reward,
+            time_estimate_minutes: q.time_estimate_minutes,
+            skill_tag: q.skill_tag,
+            career_impact: q.career_impact,
+            proof_required: q.proof_required,
+            proof_type: q.proof_type,
+            status: "active",
+            generated_by: "system",
+            quest_type: "learning",
+          }));
+          const { error: qError } = await supabase.from("quests").insert(questRows);
+          if (qError) console.error("Quest seed error (non-fatal):", qError);
+        }
+      } catch (seedErr) {
+        console.error("Quest seeding failed (non-fatal):", seedErr);
+      }
+
+      toast.success("Path forged. Your first quests are ready.");
+      // Hard navigation ensures fresh server state
+      window.location.href = "/dashboard";
     } catch (error: any) {
       console.error("Onboarding error:", error);
       toast.error(error?.message || "Something went wrong");

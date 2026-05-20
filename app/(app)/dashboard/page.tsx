@@ -33,6 +33,7 @@ interface Profile {
   username?: string;
   target_timeline_months?: number;
   weekly_availability_hours?: number;
+  primary_goal?: string;
 }
 
 // Compute level rank using Solo Leveling-style ranks
@@ -58,9 +59,19 @@ const RANK_COLORS: Record<string, { bg: string; text: string; glow: string }> = 
   SSS: { bg: "bg-gradient-to-r from-cyan-500/15 to-violet-500/15 border-cyan-400/40", text: "text-cyan-200", glow: "rgba(6,182,212,0.5)" },
 };
 
+interface FirstQuest {
+  id: string;
+  title: string;
+  difficulty: string;
+  xp_reward: number;
+  time_estimate_minutes: number | null;
+  skill_tag: string | null;
+}
+
 export default function Dashboard() {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [activeQuestCount, setActiveQuestCount] = useState(0);
+  const [firstQuest, setFirstQuest] = useState<FirstQuest | null>(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
   const supabase = createClient();
@@ -74,17 +85,27 @@ export default function Dashboard() {
           return;
         }
 
-        const [profileResult, questsResult] = await Promise.all([
+        const [profileResult, countResult, nextQuestResult] = await Promise.all([
           supabase.from("profiles").select("*").eq("id", session.user.id).single(),
           supabase
             .from("quests")
-            .select("id", { count: "exact" })
+            .select("id", { count: "exact", head: true })
             .eq("user_id", session.user.id)
             .eq("status", "active"),
+          supabase
+            .from("quests")
+            .select("id, title, difficulty, xp_reward, time_estimate_minutes, skill_tag")
+            .eq("user_id", session.user.id)
+            .eq("status", "active")
+            .order("difficulty", { ascending: true })
+            .order("created_at", { ascending: true })
+            .limit(1)
+            .maybeSingle(),
         ]);
 
         if (profileResult.data) setProfile(profileResult.data);
-        if (questsResult.count !== null) setActiveQuestCount(questsResult.count);
+        if (countResult.count !== null) setActiveQuestCount(countResult.count);
+        if (nextQuestResult.data) setFirstQuest(nextQuestResult.data);
       } catch (error) {
         console.error("Error loading dashboard:", error);
       } finally {
@@ -93,6 +114,13 @@ export default function Dashboard() {
     }
     loadData();
   }, [supabase]);
+
+  // Redirect to onboarding if user hasn't set up their path yet
+  useEffect(() => {
+    if (!loading && profile && !profile.selected_career_path_id) {
+      router.replace("/onboarding");
+    }
+  }, [loading, profile, router]);
 
   if (loading) {
     return (
@@ -103,6 +131,8 @@ export default function Dashboard() {
   }
 
   if (!profile) return null;
+  // Don't render dashboard while redirecting to onboarding
+  if (!profile.selected_career_path_id) return null;
 
   const username = profile.username || "Hunter";
   const level = profile.current_level;
@@ -383,44 +413,100 @@ export default function Dashboard() {
           </div>
         </motion.div>
 
-        {/* Today's Focus */}
-        <motion.div
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.3 }}
-          className="relative overflow-hidden rounded-2xl border border-white/[0.06] p-6"
-        >
-          <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/10 via-purple-500/5 to-transparent" />
-          <div className="absolute -top-20 -right-20 w-64 h-64 rounded-full opacity-20"
-            style={{ background: "radial-gradient(circle, rgba(168,85,247,0.5), transparent 70%)" }}
-          />
-
-          <div className="relative flex flex-col sm:flex-row sm:items-center gap-4">
-            <div className="flex-shrink-0 w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-lg shadow-indigo-500/20">
-              <Calendar size={20} className="text-white" />
-            </div>
-            <div className="flex-1">
-              <div className="text-xs text-slate-400 mb-1">Today's focus</div>
-              <h4 className="text-base font-semibold mb-1">
-                {activeQuestCount > 0
-                  ? `Complete at least 1 of your ${activeQuestCount} quests`
-                  : "Generate today's quests to get started"}
-              </h4>
-              <p className="text-xs text-slate-400">
-                {profile.streak_count > 0
-                  ? `Protect your ${profile.streak_count}-day streak — momentum compounds.`
-                  : "Build your first streak. One quest at a time."}
-              </p>
+        {/* Today's Focus / Next Quest Spotlight */}
+        {firstQuest ? (
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.3 }}
+          >
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-sm font-semibold text-slate-300 uppercase tracking-wider">
+                Your next quest
+              </h3>
+              <Link
+                href="/quests"
+                className="text-xs text-slate-400 hover:text-white inline-flex items-center gap-1 transition-colors"
+              >
+                See all
+                <ArrowRight size={11} />
+              </Link>
             </div>
             <Link
               href="/quests"
-              className="flex-shrink-0 inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-white text-slate-900 text-sm font-semibold hover:bg-slate-100 transition-colors shadow-lg shadow-white/5"
+              className="group relative overflow-hidden block rounded-2xl border border-white/[0.06] p-6 hover:border-white/[0.16] transition-all"
             >
-              View quests
-              <ArrowRight size={14} />
+              <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/10 via-purple-500/5 to-transparent" />
+              <div className="absolute -top-20 -right-20 w-64 h-64 rounded-full opacity-20 group-hover:opacity-30 transition-opacity"
+                style={{ background: "radial-gradient(circle, rgba(168,85,247,0.5), transparent 70%)" }}
+              />
+              <div className="relative flex flex-col sm:flex-row sm:items-center gap-5">
+                <div className="flex-shrink-0">
+                  <div
+                    className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${
+                      firstQuest.difficulty === "easy" ? "from-emerald-500 to-green-600" :
+                      firstQuest.difficulty === "medium" ? "from-cyan-500 to-blue-600" :
+                      firstQuest.difficulty === "hard" ? "from-violet-500 to-purple-600" :
+                      "from-rose-500 to-pink-600"
+                    } flex items-center justify-center text-white font-bold text-lg shadow-xl`}
+                  >
+                    {firstQuest.difficulty === "easy" ? "E" : firstQuest.difficulty === "medium" ? "C" : firstQuest.difficulty === "hard" ? "B" : "S"}
+                  </div>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="text-[10px] uppercase tracking-wider text-slate-500 font-semibold mb-1">
+                    {firstQuest.skill_tag || "Quest"}
+                  </div>
+                  <h4 className="text-lg font-semibold mb-1.5 group-hover:text-white transition-colors">
+                    {firstQuest.title}
+                  </h4>
+                  <div className="flex items-center gap-3 text-xs">
+                    <span className="inline-flex items-center gap-1 text-indigo-300 font-semibold">
+                      <Zap size={11} />+{firstQuest.xp_reward} XP
+                    </span>
+                    {firstQuest.time_estimate_minutes && (
+                      <span className="inline-flex items-center gap-1 text-slate-500">
+                        <Clock size={11} />
+                        {firstQuest.time_estimate_minutes < 60
+                          ? `${firstQuest.time_estimate_minutes} min`
+                          : `${Math.round(firstQuest.time_estimate_minutes / 60)}h`}
+                      </span>
+                    )}
+                  </div>
+                </div>
+                <ArrowRight size={18} className="hidden sm:block text-slate-400 group-hover:text-white group-hover:translate-x-1 transition-all flex-shrink-0" />
+              </div>
             </Link>
-          </div>
-        </motion.div>
+          </motion.div>
+        ) : (
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.3 }}
+            className="relative overflow-hidden rounded-2xl border border-white/[0.06] p-6"
+          >
+            <div className="absolute inset-0 bg-gradient-to-br from-amber-500/10 via-orange-500/5 to-transparent" />
+            <div className="relative flex flex-col sm:flex-row sm:items-center gap-4">
+              <div className="flex-shrink-0 w-12 h-12 rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center shadow-lg shadow-amber-500/20">
+                <Calendar size={20} className="text-white" />
+              </div>
+              <div className="flex-1">
+                <div className="text-xs text-slate-400 mb-1">Today's focus</div>
+                <h4 className="text-base font-semibold mb-1">All quests cleared — well done</h4>
+                <p className="text-xs text-slate-400">
+                  Ask your AI mentor to generate more, or take a well-earned break.
+                </p>
+              </div>
+              <Link
+                href="/mentor"
+                className="flex-shrink-0 inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-white text-slate-900 text-sm font-semibold hover:bg-slate-100 transition-colors shadow-lg shadow-white/5"
+              >
+                Talk to mentor
+                <ArrowRight size={14} />
+              </Link>
+            </div>
+          </motion.div>
+        )}
       </div>
     </div>
   );

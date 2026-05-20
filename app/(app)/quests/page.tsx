@@ -15,7 +15,9 @@ import {
   ArrowRight,
   Trophy,
   Loader2,
+  ChevronRight,
 } from "lucide-react";
+import { QuestDetailModal } from "@/components/quests/QuestDetailModal";
 
 interface Quest {
   id: string;
@@ -26,8 +28,11 @@ interface Quest {
   time_estimate_minutes: number | null;
   skill_tag: string | null;
   career_impact: string | null;
+  proof_required: boolean;
+  proof_type: string | null;
   status: string;
   created_at: string;
+  career_path_id?: string;
 }
 
 const DIFFICULTY_META: Record<
@@ -54,6 +59,7 @@ export default function Quests() {
   const [loading, setLoading] = useState(true);
   const [completingId, setCompletingId] = useState<string | null>(null);
   const [activeFilter, setActiveFilter] = useState("all");
+  const [selectedQuest, setSelectedQuest] = useState<Quest | null>(null);
   const router = useRouter();
   const supabase = createClient();
 
@@ -72,7 +78,8 @@ export default function Quests() {
             .select("*")
             .eq("user_id", session.user.id)
             .eq("status", "active")
-            .order("difficulty", { ascending: false }),
+            .order("difficulty", { ascending: true })
+            .order("created_at", { ascending: true }),
           supabase
             .from("quests")
             .select("*")
@@ -99,7 +106,7 @@ export default function Quests() {
     return quests.filter((q) => q.difficulty === activeFilter);
   }, [quests, activeFilter]);
 
-  const completeQuest = async (questId: string) => {
+  const completeQuest = async (questId: string, proofUrl?: string, proofNotes?: string) => {
     setCompletingId(questId);
     try {
       const { data: { session } } = await supabase.auth.getSession();
@@ -113,6 +120,8 @@ export default function Quests() {
         .update({
           status: "completed",
           completed_at: new Date().toISOString(),
+          proof_url: proofUrl || null,
+          proof_notes: proofNotes || null,
         })
         .eq("id", questId);
 
@@ -245,21 +254,29 @@ export default function Quests() {
                 <Sparkles size={20} className="text-indigo-300" />
               </div>
               <h3 className="text-lg font-semibold mb-1">
-                {activeFilter === "all" ? "No active quests" : "No quests at this difficulty"}
+                {activeFilter === "all" ? "Quest log empty" : "No quests at this difficulty"}
               </h3>
               <p className="text-sm text-slate-400 max-w-sm mx-auto">
                 {activeFilter === "all"
-                  ? "Your quest log is empty. Generate new quests from your AI mentor to get started."
-                  : "Try a different filter or generate more quests."}
+                  ? "Looks like you haven't set your career path yet. Complete onboarding to get your starter quests."
+                  : "Try a different filter or complete some easier quests first."}
               </p>
               {activeFilter === "all" && (
-                <button
-                  onClick={() => router.push("/mentor")}
-                  className="mt-5 inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-white text-slate-900 text-sm font-semibold hover:bg-slate-100 transition-colors"
-                >
-                  Talk to mentor
-                  <ArrowRight size={14} />
-                </button>
+                <div className="flex items-center justify-center gap-2 mt-5 flex-wrap">
+                  <button
+                    onClick={() => router.push("/onboarding")}
+                    className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-white text-slate-900 text-sm font-semibold hover:bg-slate-100 transition-colors"
+                  >
+                    Choose your path
+                    <ArrowRight size={14} />
+                  </button>
+                  <button
+                    onClick={() => router.push("/mentor")}
+                    className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-white/[0.08] text-sm font-medium text-slate-300 hover:bg-white/[0.03] transition-colors"
+                  >
+                    Ask AI mentor
+                  </button>
+                </div>
               )}
             </div>
           </motion.div>
@@ -270,19 +287,18 @@ export default function Quests() {
                 const diff = DIFFICULTY_META[quest.difficulty] || DIFFICULTY_META.medium;
                 const isCompleting = completingId === quest.id;
                 return (
-                  <motion.div
+                  <motion.button
                     key={quest.id}
                     layout
                     initial={{ opacity: 0, y: 12 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, x: -20, height: 0, marginBottom: 0 }}
                     transition={{ duration: 0.4, delay: Math.min(index * 0.04, 0.3) }}
-                    className="group relative overflow-hidden rounded-2xl border border-white/[0.06] bg-white/[0.02] hover:bg-white/[0.04] hover:border-white/[0.12] transition-all"
+                    onClick={() => setSelectedQuest(quest)}
+                    className="group relative overflow-hidden rounded-2xl border border-white/[0.06] bg-white/[0.02] hover:bg-white/[0.04] hover:border-white/[0.12] transition-all text-left w-full"
                   >
                     <div className="p-5 sm:p-6 flex flex-col sm:flex-row gap-4 sm:items-center">
-                      {/* Left: rank + content */}
                       <div className="flex gap-4 flex-1 min-w-0">
-                        {/* Rank Badge */}
                         <div className="flex-shrink-0">
                           <div
                             className={`w-12 h-12 rounded-xl bg-gradient-to-br ${diff.gradient} flex items-center justify-center font-bold text-white shadow-lg`}
@@ -292,7 +308,6 @@ export default function Quests() {
                           </div>
                         </div>
 
-                        {/* Content */}
                         <div className="flex-1 min-w-0">
                           <div className="flex items-start gap-2 mb-1.5 flex-wrap">
                             <h3 className="font-semibold text-base leading-tight">{quest.title}</h3>
@@ -331,30 +346,22 @@ export default function Quests() {
                         </div>
                       </div>
 
-                      {/* Right: complete button */}
-                      <button
-                        onClick={() => completeQuest(quest.id)}
-                        disabled={isCompleting}
-                        className="flex-shrink-0 inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-white text-slate-900 text-sm font-semibold hover:bg-slate-100 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg shadow-white/5"
-                      >
-                        {isCompleting ? (
-                          <>
-                            <Loader2 size={14} className="animate-spin" />
-                            Completing
-                          </>
-                        ) : (
-                          <>
-                            <CheckCircle2 size={14} />
-                            Complete
-                          </>
-                        )}
-                      </button>
+                      <ChevronRight size={16} className="text-slate-500 group-hover:text-white transition-colors flex-shrink-0 group-hover:translate-x-0.5 transition-transform" />
                     </div>
-                  </motion.div>
+                  </motion.button>
                 );
               })}
             </AnimatePresence>
           </div>
+        )}
+
+        {/* Quest Detail Modal */}
+        {selectedQuest && (
+          <QuestDetailModal
+            quest={selectedQuest}
+            onClose={() => setSelectedQuest(null)}
+            onComplete={completeQuest}
+          />
         )}
 
         {/* Recently completed */}
