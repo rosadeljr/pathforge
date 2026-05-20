@@ -20,11 +20,14 @@ import {
   Copy,
   Volume2,
   VolumeX,
+  Sun,
+  Moon,
 } from "lucide-react";
 import Link from "next/link";
 import { CAREER_PATHS, formatPhp } from "@/lib/data/career-paths";
 import { PageShimmer } from "@/components/ui/Shimmer";
 import { isSoundEnabled, setSoundEnabled } from "@/lib/effects/celebration";
+import { useTheme } from "@/components/theme/ThemeProvider";
 
 interface Profile {
   id: string;
@@ -50,6 +53,7 @@ export default function Settings() {
   const [username, setUsername] = useState("");
   const [fullName, setFullName] = useState("");
   const [soundOn, setSoundOn] = useState(true);
+  const { theme, toggle: toggleTheme } = useTheme();
 
   useEffect(() => {
     setSoundOn(isSoundEnabled());
@@ -422,8 +426,45 @@ export default function Settings() {
               Preferences
             </h2>
           </div>
-          <div className="p-6">
+          <div className="p-6 space-y-5">
+            {/* Theme toggle */}
             <div className="flex items-center justify-between gap-4">
+              <div className="flex items-center gap-3 min-w-0">
+                <div
+                  className={`w-10 h-10 rounded-xl flex items-center justify-center ${
+                    theme === "dark"
+                      ? "bg-indigo-500/15 text-indigo-300"
+                      : "bg-amber-500/15 text-amber-300"
+                  }`}
+                >
+                  {theme === "dark" ? <Moon size={18} /> : <Sun size={18} />}
+                </div>
+                <div>
+                  <div className="text-sm font-semibold">
+                    Theme · {theme === "dark" ? "Dark" : "Light"}
+                  </div>
+                  <div className="text-xs text-slate-400">
+                    Dark mode is the recommended experience for that premium feel.
+                  </div>
+                </div>
+              </div>
+              <button
+                onClick={toggleTheme}
+                className={`relative w-11 h-6 rounded-full transition-colors flex-shrink-0 ${
+                  theme === "light" ? "bg-amber-500" : "bg-white/[0.1]"
+                }`}
+                aria-label={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}
+              >
+                <span
+                  className={`absolute top-0.5 w-5 h-5 rounded-full bg-white shadow-md transition-transform ${
+                    theme === "light" ? "translate-x-5" : "translate-x-0.5"
+                  }`}
+                />
+              </button>
+            </div>
+
+            {/* Sound toggle */}
+            <div className="flex items-center justify-between gap-4 pt-5 border-t border-white/[0.06]">
               <div className="flex items-center gap-3 min-w-0">
                 <div
                   className={`w-10 h-10 rounded-xl flex items-center justify-center ${
@@ -444,6 +485,7 @@ export default function Settings() {
                 className={`relative w-11 h-6 rounded-full transition-colors flex-shrink-0 ${
                   soundOn ? "bg-indigo-500" : "bg-white/[0.1]"
                 }`}
+                aria-label={soundOn ? "Mute sounds" : "Enable sounds"}
               >
                 <span
                   className={`absolute top-0.5 w-5 h-5 rounded-full bg-white shadow-md transition-transform ${

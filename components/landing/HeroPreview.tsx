@@ -1,15 +1,45 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { motion, useMotionValue, useSpring, useTransform } from "framer-motion";
+import { useRef, MouseEvent } from "react";
 import { Swords, Zap, Flame, Trophy, Sparkles, ArrowRight } from "lucide-react";
 
 /**
  * Animated dashboard preview shown in the landing hero.
- * Looks like a real product screenshot, but animated and on-brand.
+ * Now with 3D mouse-tracking tilt for that futuristic feel.
  */
 export function HeroPreview() {
+  const cardRef = useRef<HTMLDivElement>(null);
+  const mouseX = useMotionValue(0);
+  const mouseY = useMotionValue(0);
+
+  // Spring smoothing for buttery-smooth tilt
+  const springConfig = { stiffness: 100, damping: 30 };
+  const rotateX = useSpring(useTransform(mouseY, [-0.5, 0.5], [6, -6]), springConfig);
+  const rotateY = useSpring(useTransform(mouseX, [-0.5, 0.5], [-6, 6]), springConfig);
+
+  const handleMouseMove = (e: MouseEvent<HTMLDivElement>) => {
+    if (!cardRef.current) return;
+    const rect = cardRef.current.getBoundingClientRect();
+    const x = (e.clientX - rect.left) / rect.width - 0.5;
+    const y = (e.clientY - rect.top) / rect.height - 0.5;
+    mouseX.set(x);
+    mouseY.set(y);
+  };
+
+  const handleMouseLeave = () => {
+    mouseX.set(0);
+    mouseY.set(0);
+  };
+
   return (
-    <div className="relative">
+    <div
+      ref={cardRef}
+      onMouseMove={handleMouseMove}
+      onMouseLeave={handleMouseLeave}
+      className="relative"
+      style={{ perspective: "1200px" }}
+    >
       {/* Outer glow */}
       <div
         className="absolute -inset-8 opacity-50 blur-3xl pointer-events-none"
@@ -19,8 +49,15 @@ export function HeroPreview() {
         }}
       />
 
-      {/* Browser chrome */}
-      <div className="relative rounded-2xl border border-white/[0.08] bg-[#0a0a0f]/95 backdrop-blur-xl shadow-2xl overflow-hidden">
+      {/* Browser chrome — with 3D tilt */}
+      <motion.div
+        style={{
+          rotateX,
+          rotateY,
+          transformStyle: "preserve-3d",
+        }}
+        className="relative rounded-2xl border border-white/[0.08] bg-[#0a0a0f]/95 backdrop-blur-xl shadow-2xl overflow-hidden will-change-transform"
+      >
         {/* Browser bar */}
         <div className="flex items-center gap-2 px-4 h-9 border-b border-white/[0.06] bg-white/[0.02]">
           <div className="flex items-center gap-1.5">
@@ -184,7 +221,7 @@ export function HeroPreview() {
             </motion.div>
           </div>
         </div>
-      </div>
+      </motion.div>
 
       {/* Floating achievement badge — stays inside viewport on mobile, escapes on lg+ */}
       <motion.div

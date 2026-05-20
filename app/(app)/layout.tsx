@@ -16,7 +16,10 @@ import {
   Settings as SettingsIcon,
   LogOut,
   Sparkles,
+  Sun,
+  Moon,
 } from "lucide-react";
+import { useTheme } from "@/components/theme/ThemeProvider";
 
 interface Profile {
   username: string | null;
@@ -58,6 +61,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
   // createClient() is now a singleton — same instance across renders
   const supabase = createClient();
+  const { theme, toggle: toggleTheme } = useTheme();
 
   const isFullscreen = FULLSCREEN_ROUTES.some((route) => pathname?.startsWith(route));
 
@@ -318,6 +322,21 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                   </span>
                 </Link>
               )}
+              {/* Theme toggle */}
+              <button
+                onClick={toggleTheme}
+                className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-slate-400 hover:bg-white/[0.03] hover:text-white transition-all"
+                aria-label={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}
+              >
+                {theme === "dark" ? (
+                  <Sun size={17} strokeWidth={2} />
+                ) : (
+                  <Moon size={17} strokeWidth={2} />
+                )}
+                <span className="font-medium">
+                  {theme === "dark" ? "Light mode" : "Dark mode"}
+                </span>
+              </button>
               <button
                 onClick={handleSignOut}
                 className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-slate-400 hover:bg-white/[0.03] hover:text-white transition-all"

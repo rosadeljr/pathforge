@@ -17,6 +17,7 @@ import { Logo } from "@/components/brand/Logo";
 import { PrimaryLinkButton } from "@/components/ui/PrimaryButton";
 import { HeroPreview } from "@/components/landing/HeroPreview";
 import { StickyCTA } from "@/components/landing/StickyCTA";
+import { FloatingParticles } from "@/components/landing/FloatingParticles";
 
 export default function Landing() {
   return (
@@ -64,6 +65,9 @@ export default function Landing() {
               "radial-gradient(ellipse at center, transparent 0%, rgba(0,0,0,0.5) 100%)",
           }}
         />
+
+        {/* Floating light particles */}
+        <FloatingParticles />
       </div>
 
       {/* Navigation */}
