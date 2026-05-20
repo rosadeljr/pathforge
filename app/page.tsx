@@ -67,10 +67,12 @@ export default function Landing() {
 
       {/* Navigation */}
       <nav className="relative z-50 border-b border-white/[0.06] bg-[#0a0a0f]/80 backdrop-blur-xl sticky top-0">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2.5">
-            <Logo size={28} />
-            <span className="text-base font-semibold tracking-tight">PathForge</span>
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 h-14 sm:h-16 flex items-center justify-between gap-3">
+          <Link href="/" className="flex items-center gap-2 sm:gap-2.5 min-w-0">
+            <Logo size={26} className="flex-shrink-0" />
+            <span className="text-sm sm:text-base font-semibold tracking-tight truncate">
+              PathForge
+            </span>
           </Link>
 
           <div className="hidden md:flex items-center gap-8">
@@ -85,15 +87,16 @@ export default function Landing() {
             </Link>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
             <Link
               href="/login"
-              className="text-sm text-slate-300 hover:text-white px-3 py-1.5 transition-colors"
+              className="text-xs sm:text-sm text-slate-300 hover:text-white px-2 sm:px-3 py-1.5 transition-colors"
             >
               Sign in
             </Link>
             <PrimaryLinkButton href="/signup" size="sm">
-              Get started
+              <span className="hidden xs:inline">Get started</span>
+              <span className="xs:hidden">Start</span>
               <ArrowRight size={12} />
             </PrimaryLinkButton>
           </div>
@@ -108,14 +111,14 @@ export default function Landing() {
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
-            className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/[0.04] border border-white/[0.08] mb-7 shadow-lg shadow-black/40"
+            className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/[0.04] border border-white/[0.08] mb-7 shadow-lg shadow-black/40"
           >
             <div className="relative">
               <div className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
               <div className="absolute inset-0 w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping opacity-50" />
             </div>
             <span className="text-xs font-medium text-slate-300 tracking-wide">
-              Built for the ambitious
+              Career growth, gamified
             </span>
           </motion.div>
 
@@ -449,9 +452,9 @@ export default function Landing() {
       {/* Footer */}
       <footer className="relative z-10 border-t border-white/[0.06] bg-[#070710]">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-14">
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-10 mb-12">
-            {/* Brand */}
-            <div>
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-8 lg:gap-12 mb-12">
+            {/* Brand — full width on mobile, 1/3 on larger */}
+            <div className="col-span-2 sm:col-span-1">
               <Link href="/" className="inline-flex items-center gap-2.5 mb-4">
                 <Logo size={28} />
                 <span className="text-base font-semibold tracking-tight">PathForge</span>

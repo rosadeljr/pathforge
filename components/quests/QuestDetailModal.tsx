@@ -114,13 +114,17 @@ export function QuestDetailModal({ quest, onClose, onComplete }: Props) {
       className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/70 backdrop-blur-md overflow-y-auto"
     >
       <motion.div
-        initial={{ y: 20, opacity: 0, scale: 0.98 }}
+        initial={{ y: 30, opacity: 0, scale: 0.98 }}
         animate={{ y: 0, opacity: 1, scale: 1 }}
-        exit={{ y: 20, opacity: 0, scale: 0.98 }}
+        exit={{ y: 30, opacity: 0, scale: 0.98 }}
         transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
         onClick={(e) => e.stopPropagation()}
-        className="w-full sm:max-w-2xl bg-[#0a0a0f] border border-white/[0.08] sm:rounded-2xl shadow-2xl my-auto overflow-hidden"
+        className="relative w-full sm:max-w-2xl bg-[#0a0a0f] border-t border-x sm:border border-white/[0.08] sm:rounded-2xl rounded-t-3xl shadow-2xl my-auto overflow-hidden max-h-[92vh] sm:max-h-[88vh] flex flex-col"
       >
+        {/* Mobile drag handle */}
+        <div className="sm:hidden flex justify-center pt-2 pb-1">
+          <div className="w-10 h-1 rounded-full bg-white/20" />
+        </div>
         {/* Header */}
         <div className="relative overflow-hidden">
           <div
@@ -170,7 +174,7 @@ export function QuestDetailModal({ quest, onClose, onComplete }: Props) {
         </div>
 
         {/* Body */}
-        <div className="px-6 py-5 space-y-5 max-h-[60vh] overflow-y-auto">
+        <div className="px-6 py-5 space-y-5 overflow-y-auto flex-1">
           {/* Description */}
           {quest.description && (
             <div>

@@ -337,15 +337,19 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
       {/* Mobile Bottom Tab Bar */}
       {authenticated && (
-        <nav className="md:hidden fixed bottom-0 inset-x-0 z-40 bg-[#0a0a0f]/95 backdrop-blur-xl border-t border-white/[0.06]">
-          <div className="flex items-stretch justify-around h-16 px-2 pb-safe">
+        <nav
+          className="md:hidden fixed bottom-0 inset-x-0 z-40 bg-[#0a0a0f]/95 backdrop-blur-xl border-t border-white/[0.06]"
+          style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
+        >
+          <div className="flex items-stretch justify-around h-16 px-1">
             {mobileNavLinks.map(({ icon: Icon, label, href }) => {
               const isActive = pathname === href;
               return (
                 <Link
                   key={href}
                   href={href}
-                  className="relative flex-1 flex flex-col items-center justify-center gap-0.5 py-1.5 group"
+                  // 44px minimum touch target via py-2.5 + flex content height
+                  className="relative flex-1 flex flex-col items-center justify-center gap-0.5 py-2 min-h-[44px] group active:bg-white/[0.04] transition-colors rounded-lg"
                 >
                   {isActive && (
                     <motion.div

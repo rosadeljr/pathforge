@@ -25,6 +25,10 @@ const config: Config = {
       "7xl": ["4.5rem", { lineHeight: "5.5rem" }],
     },
     extend: {
+      screens: {
+        // Tiny-phone breakpoint (320-374px). Useful for shrinking inline content.
+        xs: "375px",
+      },
       colors: {
         slate: {
           950: "#0a0e27",

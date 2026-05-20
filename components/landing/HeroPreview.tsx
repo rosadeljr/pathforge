@@ -186,15 +186,15 @@ export function HeroPreview() {
         </div>
       </div>
 
-      {/* Floating achievement badge — emerges from card */}
+      {/* Floating achievement badge — stays inside viewport on mobile, escapes on lg+ */}
       <motion.div
         initial={{ opacity: 0, scale: 0.5, x: 30, y: -20 }}
         animate={{ opacity: 1, scale: 1, x: 0, y: 0 }}
         transition={{ duration: 0.7, delay: 1.6, type: "spring", stiffness: 200 }}
-        className="hidden sm:flex absolute -right-4 lg:-right-10 top-12 z-20 items-center gap-2.5 p-3 rounded-2xl border border-white/[0.12] bg-[#0a0a0f]/90 backdrop-blur-xl shadow-2xl"
+        className="hidden sm:flex absolute right-2 sm:right-4 lg:-right-10 top-12 z-20 items-center gap-2.5 p-3 rounded-2xl border border-white/[0.12] bg-[#0a0a0f]/90 backdrop-blur-xl shadow-2xl"
         style={{ boxShadow: "0 20px 60px rgba(168,85,247,0.3)" }}
       >
-        <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center shadow-lg shadow-amber-500/30">
+        <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center shadow-lg shadow-amber-500/30 flex-shrink-0">
           <Trophy size={16} className="text-white" />
         </div>
         <div className="pr-1">
@@ -206,15 +206,15 @@ export function HeroPreview() {
         </div>
       </motion.div>
 
-      {/* Floating quest complete toast */}
+      {/* Floating quest complete toast — stays inside viewport on mobile, escapes on lg+ */}
       <motion.div
         initial={{ opacity: 0, scale: 0.5, x: -30, y: 20 }}
         animate={{ opacity: 1, scale: 1, x: 0, y: 0 }}
         transition={{ duration: 0.7, delay: 1.9, type: "spring", stiffness: 200 }}
-        className="hidden md:flex absolute -left-4 lg:-left-8 bottom-16 z-20 items-center gap-2.5 p-2.5 rounded-xl border border-white/[0.12] bg-[#0a0a0f]/90 backdrop-blur-xl shadow-2xl"
+        className="hidden md:flex absolute left-2 md:left-4 lg:-left-8 bottom-16 z-20 items-center gap-2.5 p-2.5 rounded-xl border border-white/[0.12] bg-[#0a0a0f]/90 backdrop-blur-xl shadow-2xl"
         style={{ boxShadow: "0 20px 60px rgba(99,102,241,0.3)" }}
       >
-        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-500 to-green-600 flex items-center justify-center">
+        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-500 to-green-600 flex items-center justify-center flex-shrink-0">
           <Swords size={14} className="text-white" />
         </div>
         <div className="pr-1">
