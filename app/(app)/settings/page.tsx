@@ -2,141 +2,354 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { motion } from "framer-motion";
 import { createClient } from "@/lib/supabase/client";
 import toast from "react-hot-toast";
-import { LogOut, ArrowLeft } from "lucide-react";
+import {
+  Settings as SettingsIcon,
+  User,
+  Target,
+  CreditCard,
+  LogOut,
+  Loader2,
+  Check,
+  Mail,
+  Sparkles,
+  ArrowRight,
+} from "lucide-react";
+import Link from "next/link";
+import { CAREER_PATHS, formatPhp } from "@/lib/data/career-paths";
 
 interface Profile {
-  username?: string;
-  email?: string;
-  target_salary_min?: number;
-  target_salary_max?: number;
-  primary_goal?: string;
-  subscription_tier?: string;
+  id: string;
+  username: string | null;
+  email: string | null;
+  full_name: string | null;
+  selected_career_path_id: string | null;
+  target_salary_min: number | null;
+  target_salary_max: number | null;
+  target_timeline_months: number | null;
+  weekly_availability_hours: number | null;
+  primary_goal: string | null;
+  subscription_tier: string | null;
 }
 
 export default function Settings() {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [username, setUsername] = useState("");
+  const [fullName, setFullName] = useState("");
   const router = useRouter();
   const supabase = createClient();
 
   useEffect(() => {
     async function loadProfile() {
       try {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) {
-          router.push("/login");
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session?.user) {
+          setLoading(false);
           return;
         }
-
-        const { data, error } = await supabase
+        const { data } = await supabase
           .from("profiles")
           .select("*")
-          .eq("id", user.id)
+          .eq("id", session.user.id)
           .single();
-
-        if (error) throw error;
-        setProfile(data);
-      } catch (error) {
+        if (data) {
+          setProfile(data);
+          setUsername(data.username || "");
+          setFullName(data.full_name || "");
+        }
+      } catch (e) {
         toast.error("Failed to load settings");
       } finally {
         setLoading(false);
       }
     }
-
     loadProfile();
-  }, [router, supabase]);
+  }, [supabase]);
 
-  const handleLogout = async () => {
-    await supabase.auth.signOut();
-    router.push("/");
+  const saveProfile = async () => {
+    if (!profile) return;
+    setSaving(true);
+    try {
+      const { error } = await supabase
+        .from("profiles")
+        .update({
+          username: username.trim() || null,
+          full_name: fullName.trim() || null,
+        })
+        .eq("id", profile.id);
+      if (error) throw error;
+      toast.success("Profile saved");
+      setProfile({ ...profile, username, full_name: fullName });
+    } catch (e: any) {
+      toast.error(e?.message || "Save failed");
+    } finally {
+      setSaving(false);
+    }
   };
 
-  if (loading)
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
+    router.replace("/login");
+  };
+
+  if (loading) {
     return (
-      <div className="min-h-screen bg-slate-950 flex items-center justify-center">
-        Loading...
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="w-8 h-8 rounded-full border-2 border-white/10 border-t-white/60 animate-spin" />
       </div>
     );
+  }
+
+  if (!profile) return null;
+
+  const careerPath = CAREER_PATHS.find((p) => p.id === profile.selected_career_path_id);
+  const tier = profile.subscription_tier || "free";
+  const isPro = tier === "pro";
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 py-8">
-      <div className="max-w-2xl mx-auto px-4">
-        <button
-          onClick={() => router.back()}
-          className="flex items-center gap-2 text-slate-400 hover:text-slate-200 mb-8"
+    <div className="min-h-screen pb-12">
+      <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-10 space-y-8">
+        {/* Header */}
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
         >
-          <ArrowLeft className="w-4 h-4" />
-          Back
-        </button>
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/[0.04] border border-white/[0.06] mb-3">
+            <SettingsIcon size={11} className="text-slate-400" />
+            <span className="text-xs font-medium text-slate-300 tracking-wide">Settings</span>
+          </div>
+          <h1 className="text-3xl sm:text-4xl font-semibold tracking-tight mb-2">
+            Your account
+          </h1>
+          <p className="text-sm text-slate-400">Manage your profile, goals, and subscription.</p>
+        </motion.div>
 
-        <h1 className="text-3xl font-bold mb-8">Settings</h1>
-
-        <div className="space-y-6">
-          {/* Profile Section */}
-          <div className="bg-slate-900 border border-slate-800 rounded-xl p-6">
-            <h2 className="font-semibold text-lg mb-4">Profile</h2>
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm text-slate-400 mb-2">
-                  Username
-                </label>
+        {/* Profile Section */}
+        <motion.section
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.05 }}
+          className="rounded-2xl border border-white/[0.06] bg-white/[0.02] overflow-hidden"
+        >
+          <div className="px-6 py-4 border-b border-white/[0.06] flex items-center gap-2">
+            <User size={14} className="text-slate-400" />
+            <h2 className="text-sm font-semibold tracking-tight uppercase tracking-wider text-slate-300">Profile</h2>
+          </div>
+          <div className="p-6 space-y-4">
+            <div>
+              <label className="block text-xs font-medium text-slate-300 mb-1.5">
+                Username
+              </label>
+              <input
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                placeholder="your-handle"
+                className="w-full px-3.5 py-2 bg-white/[0.03] border border-white/[0.06] rounded-lg text-sm focus:outline-none focus:border-indigo-500/50 focus:ring-2 focus:ring-indigo-500/30 transition-all"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-slate-300 mb-1.5">
+                Full name
+              </label>
+              <input
+                value={fullName}
+                onChange={(e) => setFullName(e.target.value)}
+                placeholder="Your name"
+                className="w-full px-3.5 py-2 bg-white/[0.03] border border-white/[0.06] rounded-lg text-sm focus:outline-none focus:border-indigo-500/50 focus:ring-2 focus:ring-indigo-500/30 transition-all"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-slate-300 mb-1.5">
+                Email
+              </label>
+              <div className="relative">
+                <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-500 pointer-events-none" />
                 <input
-                  type="text"
-                  value={profile?.username || ""}
+                  value={profile.email || ""}
                   disabled
-                  className="w-full px-4 py-2 bg-slate-800 border border-slate-700 rounded-lg text-slate-400"
+                  className="w-full pl-10 pr-3.5 py-2 bg-white/[0.02] border border-white/[0.04] rounded-lg text-sm text-slate-400 cursor-not-allowed"
                 />
               </div>
-              <div>
-                <label className="block text-sm text-slate-400 mb-2">
-                  Email
-                </label>
-                <input
-                  type="email"
-                  value={profile?.email || ""}
-                  disabled
-                  className="w-full px-4 py-2 bg-slate-800 border border-slate-700 rounded-lg text-slate-400"
+              <p className="text-[10px] text-slate-500 mt-1">Email cannot be changed</p>
+            </div>
+
+            <div className="flex justify-end pt-2">
+              <button
+                onClick={saveProfile}
+                disabled={saving}
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-white text-slate-900 text-sm font-semibold hover:bg-slate-100 disabled:opacity-50 transition-colors"
+              >
+                {saving ? (
+                  <>
+                    <Loader2 size={14} className="animate-spin" />
+                    Saving
+                  </>
+                ) : (
+                  <>
+                    <Check size={14} />
+                    Save changes
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </motion.section>
+
+        {/* Career Goals */}
+        <motion.section
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.1 }}
+          className="rounded-2xl border border-white/[0.06] bg-white/[0.02] overflow-hidden"
+        >
+          <div className="px-6 py-4 border-b border-white/[0.06] flex items-center gap-2">
+            <Target size={14} className="text-slate-400" />
+            <h2 className="text-sm font-semibold uppercase tracking-wider text-slate-300">Career Goals</h2>
+          </div>
+          <div className="p-6 space-y-4">
+            {careerPath ? (
+              <div className="flex items-center gap-3 p-3 rounded-xl bg-white/[0.02] border border-white/[0.06]">
+                <div
+                  className={`w-11 h-11 rounded-xl bg-gradient-to-br ${careerPath.gradient} flex items-center justify-center text-xl`}
+                  style={{ boxShadow: `0 8px 24px ${careerPath.accentColor}30` }}
+                >
+                  {careerPath.emoji}
+                </div>
+                <div className="flex-1">
+                  <div className="text-sm font-semibold">{careerPath.title}</div>
+                  <div className="text-xs text-slate-400">{careerPath.tagline}</div>
+                </div>
+              </div>
+            ) : (
+              <div className="text-sm text-slate-400">No career path selected.</div>
+            )}
+
+            <div className="grid grid-cols-2 gap-3">
+              <div className="p-3 rounded-xl bg-white/[0.02] border border-white/[0.06]">
+                <div className="text-[10px] uppercase tracking-wider text-slate-500 mb-1">
+                  Target salary
+                </div>
+                <div className="text-sm font-semibold tabular-nums">
+                  {profile.target_salary_min && profile.target_salary_max
+                    ? `${formatPhp(profile.target_salary_min)} – ${formatPhp(profile.target_salary_max)}`
+                    : "Not set"}
+                </div>
+              </div>
+              <div className="p-3 rounded-xl bg-white/[0.02] border border-white/[0.06]">
+                <div className="text-[10px] uppercase tracking-wider text-slate-500 mb-1">
+                  Timeline
+                </div>
+                <div className="text-sm font-semibold">
+                  {profile.target_timeline_months ? `${profile.target_timeline_months} months` : "Not set"}
+                </div>
+              </div>
+              <div className="p-3 rounded-xl bg-white/[0.02] border border-white/[0.06]">
+                <div className="text-[10px] uppercase tracking-wider text-slate-500 mb-1">
+                  Weekly hours
+                </div>
+                <div className="text-sm font-semibold">
+                  {profile.weekly_availability_hours ? `${profile.weekly_availability_hours}h` : "Not set"}
+                </div>
+              </div>
+              <div className="p-3 rounded-xl bg-white/[0.02] border border-white/[0.06]">
+                <div className="text-[10px] uppercase tracking-wider text-slate-500 mb-1">
+                  Primary goal
+                </div>
+                <div className="text-sm font-semibold capitalize">
+                  {profile.primary_goal?.replace(/_/g, " ") || "Not set"}
+                </div>
+              </div>
+            </div>
+
+            <Link
+              href="/onboarding"
+              className="inline-flex items-center gap-2 text-xs font-medium text-indigo-300 hover:text-indigo-200 transition-colors"
+            >
+              Update goals
+              <ArrowRight size={12} />
+            </Link>
+          </div>
+        </motion.section>
+
+        {/* Subscription */}
+        <motion.section
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.15 }}
+          className="rounded-2xl border border-white/[0.06] bg-white/[0.02] overflow-hidden"
+        >
+          <div className="px-6 py-4 border-b border-white/[0.06] flex items-center gap-2">
+            <CreditCard size={14} className="text-slate-400" />
+            <h2 className="text-sm font-semibold uppercase tracking-wider text-slate-300">Subscription</h2>
+          </div>
+          <div className="p-6">
+            <div className="relative overflow-hidden rounded-2xl border border-white/[0.06] p-5">
+              {isPro && (
+                <div className="absolute inset-0 opacity-20"
+                  style={{ background: "radial-gradient(ellipse at top right, rgba(245,158,11,0.4), transparent 70%)" }}
                 />
+              )}
+              <div className="relative flex items-center justify-between gap-4 flex-wrap">
+                <div>
+                  <div className="flex items-center gap-2 mb-1">
+                    {isPro && <Sparkles size={14} className="text-amber-300" />}
+                    <span className="text-xs uppercase tracking-wider text-slate-500 font-semibold">
+                      Current plan
+                    </span>
+                  </div>
+                  <div className="text-xl font-semibold tracking-tight capitalize">
+                    {isPro ? "PathForge Pro" : "Free"}
+                  </div>
+                  <p className="text-xs text-slate-400 mt-1">
+                    {isPro
+                      ? "Unlimited AI mentor, advanced quests, priority support"
+                      : "Daily quests, basic AI mentor, portfolio basics"}
+                  </p>
+                </div>
+                <Link
+                  href="/pricing"
+                  className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-colors ${
+                    isPro
+                      ? "border border-white/[0.08] text-slate-300 hover:bg-white/[0.03]"
+                      : "bg-gradient-to-br from-amber-400 to-orange-500 text-slate-900 hover:from-amber-300 hover:to-orange-400 shadow-lg shadow-amber-500/20"
+                  }`}
+                >
+                  {isPro ? "Manage plan" : "Upgrade to Pro"}
+                  <ArrowRight size={12} />
+                </Link>
               </div>
             </div>
           </div>
+        </motion.section>
 
-          {/* Goals Section */}
-          <div className="bg-slate-900 border border-slate-800 rounded-xl p-6">
-            <h2 className="font-semibold text-lg mb-4">Career Goals</h2>
-            <p className="text-slate-400 text-sm mb-4">
-              {profile?.primary_goal || "No goal set"}
-            </p>
-            <p className="text-slate-400 text-sm">
-              Target: ₱{profile?.target_salary_min} - ₱{profile?.target_salary_max}
-            </p>
-          </div>
-
-          {/* Subscription Section */}
-          <div className="bg-gradient-to-r from-violet-900/30 to-slate-900 border border-violet-500/30 rounded-xl p-6">
-            <h2 className="font-semibold text-lg mb-4">Subscription</h2>
-            <p className="text-slate-400 text-sm mb-4">
-              Current plan:{" "}
-              <span className="text-cyan-400 font-semibold capitalize">
-                {profile?.subscription_tier || "free"}
-              </span>
-            </p>
-            <button className="px-6 py-2 bg-gradient-to-r from-cyan-500 to-cyan-600 text-slate-950 font-semibold rounded-lg hover:shadow-lg hover:shadow-cyan-500/30 transition-all">
-              Upgrade to Pro
+        {/* Danger zone */}
+        <motion.section
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.2 }}
+          className="rounded-2xl border border-rose-500/20 bg-rose-500/[0.03] overflow-hidden"
+        >
+          <div className="p-6 flex items-center justify-between gap-4">
+            <div>
+              <h2 className="text-sm font-semibold mb-1">Sign out</h2>
+              <p className="text-xs text-slate-400">
+                You'll need to sign in again to access your account.
+              </p>
+            </div>
+            <button
+              onClick={handleSignOut}
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-rose-500/30 text-sm font-medium text-rose-300 hover:bg-rose-500/10 transition-colors flex-shrink-0"
+            >
+              <LogOut size={14} />
+              Sign out
             </button>
           </div>
-
-          {/* Logout */}
-          <button
-            onClick={handleLogout}
-            className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-red-500/10 border border-red-500/30 text-red-400 font-semibold rounded-lg hover:bg-red-500/20 transition-all"
-          >
-            <LogOut className="w-4 h-4" />
-            Logout
-          </button>
-        </div>
+        </motion.section>
       </div>
     </div>
   );
