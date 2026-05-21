@@ -11,7 +11,11 @@ const inter = Inter({
   display: "swap",
 });
 
+// Canonical origin — set NEXT_PUBLIC_APP_URL in Vercel if a custom domain is used.
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "https://pathforge-zeta.vercel.app";
+
 export const metadata: Metadata = {
+  metadataBase: new URL(APP_URL),
   title: "PathForge — Forge the career you actually want",
   description:
     "Personalized roadmaps, daily quests, and Jus AI — your career coach. Built for the ambitious, anywhere in the world.",
@@ -50,6 +54,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       lang="en"
       className={`dark ${inter.variable}`}
       data-theme="dark"
+      data-scroll-behavior="smooth"
       suppressHydrationWarning
     >
       <head>
