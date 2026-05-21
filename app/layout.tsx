@@ -1,4 +1,5 @@
 import "./globals.css";
+import type { Metadata, Viewport } from "next";
 import { Analytics } from "@vercel/analytics/react";
 import { Inter } from "next/font/google";
 import { AppToaster } from "@/components/ui/AppToaster";
@@ -10,16 +11,37 @@ const inter = Inter({
   display: "swap",
 });
 
-export const metadata = {
+export const metadata: Metadata = {
   title: "PathForge — Forge the career you actually want",
   description:
-    "Personalized roadmaps, daily quests, and an AI mentor. Built for the ambitious — anywhere in the world.",
+    "Personalized roadmaps, daily quests, and Jus AI — your career coach. Built for the ambitious, anywhere in the world.",
+  applicationName: "PathForge",
+  manifest: "/manifest.webmanifest",
+  appleWebApp: {
+    capable: true,
+    title: "PathForge",
+    statusBarStyle: "black-translucent",
+  },
   openGraph: {
     title: "PathForge — Forge the career you actually want",
     description:
-      "Personalized roadmaps, daily quests, and an AI mentor. Built for the ambitious.",
+      "Personalized roadmaps, daily quests, and Jus AI — your career coach.",
     siteName: "PathForge",
+    type: "website",
   },
+  twitter: {
+    card: "summary_large_image",
+    title: "PathForge — Forge the career you actually want",
+    description: "Career growth, gamified. Personalized roadmaps + Jus AI coach.",
+  },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#0a0a0f",
+  colorScheme: "dark light",
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 5,
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

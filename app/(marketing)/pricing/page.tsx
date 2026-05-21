@@ -4,9 +4,20 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { Check, Sparkles, ArrowRight, CreditCard, Crown, Zap, Loader2 } from "lucide-react";
+import {
+  Check,
+  Sparkles,
+  ArrowRight,
+  CreditCard,
+  Crown,
+  Zap,
+  ArrowLeft,
+} from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import toast from "react-hot-toast";
+import { Logo } from "@/components/brand/Logo";
+import { PrimaryLinkButton } from "@/components/ui/PrimaryButton";
+import { GCashPaymentModal } from "@/components/payments/GCashPaymentModal";
 
 const PLANS = [
   {
@@ -23,11 +34,6 @@ const PLANS = [
       "Standard XP progression",
       "Public portfolio",
     ],
-    notIncluded: [
-      "Advanced AI strategies",
-      "Mock interview prep",
-      "Priority support",
-    ],
     cta: "Start free",
     highlight: false,
   },
@@ -35,7 +41,7 @@ const PLANS = [
     name: "Pro",
     icon: Sparkles,
     accent: "#a855f7",
-    price: "₱499",
+    price: "₱249",
     period: "per month",
     description: "For ambitious forgers who want to ship.",
     features: [
@@ -48,7 +54,6 @@ const PLANS = [
       "Advanced analytics & insights",
       "Priority support",
     ],
-    notIncluded: [],
     cta: "Go Pro",
     highlight: true,
     badge: "Most popular",
@@ -57,7 +62,7 @@ const PLANS = [
     name: "Elite",
     icon: Crown,
     accent: "#f59e0b",
-    price: "₱1,999",
+    price: "₱999",
     period: "per month",
     description: "Total career acceleration. White-glove.",
     features: [
@@ -70,7 +75,6 @@ const PLANS = [
       "Premium themes & badges",
       "VIP support",
     ],
-    notIncluded: [],
     cta: "Go Elite",
     highlight: false,
   },
@@ -79,35 +83,47 @@ const PLANS = [
 const FAQS = [
   {
     q: "Is there really a free tier?",
-    a: "Yes. Free forever, no credit card. You can complete quests, talk to the AI mentor (basic), build your portfolio, and level up. Upgrade only when you outgrow it.",
+    a: "Yes. Free forever, no credit card needed. You can complete quests, talk to the AI mentor (basic), build your portfolio, and level up. Upgrade only when you outgrow it.",
   },
   {
     q: "Can I cancel anytime?",
-    a: "Anytime. We don't lock you in. If you cancel, you keep your account and progress — you just lose Pro/Elite features.",
+    a: "Anytime. We don't lock you in. If you cancel, you keep your account and progress — you just lose Pro/Elite features at the end of the billing period.",
   },
   {
-    q: "Who is PathForge for?",
-    a: "Designed with the global remote economy in mind. Salary ranges shown in PHP for the PH market, plus remote-friendly career paths (VA, Copywriter, Customer Success) that work from anywhere.",
+    q: "How does the pricing compare globally?",
+    a: "₱249/mo Pro is roughly the cost of one streaming subscription. ₱999/mo Elite is less than a typical gym membership. Designed to feel like an easy yes for someone serious about their career.",
   },
   {
     q: "Do I need to know how to code?",
     a: "Nope. Half our career paths are non-technical — Design, Marketing, Content, Virtual Assistant, Customer Success, Copywriting. Anyone ambitious can use PathForge.",
   },
+  {
+    q: "What payment methods do you accept?",
+    a: "We accept GCash and Maya. After signup, click Upgrade — you'll see the mobile number and amount to send. Submit your reference number, and we'll verify and unlock Pro/Elite within 4 hours (PH business hours).",
+  },
+  {
+    q: "Is there a refund policy?",
+    a: "Yes — 30-day refund window from your first paid subscription. Just email support@pathforge.app. After 30 days, you can cancel anytime to stop future charges.",
+  },
 ];
 
-export default function Pricing() {
-  const [authenticated, setAuthenticated] = useState(false);
-  const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
+const PRICE_BY_TIER: Record<"pro" | "elite", number> = {
+  pro: 249,
+  elite: 999,
+};
+
+export default function PricingPage() {
+  const [authenticated, setAuthenticated] = useState<boolean | null>(null);
   const [errorBanner, setErrorBanner] = useState<string | null>(null);
+  const [paymentModal, setPaymentModal] = useState<{ tier: "pro" | "elite"; amount: number } | null>(null);
   const router = useRouter();
   const supabase = createClient();
 
   useEffect(() => {
-    async function checkAuth() {
-      const { data: { session } } = await supabase.auth.getSession();
-      setAuthenticated(!!session?.user);
-    }
-    checkAuth();
+    let mounted = true;
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (mounted) setAuthenticated(!!session?.user);
+    });
 
     // Surface errors returned by Stripe checkout (?error=...)
     if (typeof window !== "undefined") {
@@ -119,45 +135,93 @@ export default function Pricing() {
         toast("Checkout cancelled. No charge was made.", { icon: "ℹ️" });
       }
     }
+
+    return () => {
+      mounted = false;
+    };
   }, [supabase]);
 
   const handleSelect = async (planName: string) => {
-    if (!authenticated) {
-      router.push("/signup");
-      return;
-    }
+    // Free always goes to signup (if not auth'd) or dashboard (if auth'd)
     if (planName === "Free") {
-      router.push("/dashboard");
+      router.push(authenticated ? "/dashboard" : "/signup");
       return;
     }
 
-    const tier = planName.toLowerCase();
-    setLoadingPlan(tier);
-    try {
-      const res = await fetch("/api/checkout", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ tier }),
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        throw new Error(data.error || "Checkout failed");
-      }
-      if (data.url) {
-        window.location.href = data.url;
-      } else {
-        throw new Error("No checkout URL returned");
-      }
-    } catch (e: any) {
-      console.error("Checkout error:", e);
-      toast.error(e?.message || "Couldn't start checkout. Try again.");
-      setLoadingPlan(null);
+    // Paid plans: route to signup with a returnTo flag if not authenticated
+    if (!authenticated) {
+      router.push(`/signup?returnTo=${encodeURIComponent(`/pricing?upgrade=${planName.toLowerCase()}`)}`);
+      return;
     }
+
+    // Authenticated: open GCash / Maya payment modal
+    const tier = planName.toLowerCase() as "pro" | "elite";
+    setPaymentModal({ tier, amount: PRICE_BY_TIER[tier] });
+  };
+
+  // CTA label changes based on auth state
+  const ctaLabel = (plan: { name: string; cta: string }): string => {
+    if (plan.name === "Free") return authenticated ? "Open dashboard" : plan.cta;
+    if (authenticated === null) return plan.cta;
+    return authenticated ? plan.cta : "Sign up to upgrade";
   };
 
   return (
-    <div className="min-h-screen pb-16">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12 lg:py-16">
+    <div className="min-h-screen bg-[#0a0a0f] text-white relative overflow-hidden">
+      {/* Ambient bg */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div
+          className="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[600px] rounded-full opacity-30"
+          style={{ background: "radial-gradient(ellipse, rgba(168,85,247,0.3), transparent 70%)" }}
+        />
+        <div
+          className="absolute inset-0 opacity-[0.015]"
+          style={{
+            backgroundImage: `linear-gradient(rgba(255,255,255,1) 1px, transparent 1px),
+                              linear-gradient(90deg, rgba(255,255,255,1) 1px, transparent 1px)`,
+            backgroundSize: "64px 64px",
+          }}
+        />
+      </div>
+
+      {/* Top nav */}
+      <nav className="relative z-50 border-b border-white/[0.06] bg-[#0a0a0f]/80 backdrop-blur-xl sticky top-0">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 h-14 sm:h-16 flex items-center justify-between gap-3">
+          <Link href="/" className="flex items-center gap-2 sm:gap-2.5 min-w-0">
+            <Logo size={26} className="flex-shrink-0" />
+            <span className="text-sm sm:text-base font-semibold tracking-tight truncate">
+              PathForge
+            </span>
+          </Link>
+          <div className="flex items-center gap-2 flex-shrink-0">
+            {authenticated ? (
+              <Link
+                href="/dashboard"
+                className="inline-flex items-center gap-1.5 text-xs sm:text-sm text-slate-300 hover:text-white px-2 sm:px-3 py-1.5 transition-colors"
+              >
+                <ArrowLeft size={12} />
+                Dashboard
+              </Link>
+            ) : (
+              <>
+                <Link
+                  href="/login"
+                  className="text-xs sm:text-sm text-slate-300 hover:text-white px-2 sm:px-3 py-1.5 transition-colors"
+                >
+                  Sign in
+                </Link>
+                <PrimaryLinkButton href="/signup" size="sm">
+                  <span className="hidden xs:inline">Get started</span>
+                  <span className="xs:hidden">Start</span>
+                  <ArrowRight size={12} />
+                </PrimaryLinkButton>
+              </>
+            )}
+          </div>
+        </div>
+      </nav>
+
+      <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12 lg:py-16">
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: 12 }}
@@ -177,7 +241,7 @@ export default function Pricing() {
             </span>
           </h1>
           <p className="text-base text-slate-400 max-w-2xl mx-auto">
-            Start free. Upgrade only if PathForge becomes your edge. Cancel anytime.
+            Start free. Upgrade only when PathForge becomes your edge. Cancel anytime.
           </p>
         </motion.div>
 
@@ -222,7 +286,8 @@ export default function Pricing() {
             >
               {plan.highlight && (
                 <>
-                  <div className="absolute -top-20 left-1/2 -translate-x-1/2 w-64 h-64 rounded-full opacity-30 pointer-events-none"
+                  <div
+                    className="absolute -top-20 left-1/2 -translate-x-1/2 w-64 h-64 rounded-full opacity-30 pointer-events-none"
                     style={{ background: `radial-gradient(circle, ${plan.accent}50, transparent 70%)` }}
                   />
                   {plan.badge && (
@@ -249,7 +314,9 @@ export default function Pricing() {
                 {/* Price */}
                 <div className="mb-6">
                   <div className="flex items-baseline gap-1">
-                    <span className="text-4xl font-semibold tracking-tight tabular-nums">{plan.price}</span>
+                    <span className="text-4xl font-semibold tracking-tight tabular-nums">
+                      {plan.price}
+                    </span>
                     <span className="text-sm text-slate-400">/{plan.period}</span>
                   </div>
                 </div>
@@ -257,21 +324,13 @@ export default function Pricing() {
                 {/* CTA */}
                 <button
                   onClick={() => handleSelect(plan.name)}
-                  disabled={loadingPlan !== null}
-                  className={`w-full py-2.5 rounded-lg text-sm font-semibold transition-all mb-6 inline-flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed ${
+                  className={`w-full py-2.5 rounded-lg text-sm font-semibold transition-all mb-6 inline-flex items-center justify-center gap-2 ${
                     plan.highlight
                       ? "bg-white text-slate-900 hover:bg-slate-100 shadow-lg shadow-white/5"
                       : "border border-white/[0.08] text-slate-300 hover:bg-white/[0.04] hover:border-white/[0.16]"
                   }`}
                 >
-                  {loadingPlan === plan.name.toLowerCase() ? (
-                    <>
-                      <Loader2 size={14} className="animate-spin" />
-                      Opening Stripe…
-                    </>
-                  ) : (
-                    plan.cta
-                  )}
+                  {ctaLabel(plan)}
                 </button>
 
                 {/* Features */}
@@ -322,9 +381,7 @@ export default function Pricing() {
           className="mt-20"
         >
           <div className="text-center mb-10">
-            <h2 className="text-3xl font-semibold tracking-tight mb-2">
-              Questions, answered.
-            </h2>
+            <h2 className="text-3xl font-semibold tracking-tight mb-2">Questions, answered.</h2>
             <p className="text-sm text-slate-400">Real questions from real users.</p>
           </div>
 
@@ -354,8 +411,12 @@ export default function Pricing() {
           className="mt-20 max-w-3xl mx-auto"
         >
           <div className="relative overflow-hidden rounded-3xl border border-white/[0.08] bg-gradient-to-br from-white/[0.06] to-transparent p-10 lg:p-12 text-center">
-            <div className="absolute inset-0 opacity-30"
-              style={{ background: "radial-gradient(ellipse at top, rgba(168,85,247,0.4), transparent 70%)" }}
+            <div
+              className="absolute inset-0 opacity-30"
+              style={{
+                background:
+                  "radial-gradient(ellipse at top, rgba(168,85,247,0.4), transparent 70%)",
+              }}
             />
             <div className="relative">
               <h2 className="text-3xl sm:text-4xl font-semibold tracking-tight mb-3">
@@ -364,17 +425,23 @@ export default function Pricing() {
               <p className="text-base text-slate-400 mb-8 max-w-md mx-auto">
                 Start free. Upgrade only when PathForge becomes your secret weapon.
               </p>
-              <Link
-                href="/signup"
-                className="group inline-flex items-center gap-2 bg-white text-slate-900 hover:bg-slate-100 px-6 py-3 rounded-lg text-sm font-semibold transition-all shadow-2xl shadow-white/10"
-              >
-                Create your account
-                <ArrowRight size={14} className="group-hover:translate-x-0.5 transition-transform" />
-              </Link>
+              <PrimaryLinkButton href={authenticated ? "/dashboard" : "/signup"} size="lg">
+                {authenticated ? "Open dashboard" : "Create your account"}
+                <ArrowRight size={14} />
+              </PrimaryLinkButton>
             </div>
           </div>
         </motion.div>
       </div>
+
+      {/* GCash / Maya payment modal */}
+      {paymentModal && (
+        <GCashPaymentModal
+          tier={paymentModal.tier}
+          amount={paymentModal.amount}
+          onClose={() => setPaymentModal(null)}
+        />
+      )}
     </div>
   );
 }

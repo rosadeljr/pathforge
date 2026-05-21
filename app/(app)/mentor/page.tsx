@@ -109,7 +109,7 @@ export default function Mentor() {
       ]);
     } catch (error: any) {
       console.error(error);
-      toast.error("Mentor is offline right now. Try again in a moment.");
+      toast.error("Jus is offline right now. Try again in a moment.");
       // Remove the optimistic user message
       setMessages((prev) => prev.filter((m) => m.id !== userMsg.id));
       setInput(text);
@@ -150,7 +150,12 @@ export default function Mentor() {
             <div className="absolute -bottom-1 -right-1 w-3.5 h-3.5 rounded-full bg-emerald-400 border-2 border-[#0a0a0f]" />
           </div>
           <div className="flex-1 min-w-0">
-            <h1 className="font-semibold text-base">AI Mentor</h1>
+            <div className="flex items-center gap-2">
+              <h1 className="font-semibold text-base">Jus AI</h1>
+              <span className="text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-violet-500/15 text-violet-300 border border-violet-500/30">
+                Your mentor
+              </span>
+            </div>
             <div className="flex items-center gap-1.5">
               <div className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
               <p className="text-xs text-slate-400">Online · Knows your goals & progress</p>
@@ -174,10 +179,10 @@ export default function Mentor() {
                 </div>
               </div>
               <h2 className="text-xl font-semibold tracking-tight mb-2">
-                What do you want to forge?
+                Hey, I'm Jus.
               </h2>
               <p className="text-sm text-slate-400 max-w-md mb-8">
-                Your AI mentor knows your career path, level, and goals. Ask anything —
+                I know your career path, level, and goals. Ask me anything —
                 career advice, project ideas, what to learn next, or just talk it out.
               </p>
 
@@ -276,7 +281,7 @@ export default function Mentor() {
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder="Ask your mentor anything..."
+              placeholder="Ask Jus anything..."
               rows={1}
               disabled={loading}
               className="w-full pl-4 pr-12 py-3 bg-white/[0.03] border border-white/[0.06] rounded-2xl text-sm text-white placeholder-slate-500 focus:outline-none focus:border-violet-500/50 focus:ring-2 focus:ring-violet-500/20 transition-all resize-none disabled:opacity-50"

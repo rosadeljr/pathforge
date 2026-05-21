@@ -22,6 +22,7 @@ import {
 import toast from "react-hot-toast";
 import { createClient } from "@/lib/supabase/client";
 import { QUEST_LIBRARY, type QuestResource } from "@/lib/data/quest-templates";
+import { assessQuestSubmission, type QuestAssessment } from "@/lib/ai/quest-assessment";
 
 interface Quest {
   id: string;
@@ -70,6 +71,9 @@ export function QuestDetailModal({ quest, onClose, onComplete }: Props) {
   const [proofUrl, setProofUrl] = useState("");
   const [proofNotes, setProofNotes] = useState("");
   const [completing, setCompleting] = useState(false);
+  // After completion, Jus reviews the submission and shows feedback
+  const [view, setView] = useState<"detail" | "assessed">("detail");
+  const [assessment, setAssessment] = useState<QuestAssessment | null>(null);
 
   // Look up matching template for steps/resources
   const template = useMemo(() => {
@@ -95,11 +99,49 @@ export function QuestDetailModal({ quest, onClose, onComplete }: Props) {
     }
 
     setCompleting(true);
+    const cleanUrl = proofUrl.trim() || undefined;
+    const cleanNotes = proofNotes.trim() || undefined;
     try {
-      await onComplete(quest.id, proofUrl.trim() || undefined, proofNotes.trim() || undefined);
-      onClose();
+      // 1. Complete the quest (parent handles XP/streak/achievements)
+      await onComplete(quest.id, cleanUrl, cleanNotes);
+
+      // 2. Get Jus's assessment of the submission — instant local fallback,
+      //    then upgrade with the API response if it's better.
+      const localAssessment = assessQuestSubmission({
+        title: quest.title,
+        difficulty: quest.difficulty,
+        skillTag: quest.skill_tag,
+        careerImpact: quest.career_impact,
+        proofType: quest.proof_type,
+        proofUrl: cleanUrl,
+        proofNotes: cleanNotes,
+      });
+      setAssessment(localAssessment);
+      setView("assessed");
+
+      // Async upgrade — don't block the UI
+      fetch("/api/assess-quest", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: quest.title,
+          difficulty: quest.difficulty,
+          skillTag: quest.skill_tag,
+          careerImpact: quest.career_impact,
+          proofType: quest.proof_type,
+          proofUrl: cleanUrl,
+          proofNotes: cleanNotes,
+        }),
+      })
+        .then((r) => (r.ok ? r.json() : null))
+        .then((data) => {
+          if (data?.verdict && data?.feedback) setAssessment(data);
+        })
+        .catch(() => {
+          /* keep local assessment */
+        });
     } catch (e) {
-      // Error handling done in parent
+      // Error handling done in parent — stay on detail view so user can retry
     } finally {
       setCompleting(false);
     }
@@ -119,7 +161,11 @@ export function QuestDetailModal({ quest, onClose, onComplete }: Props) {
         exit={{ y: 30, opacity: 0, scale: 0.98 }}
         transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
         onClick={(e) => e.stopPropagation()}
-        className="relative w-full sm:max-w-2xl bg-[#0a0a0f] border-t border-x sm:border border-white/[0.08] sm:rounded-2xl rounded-t-3xl shadow-2xl my-auto overflow-hidden max-h-[92vh] sm:max-h-[88vh] flex flex-col"
+        className="relative w-full sm:max-w-2xl bg-[#0a0a0f] border-t border-x sm:border border-white/[0.08] sm:rounded-2xl rounded-t-3xl shadow-2xl overflow-hidden flex flex-col"
+        style={{
+          // Use small viewport-height units (svh) so mobile chrome doesn't crop
+          maxHeight: "min(92svh, 92vh)",
+        }}
       >
         {/* Mobile drag handle */}
         <div className="sm:hidden flex justify-center pt-2 pb-1">
@@ -173,7 +219,50 @@ export function QuestDetailModal({ quest, onClose, onComplete }: Props) {
           </div>
         </div>
 
-        {/* Body */}
+        {/* ASSESSED VIEW — Jus AI's review of the submission */}
+        {view === "assessed" && assessment && (
+          <div className="px-6 py-6 overflow-y-auto flex-1">
+            {/* Jus header */}
+            <div className="flex items-center gap-3 mb-5">
+              <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center shadow-lg shadow-violet-500/25">
+                <Sparkles size={18} className="text-white" />
+              </div>
+              <div>
+                <div className="text-sm font-semibold">Jus reviewed your work</div>
+                <div className="text-xs text-slate-400">Quest complete · +{quest.xp_reward} XP banked</div>
+              </div>
+            </div>
+
+            {/* Verdict */}
+            <div
+              className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md border mb-4 ${
+                assessment.strength === "excellent"
+                  ? "bg-emerald-500/15 border-emerald-500/30 text-emerald-300"
+                  : assessment.strength === "good"
+                  ? "bg-indigo-500/15 border-indigo-500/30 text-indigo-300"
+                  : "bg-amber-500/15 border-amber-500/30 text-amber-300"
+              }`}
+            >
+              <CheckCircle2 size={12} />
+              <span className="text-xs font-bold tracking-wide">{assessment.verdict}</span>
+            </div>
+
+            {/* Feedback */}
+            <p className="text-sm text-slate-200 leading-relaxed mb-5">{assessment.feedback}</p>
+
+            {/* Next step */}
+            <div className="p-3.5 rounded-xl bg-indigo-500/[0.06] border border-indigo-500/20">
+              <div className="text-[10px] uppercase tracking-wider text-indigo-300 font-semibold mb-1 flex items-center gap-1.5">
+                <ChevronRight size={11} />
+                Jus suggests
+              </div>
+              <p className="text-sm text-slate-200 leading-relaxed">{assessment.nextStep}</p>
+            </div>
+          </div>
+        )}
+
+        {/* DETAIL VIEW — the quest details + proof form */}
+        {view === "detail" && (
         <div className="px-6 py-5 space-y-5 overflow-y-auto flex-1">
           {/* Description */}
           {quest.description && (
@@ -295,33 +384,50 @@ export function QuestDetailModal({ quest, onClose, onComplete }: Props) {
             </div>
           )}
         </div>
+        )}
 
-        {/* Footer */}
-        <div className="px-6 py-4 border-t border-white/[0.06] bg-white/[0.02] flex items-center justify-between gap-3">
-          <button
-            onClick={onClose}
-            className="px-4 py-2 rounded-lg border border-white/[0.08] text-sm font-medium text-slate-300 hover:bg-white/[0.04] transition-colors"
-            disabled={completing}
-          >
-            Close
-          </button>
-          <button
-            onClick={handleComplete}
-            disabled={completing}
-            className="inline-flex items-center gap-2 px-5 py-2 rounded-lg bg-white text-slate-900 text-sm font-semibold hover:bg-slate-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-lg shadow-white/5"
-          >
-            {completing ? (
-              <>
-                <Loader2 size={14} className="animate-spin" />
-                Completing
-              </>
-            ) : (
-              <>
-                <CheckCircle2 size={14} />
-                Complete quest · +{quest.xp_reward} XP
-              </>
-            )}
-          </button>
+        {/* Footer — sticky on mobile so submit button is ALWAYS visible */}
+        <div
+          className="px-4 sm:px-6 py-3 sm:py-4 border-t border-white/[0.06] bg-[#0a0a0f]/95 backdrop-blur-xl flex items-center justify-between gap-2 sm:gap-3 flex-shrink-0"
+          style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 12px)" }}
+        >
+          {view === "assessed" ? (
+            <button
+              onClick={onClose}
+              className="w-full inline-flex items-center justify-center gap-2 px-5 py-2 rounded-lg bg-white text-slate-900 text-sm font-semibold hover:bg-slate-100 transition-colors shadow-lg shadow-white/5"
+            >
+              <CheckCircle2 size={14} />
+              Done
+            </button>
+          ) : (
+            <>
+              <button
+                onClick={onClose}
+                className="px-3 sm:px-4 py-2 rounded-lg border border-white/[0.08] text-xs sm:text-sm font-medium text-slate-300 hover:bg-white/[0.04] transition-colors flex-shrink-0"
+                disabled={completing}
+              >
+                Close
+              </button>
+              <button
+                onClick={handleComplete}
+                disabled={completing}
+                className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 sm:gap-2 px-3 sm:px-5 py-2 rounded-lg bg-white text-slate-900 text-xs sm:text-sm font-semibold hover:bg-slate-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-lg shadow-white/5 whitespace-nowrap"
+              >
+                {completing ? (
+                  <>
+                    <Loader2 size={14} className="animate-spin" />
+                    <span>Completing…</span>
+                  </>
+                ) : (
+                  <>
+                    <CheckCircle2 size={14} />
+                    <span className="hidden xs:inline">Complete · </span>
+                    <span>+{quest.xp_reward} XP</span>
+                  </>
+                )}
+              </button>
+            </>
+          )}
         </div>
       </motion.div>
     </motion.div>

@@ -477,7 +477,7 @@ export default function Quests() {
                     onClick={() => router.push("/mentor")}
                     className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-white/[0.08] text-sm font-medium text-slate-300 hover:bg-white/[0.03] transition-colors"
                   >
-                    Ask AI mentor
+                    Ask Jus AI
                   </button>
                 </div>
               )}

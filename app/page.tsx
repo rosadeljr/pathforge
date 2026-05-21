@@ -310,8 +310,8 @@ export default function Landing() {
             {[
               {
                 icon: Bot,
-                title: "AI Mentor",
-                description: "Talk to a mentor that knows your goals, gaps, and progress. Get unstuck in minutes, not weeks.",
+                title: "Jus AI · your mentor",
+                description: "Jus is your AI career coach. Knows your goals, gaps, and progress. Direct answers in minutes.",
                 accent: "#a855f7",
               },
               {

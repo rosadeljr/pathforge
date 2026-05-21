@@ -28,6 +28,8 @@ import { CAREER_PATHS, formatPhp } from "@/lib/data/career-paths";
 import { PageShimmer } from "@/components/ui/Shimmer";
 import { isSoundEnabled, setSoundEnabled } from "@/lib/effects/celebration";
 import { useTheme } from "@/components/theme/ThemeProvider";
+import { ShareButtons } from "@/components/share/ShareButtons";
+import { GCashPaymentModal } from "@/components/payments/GCashPaymentModal";
 
 interface Profile {
   id: string;
@@ -53,6 +55,7 @@ export default function Settings() {
   const [username, setUsername] = useState("");
   const [fullName, setFullName] = useState("");
   const [soundOn, setSoundOn] = useState(true);
+  const [payModal, setPayModal] = useState<{ tier: "pro" | "elite"; amount: number } | null>(null);
   const { theme, toggle: toggleTheme } = useTheme();
 
   useEffect(() => {
@@ -333,31 +336,23 @@ export default function Settings() {
                 link with recruiters or post on LinkedIn.
               </p>
 
-              <div className="flex items-center gap-2 p-3 rounded-lg bg-white/[0.02] border border-white/[0.06]">
-                <code className="flex-1 text-xs text-slate-300 truncate font-mono">
-                  {typeof window !== "undefined" ? window.location.origin : ""}/u/{profile.username}
-                </code>
-                <button
-                  onClick={() => {
-                    if (typeof window !== "undefined") {
-                      navigator.clipboard.writeText(`${window.location.origin}/u/${profile.username}`);
-                      toast.success("Link copied");
-                    }
-                  }}
-                  className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-white/[0.04] border border-white/[0.06] text-xs font-medium text-slate-300 hover:bg-white/[0.06] transition-colors flex-shrink-0"
-                >
-                  <Copy size={11} />
-                  Copy
-                </button>
-                <Link
-                  href={`/u/${profile.username}`}
-                  target="_blank"
-                  className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-white/[0.04] border border-white/[0.06] text-xs font-medium text-slate-300 hover:bg-white/[0.06] transition-colors flex-shrink-0"
-                >
-                  <ArrowRight size={11} />
-                  Open
-                </Link>
-              </div>
+              <ShareButtons
+                url={
+                  typeof window !== "undefined"
+                    ? `${window.location.origin}/u/${profile.username}`
+                    : `/u/${profile.username}`
+                }
+                title={`${profile.full_name || profile.username} on PathForge`}
+                text={`Check out my career path on PathForge — Level ${profile.target_timeline_months ? "in progress" : "1"} forger`}
+              />
+              <Link
+                href={`/u/${profile.username}`}
+                target="_blank"
+                className="inline-flex items-center gap-1.5 text-xs font-medium text-indigo-300 hover:text-indigo-200 transition-colors"
+              >
+                Open my public profile
+                <ArrowRight size={11} />
+              </Link>
             </div>
           </motion.section>
         )}
@@ -398,22 +393,21 @@ export default function Settings() {
                   </p>
                 </div>
                 {tier === "free" ? (
-                  <Link
-                    href="/pricing"
+                  <button
+                    onClick={() => setPayModal({ tier: "pro", amount: 249 })}
                     className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-colors bg-gradient-to-br from-amber-400 to-orange-500 text-slate-900 hover:from-amber-300 hover:to-orange-400 shadow-lg shadow-amber-500/20"
                   >
                     Upgrade to Pro
                     <ArrowRight size={12} />
-                  </Link>
+                  </button>
                 ) : (
-                  // For paid users — open Stripe customer portal directly
-                  <a
-                    href="/api/customer-portal"
+                  <Link
+                    href="/pricing"
                     className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-colors border border-white/[0.08] text-slate-300 hover:bg-white/[0.03]"
                   >
-                    Manage plan
+                    Change plan
                     <ArrowRight size={12} />
-                  </a>
+                  </Link>
                 )}
               </div>
             </div>
@@ -528,6 +522,15 @@ export default function Settings() {
           </div>
         </motion.section>
       </div>
+
+      {/* GCash / Maya payment modal */}
+      {payModal && (
+        <GCashPaymentModal
+          tier={payModal.tier}
+          amount={payModal.amount}
+          onClose={() => setPayModal(null)}
+        />
+      )}
     </div>
   );
 }

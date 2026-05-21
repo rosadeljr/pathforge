@@ -34,7 +34,7 @@ const navLinks = [
   { icon: LayoutDashboard, label: "Dashboard", href: "/dashboard", description: "Your command center" },
   { icon: Swords, label: "Quests", href: "/quests", description: "Daily missions" },
   { icon: Compass, label: "Roadmap", href: "/roadmap", description: "Your career path" },
-  { icon: Bot, label: "AI Mentor", href: "/mentor", description: "Talk to your mentor" },
+  { icon: Bot, label: "Jus AI", href: "/mentor", description: "Talk to your mentor" },
   { icon: Trophy, label: "Portfolio", href: "/portfolio", description: "Show your work" },
   { icon: Sparkles, label: "Achievements", href: "/achievements", description: "Your trophies" },
   { icon: Crown, label: "Leaderboard", href: "/leaderboard", description: "Top forgers" },
@@ -45,7 +45,7 @@ const navLinks = [
 const mobileNavLinks = [
   { icon: LayoutDashboard, label: "Home", href: "/dashboard" },
   { icon: Swords, label: "Quests", href: "/quests" },
-  { icon: Bot, label: "Mentor", href: "/mentor" },
+  { icon: Bot, label: "Jus AI", href: "/mentor" },
   { icon: Trophy, label: "Portfolio", href: "/portfolio" },
   { icon: SettingsIcon, label: "Settings", href: "/settings" },
 ];

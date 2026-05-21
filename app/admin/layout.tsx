@@ -12,11 +12,13 @@ import {
   ArrowLeft,
   ShieldCheck,
   Loader2,
+  CreditCard,
 } from "lucide-react";
 
 const adminNav = [
   { icon: LayoutDashboard, label: "Overview", href: "/admin" },
   { icon: Users, label: "Users", href: "/admin/users" },
+  { icon: CreditCard, label: "Payments", href: "/admin/payments" },
 ];
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {

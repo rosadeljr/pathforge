@@ -49,7 +49,7 @@ export default function Landing() {
             { icon: Zap, title: "Daily Quests", desc: "Bite-sized missions that build real skills" },
             { icon: TrendingUp, title: "XP & Leveling", desc: "Track progress visually, level up in your career" },
             { icon: Code2, title: "Portfolio Proof", desc: "Ship real projects and build credible proof" },
-            { icon: Brain, title: "AI Mentor", desc: "24/7 coaching for strategy and motivation" },
+            { icon: Brain, title: "Jus AI", desc: "Your 24/7 AI career coach for strategy and motivation" },
             { icon: Award, title: "Readiness Score", desc: "Know exactly how job-ready you are" },
           ].map((feat, i) => (
             <div key={i} className="bg-slate-900 border border-slate-800 rounded-xl p-6 hover:border-cyan-500/50 transition-all">
@@ -66,9 +66,9 @@ export default function Landing() {
         <h2 className="text-3xl font-bold text-center mb-12">Simple, Fair Pricing</h2>
         <div className="grid md:grid-cols-3 gap-6">
           {[
-            { name: "Free", price: "₱0", features: ["1 Career Path", "Limited Daily Quests", "Basic AI Mentor", "Basic Analytics"] },
-            { name: "Pro", price: "₱499", features: ["Unlimited Paths", "Advanced AI", "Custom Quests", "Portfolio Review", "Mock Interviews"] },
-            { name: "Elite", price: "₱1,999", features: ["Everything in Pro", "AI Strategy Session", "Priority Support", "Job Application Strategy"] },
+            { name: "Free", price: "₱0", features: ["1 Career Path", "Limited Daily Quests", "Basic Jus AI", "Basic Analytics"] },
+            { name: "Pro", price: "₱249", features: ["Unlimited Paths", "Advanced Jus AI", "Custom Quests", "Portfolio Review", "Mock Interviews"] },
+            { name: "Elite", price: "₱999", features: ["Everything in Pro", "AI Strategy Sessions", "Priority Support", "Job Application Strategy"] },
           ].map((plan, i) => (
             <div key={i} className={`border rounded-xl p-8 transition-all ${i === 1 ? 'bg-gradient-to-br from-cyan-500/10 to-violet-500/10 border-cyan-400 shadow-lg shadow-cyan-500/20' : 'bg-slate-900 border-slate-800'}`}>
               <h3 className="font-bold text-lg mb-2">{plan.name}</h3>
