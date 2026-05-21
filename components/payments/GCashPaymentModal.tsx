@@ -61,20 +61,35 @@ export function GCashPaymentModal({ tier, amount, onClose }: Props) {
         return;
       }
 
-      const { error } = await supabase.from("payment_requests").insert({
-        user_id: session.user.id,
-        tier,
-        amount_php: amount,
-        payment_method: method,
-        sender_name: senderName.trim() || null,
-        sender_number: senderNumber.trim() || null,
-        reference_number: referenceNumber.trim(),
-        proof_url: proofUrl.trim() || null,
-        notes: notes.trim() || null,
-        status: "pending",
-      });
+      const { data: inserted, error } = await supabase
+        .from("payment_requests")
+        .insert({
+          user_id: session.user.id,
+          tier,
+          amount_php: amount,
+          payment_method: method,
+          sender_name: senderName.trim() || null,
+          sender_number: senderNumber.trim() || null,
+          reference_number: referenceNumber.trim(),
+          proof_url: proofUrl.trim() || null,
+          notes: notes.trim() || null,
+          status: "pending",
+        })
+        .select("id")
+        .single();
 
       if (error) throw error;
+
+      // Fire-and-forget admin email alert (non-blocking, best-effort)
+      if (inserted?.id) {
+        fetch("/api/notify-payment", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ type: "submitted", paymentRequestId: inserted.id }),
+        }).catch(() => {
+          /* email is best-effort — never block the user */
+        });
+      }
 
       setStep("success");
     } catch (e: any) {

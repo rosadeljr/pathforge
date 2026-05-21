@@ -97,6 +97,13 @@ export default function AdminPaymentsPage() {
         provider: req.payment_method,
       });
 
+      // 4) email the user (best-effort, non-blocking)
+      fetch("/api/notify-payment", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ type: "approved", paymentRequestId: req.id }),
+      }).catch(() => {});
+
       toast.success(`Approved · user upgraded to ${req.tier.toUpperCase()}`);
       load();
     } catch (e: any) {
@@ -125,6 +132,13 @@ export default function AdminPaymentsPage() {
         })
         .eq("id", req.id);
       if (error) throw error;
+
+      // Email the user (best-effort, non-blocking)
+      fetch("/api/notify-payment", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ type: "rejected", paymentRequestId: req.id, reason }),
+      }).catch(() => {});
 
       toast.success("Rejected");
       load();
