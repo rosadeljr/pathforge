@@ -80,8 +80,9 @@ export default function PrivacyPage() {
                 reflections, AI mentor messages
               </li>
               <li>
-                <strong>Subscription data</strong>: subscription tier (free/pro/elite), payment
-                history metadata (we never see your full card number — Stripe handles that)
+                <strong>Subscription data</strong>: subscription tier (free/pro/elite), and the
+                GCash/Maya payment proof you submit (reference number, amount, optional
+                screenshot) for manual verification
               </li>
               <li>
                 <strong>Technical data</strong>: IP address, browser type, device information,
@@ -192,9 +193,9 @@ export default function PrivacyPage() {
                 </a>
               </li>
               <li>
-                <strong>OpenAI</strong> (USA) — AI mentor responses (optional; only invoked if
-                API key configured). Only your message text and minimal user context (level,
-                career path, active quest titles) are sent.{" "}
+                <strong>OpenAI</strong> (USA) — powers Jus AI responses (optional; only invoked
+                if an API key is configured). Only your message text and minimal user context
+                (level, career path, active quest titles) are sent.{" "}
                 <a
                   href="https://openai.com/privacy"
                   target="_blank"
@@ -205,10 +206,15 @@ export default function PrivacyPage() {
                 </a>
               </li>
               <li>
-                <strong>Stripe</strong> (USA/Ireland) — payment processing. Card details go
-                directly to Stripe; we never see them.{" "}
+                <strong>GCash / Maya</strong> (Philippines) — you pay through your own
+                GCash or Maya app. We only receive the payment proof you choose to submit
+                (reference number, amount). We never see your wallet credentials or PIN.
+              </li>
+              <li>
+                <strong>Resend</strong> (USA) — transactional email delivery (payment
+                confirmations, account notices).{" "}
                 <a
-                  href="https://stripe.com/privacy"
+                  href="https://resend.com/legal/privacy-policy"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-indigo-300 underline"

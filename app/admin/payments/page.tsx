@@ -89,13 +89,17 @@ export default function AdminPaymentsPage() {
         .eq("id", req.user_id);
       if (e2) throw e2;
 
-      // 3) create subscription record
-      await supabase.from("subscriptions").upsert({
-        user_id: req.user_id,
-        tier: req.tier,
-        status: "active",
-        provider: req.payment_method,
-      });
+      // 3) create subscription record (non-fatal — base columns only,
+      //    so it works whether or not the Stripe migration ran)
+      try {
+        await supabase.from("subscriptions").insert({
+          user_id: req.user_id,
+          tier: req.tier,
+          status: "active",
+        });
+      } catch {
+        /* subscription record is a nice-to-have; tier upgrade above is the source of truth */
+      }
 
       // 4) email the user (best-effort, non-blocking)
       fetch("/api/notify-payment", {

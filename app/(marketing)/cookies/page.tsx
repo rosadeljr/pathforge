@@ -76,6 +76,11 @@ export default function CookiesPage() {
                 description="Remember your choices (sound on/off, dark mode, language)."
                 examples={[
                   {
+                    name: "pathforge-theme",
+                    purpose: "Stores your dark / light mode choice",
+                    duration: "Persistent (LocalStorage)",
+                  },
+                  {
                     name: "pathforge-sound-enabled",
                     purpose: "Stores your sound effects preference",
                     duration: "Persistent (LocalStorage)",

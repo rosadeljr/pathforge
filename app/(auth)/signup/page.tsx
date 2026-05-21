@@ -111,10 +111,8 @@ export default function SignUp() {
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("[signup] handleSignUp fired", { email, username, passwordLength: password.length });
 
     if (configError) {
-      console.warn("[signup] blocked: config error");
       toast.error("Service unavailable. Please contact support.");
       return;
     }
@@ -126,13 +124,11 @@ export default function SignUp() {
     setTouched({ email: true, password: true, username: true });
 
     if (!isFormValid()) {
-      console.warn("[signup] blocked: form invalid", { email, username, passwordLength: password.length });
       toast.error("Please fix the errors in the form");
       return;
     }
 
     setLoading(true);
-    console.log("[signup] calling supabase.auth.signUp...");
 
     try {
       // Sign up - pass username as metadata so DB trigger can use it
@@ -147,8 +143,6 @@ export default function SignUp() {
           emailRedirectTo: `${window.location.origin}/api/auth/callback`,
         },
       });
-
-      console.log("[signup] supabase response", { hasUser: !!data?.user, hasSession: !!data?.session, error: authError?.message });
 
       if (authError) {
         console.error("[signup] auth error:", authError);
@@ -202,14 +196,12 @@ export default function SignUp() {
 
       // Check if email confirmation is required
       if (data.session) {
-        console.log("[signup] success with session - redirecting to /onboarding");
         // Track signup event (fire-and-forget)
         track(supabase, data.user.id, "signup", { payload: { username, email } });
         toast.success("Welcome to PathForge");
         // Hard navigation ensures cookies are fully established
         window.location.href = "/onboarding";
       } else {
-        console.log("[signup] success without session - email verification required");
         toast.success("Check your email to verify your account", { duration: 6000 });
         router.push("/login?error=email_verification_sent");
       }

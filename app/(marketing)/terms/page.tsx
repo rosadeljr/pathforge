@@ -130,15 +130,21 @@ export default function TermsPage() {
           <Section title="6. Subscriptions, Fees, and Payment">
             <p>
               The Service offers a free tier and paid subscription plans (Pro and Elite).
-              Paid plans are billed monthly in Philippine Pesos (PHP) and automatically renew
-              on the same date each month unless canceled. Payments are processed by third-party
-              payment processors (e.g., Stripe). All fees are exclusive of applicable taxes
-              (including VAT under R.A. 9337) unless otherwise stated.
+              Paid plans are priced monthly in Philippine Pesos (PHP). Payment is made manually
+              via GCash or Maya — after sending payment, you submit a proof of payment which our
+              team verifies (typically within 4 hours during PH business hours) before your plan
+              is activated. All fees are exclusive of applicable taxes (including VAT under
+              R.A. 9337) unless otherwise stated.
             </p>
             <p className="mt-2">
-              <strong>Cancellation and refunds.</strong> You may cancel your subscription at
-              any time from your account settings. Cancellation takes effect at the end of the
-              current billing period — no refund for partial months. As required under the
+              <strong>Renewal.</strong> Plans do not auto-charge. Before each period ends, you
+              will be reminded to renew via the same GCash/Maya process. Your plan reverts to
+              Free if not renewed.
+            </p>
+            <p className="mt-2">
+              <strong>Cancellation and refunds.</strong> You may stop using a paid plan at any
+              time — simply do not renew. Since plans do not auto-charge, there is nothing to
+              cancel. As required under the
               Consumer Act of the Philippines (R.A. 7394), a refund is available within thirty
               (30) days of your first paid subscription upon written request to{" "}
               <a href="mailto:support@pathforge.app" className="text-indigo-300 underline">
@@ -166,10 +172,10 @@ export default function TermsPage() {
           <Section title="8. Third-Party Services">
             <p>
               The Service integrates with third-party providers including Supabase
-              (infrastructure), Vercel (hosting), OpenAI (optional AI features), Stripe
-              (payments), and Vercel Analytics (anonymized usage). Use of these services is
-              subject to their respective terms and privacy policies. We are not responsible
-              for the practices of third parties.
+              (infrastructure), Vercel (hosting), OpenAI (optional AI features), GCash and
+              Maya (payments), Resend (email delivery), and Vercel Analytics (anonymized
+              usage). Use of these services is subject to their respective terms and privacy
+              policies. We are not responsible for the practices of third parties.
             </p>
           </Section>
 
