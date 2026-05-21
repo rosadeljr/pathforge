@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import { useMemo } from "react";
+import { useTheme } from "@/components/theme/ThemeProvider";
 
 interface CompletionDay {
   date: string; // YYYY-MM-DD
@@ -19,6 +20,8 @@ interface StreakHeatmapProps {
  * Each cell = 1 day; color intensity = number of quests completed.
  */
 export function StreakHeatmap({ completions, days = 365, className }: StreakHeatmapProps) {
+  const { theme } = useTheme();
+  const isLight = theme === "light";
   const cells = useMemo(() => {
     // Build a map for O(1) lookup
     const map = new Map<string, number>();
@@ -67,8 +70,8 @@ export function StreakHeatmap({ completions, days = 365, className }: StreakHeat
   const maxDay = Math.max(...completions.map((c) => c.count), 1);
 
   const getColor = (count: number, isFuture: boolean): string => {
-    if (isFuture) return "rgba(255,255,255,0.02)";
-    if (count === 0) return "rgba(255,255,255,0.04)";
+    if (isFuture) return isLight ? "rgba(15,23,42,0.035)" : "rgba(255,255,255,0.02)";
+    if (count === 0) return isLight ? "rgba(15,23,42,0.07)" : "rgba(255,255,255,0.04)";
     const intensity = Math.min(count / maxDay, 1);
     if (intensity <= 0.25) return "rgba(99,102,241,0.35)";
     if (intensity <= 0.5) return "rgba(139,92,246,0.55)";

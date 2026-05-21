@@ -39,11 +39,12 @@
 
 /* When theme=light, swap the hardcoded surface colors across the app */
 [data-theme="light"] body {
-  background: #f7f7fb;
+  /* Gray page so white cards pop on top of it (Apple/Linear light aesthetic) */
+  background: #eceef3;
   color: #0f172a;
 }
 
-/* ---- Base surfaces (#0a0a0f family) → light ---- */
+/* ---- Base surfaces (#0a0a0f family) → white ---- */
 [data-theme="light"] .bg-\[\#0a0a0f\],
 [data-theme="light"] .bg-\[\#0a0a0f\]\/95,
 [data-theme="light"] .bg-\[\#0a0a0f\]\/90,
@@ -51,7 +52,7 @@
   background-color: #ffffff !important;
 }
 [data-theme="light"] .bg-\[\#070710\] {
-  background-color: #f0f0f5 !important;
+  background-color: #e6e8ee !important;
 }
 
 /* ---- Text: white + slate scale ---- */
@@ -62,37 +63,72 @@
 [data-theme="light"] .text-slate-500 { color: #64748b !important; }
 [data-theme="light"] .text-slate-600 { color: #94a3b8 !important; }
 
-/* ---- Borders: white-tinted → black-tinted (every opacity used) ---- */
-[data-theme="light"] .border-white\/\[0\.04\] { border-color: rgba(0,0,0,0.07) !important; }
-[data-theme="light"] .border-white\/\[0\.06\] { border-color: rgba(0,0,0,0.09) !important; }
-[data-theme="light"] .border-white\/\[0\.08\] { border-color: rgba(0,0,0,0.11) !important; }
-[data-theme="light"] .border-white\/\[0\.1\]  { border-color: rgba(0,0,0,0.13) !important; }
-[data-theme="light"] .border-white\/\[0\.12\] { border-color: rgba(0,0,0,0.15) !important; }
-[data-theme="light"] .border-white\/\[0\.16\] { border-color: rgba(0,0,0,0.18) !important; }
-[data-theme="light"] .border-white\/\[0\.2\]  { border-color: rgba(0,0,0,0.22) !important; }
-[data-theme="light"] .border-white\/10 { border-color: rgba(0,0,0,0.12) !important; }
-[data-theme="light"] .border-white\/20 { border-color: rgba(0,0,0,0.2) !important; }
-[data-theme="light"] .border-white\/30 { border-color: rgba(0,0,0,0.28) !important; }
+/* ---- Borders: white-tinted → black-tinted, visible on white cards ---- */
+[data-theme="light"] .border-white\/\[0\.04\] { border-color: rgba(15,23,42,0.08) !important; }
+[data-theme="light"] .border-white\/\[0\.06\] { border-color: rgba(15,23,42,0.10) !important; }
+[data-theme="light"] .border-white\/\[0\.08\] { border-color: rgba(15,23,42,0.12) !important; }
+[data-theme="light"] .border-white\/\[0\.1\]  { border-color: rgba(15,23,42,0.14) !important; }
+[data-theme="light"] .border-white\/\[0\.12\] { border-color: rgba(15,23,42,0.16) !important; }
+[data-theme="light"] .border-white\/\[0\.16\] { border-color: rgba(15,23,42,0.20) !important; }
+[data-theme="light"] .border-white\/\[0\.2\]  { border-color: rgba(15,23,42,0.24) !important; }
+[data-theme="light"] .border-white\/10 { border-color: rgba(15,23,42,0.14) !important; }
+[data-theme="light"] .border-white\/20 { border-color: rgba(15,23,42,0.22) !important; }
+[data-theme="light"] .border-white\/30 { border-color: rgba(15,23,42,0.30) !important; }
 
-/* ---- Elevated surface fills (every opacity used) ---- */
-[data-theme="light"] .bg-white\/\[0\.01\] { background-color: rgba(0,0,0,0.02) !important; }
-[data-theme="light"] .bg-white\/\[0\.02\] { background-color: rgba(0,0,0,0.035) !important; }
-[data-theme="light"] .bg-white\/\[0\.03\] { background-color: rgba(0,0,0,0.05) !important; }
-[data-theme="light"] .bg-white\/\[0\.04\] { background-color: rgba(0,0,0,0.06) !important; }
-[data-theme="light"] .bg-white\/\[0\.05\] { background-color: rgba(0,0,0,0.07) !important; }
-[data-theme="light"] .bg-white\/\[0\.06\] { background-color: rgba(0,0,0,0.08) !important; }
-[data-theme="light"] .bg-white\/\[0\.08\] { background-color: rgba(0,0,0,0.1) !important; }
-[data-theme="light"] .bg-white\/\[0\.1\]  { background-color: rgba(0,0,0,0.12) !important; }
+/* ---- Surface fills ----
+   Low opacities (0.01-0.03) = CARDS → white, so they pop on the gray page.
+   Mid/high (0.04-0.1) = pills, badges, insets, hover highlights → light gray
+   tint so they stay visible ON a white card. */
+[data-theme="light"] .bg-white\/\[0\.01\] { background-color: #ffffff !important; }
+[data-theme="light"] .bg-white\/\[0\.02\] { background-color: #ffffff !important; }
+[data-theme="light"] .bg-white\/\[0\.03\] { background-color: #ffffff !important; }
+[data-theme="light"] .bg-white\/\[0\.04\] { background-color: rgba(15,23,42,0.05) !important; }
+[data-theme="light"] .bg-white\/\[0\.05\] { background-color: rgba(15,23,42,0.06) !important; }
+[data-theme="light"] .bg-white\/\[0\.06\] { background-color: rgba(15,23,42,0.07) !important; }
+[data-theme="light"] .bg-white\/\[0\.08\] { background-color: rgba(15,23,42,0.09) !important; }
+[data-theme="light"] .bg-white\/\[0\.1\]  { background-color: rgba(15,23,42,0.11) !important; }
+
+/* Cards (white surfaces) get a soft shadow so they lift off the gray page */
+[data-theme="light"] .bg-white\/\[0\.01\],
+[data-theme="light"] .bg-white\/\[0\.02\],
+[data-theme="light"] .bg-white\/\[0\.03\],
+[data-theme="light"] .bg-\[\#0a0a0f\],
+[data-theme="light"] .bg-slate-900,
+[data-theme="light"] .bg-slate-900\/50 {
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04), 0 1px 2px rgba(15, 23, 42, 0.03);
+}
 
 /* ---- Hover surface fills ---- */
-[data-theme="light"] .hover\:bg-white\/\[0\.03\]:hover { background-color: rgba(0,0,0,0.05) !important; }
-[data-theme="light"] .hover\:bg-white\/\[0\.04\]:hover { background-color: rgba(0,0,0,0.06) !important; }
-[data-theme="light"] .hover\:bg-white\/\[0\.06\]:hover { background-color: rgba(0,0,0,0.08) !important; }
-[data-theme="light"] .hover\:bg-white\/\[0\.08\]:hover { background-color: rgba(0,0,0,0.1) !important; }
+[data-theme="light"] .hover\:bg-white\/\[0\.03\]:hover { background-color: #f8f9fb !important; }
+[data-theme="light"] .hover\:bg-white\/\[0\.04\]:hover { background-color: rgba(15,23,42,0.05) !important; }
+[data-theme="light"] .hover\:bg-white\/\[0\.06\]:hover { background-color: rgba(15,23,42,0.07) !important; }
+[data-theme="light"] .hover\:bg-white\/\[0\.08\]:hover { background-color: rgba(15,23,42,0.09) !important; }
 
-/* ---- Gradient surface starts (premium cards) ---- */
-[data-theme="light"] .from-white\/\[0\.04\] { --tw-gradient-from: rgba(0,0,0,0.05) !important; }
-[data-theme="light"] .from-white\/\[0\.06\] { --tw-gradient-from: rgba(0,0,0,0.07) !important; }
+/* ---- Gradient surface starts (premium cards) → white ---- */
+[data-theme="light"] .from-white\/\[0\.04\] { --tw-gradient-from: #ffffff !important; }
+[data-theme="light"] .from-white\/\[0\.06\] { --tw-gradient-from: #ffffff !important; }
+
+/* ---- Non-scrim dark fills (panels, progress tracks, insets) ----
+   Modal/overlay scrims (.fixed / .inset-0) keep their dark backdrop. */
+[data-theme="light"] .bg-black\/10:not(.fixed):not(.inset-0) { background-color: rgba(15,23,42,0.04) !important; }
+[data-theme="light"] .bg-black\/20:not(.fixed):not(.inset-0) { background-color: rgba(15,23,42,0.05) !important; }
+[data-theme="light"] .bg-black\/30:not(.fixed):not(.inset-0) { background-color: rgba(15,23,42,0.06) !important; }
+[data-theme="light"] .bg-black\/40:not(.fixed):not(.inset-0) { background-color: rgba(15,23,42,0.045) !important; }
+[data-theme="light"] .bg-black\/50:not(.fixed):not(.inset-0) { background-color: rgba(15,23,42,0.07) !important; }
+[data-theme="light"] .bg-black\/60:not(.fixed):not(.inset-0) { background-color: rgba(15,23,42,0.08) !important; }
+[data-theme="light"] .bg-black\/70:not(.fixed):not(.inset-0) { background-color: rgba(15,23,42,0.09) !important; }
+
+/* ---- Slate dark surfaces (UI primitives: Card, Input, Progress, Button) ---- */
+[data-theme="light"] .bg-slate-900,
+[data-theme="light"] .bg-slate-900\/50 { background-color: #ffffff !important; }
+[data-theme="light"] .bg-slate-900\/80 { background-color: rgba(15,23,42,0.05) !important; }
+[data-theme="light"] .bg-slate-800 { background-color: rgba(15,23,42,0.08) !important; }
+[data-theme="light"] .bg-slate-800\/50 { background-color: rgba(15,23,42,0.06) !important; }
+[data-theme="light"] .bg-slate-700 { background-color: rgba(15,23,42,0.10) !important; }
+[data-theme="light"] .hover\:bg-slate-800\/50:hover { background-color: rgba(15,23,42,0.06) !important; }
+[data-theme="light"] .focus\:bg-slate-800:focus { background-color: rgba(15,23,42,0.08) !important; }
+[data-theme="light"] .border-slate-700 { border-color: rgba(15,23,42,0.12) !important; }
+[data-theme="light"] .border-slate-800 { border-color: rgba(15,23,42,0.10) !important; }
 
 /* ---- Dividers ---- */
 [data-theme="light"] .divide-white\/\[0\.04\] > :not([hidden]) ~ :not([hidden]) {
@@ -112,6 +148,16 @@
 [data-theme="light"] button.hover\:bg-slate-100:hover,
 [data-theme="light"] a.hover\:bg-slate-100:hover {
   background-color: #1e293b !important;
+}
+
+/* ---- Gradient CTA buttons keep WHITE text in light mode ----
+   Saturated indigo/purple/pink gradients need white text; the generic
+   text-white→dark remap would leave low-contrast near-black labels. */
+[data-theme="light"] button.text-white[class*="gradient"],
+[data-theme="light"] a.text-white[class*="gradient"],
+[data-theme="light"] button.text-white[class*="gradient"] *,
+[data-theme="light"] a.text-white[class*="gradient"] * {
+  color: #ffffff !important;
 }
 
 /* ---- Grid-line overlays → visible on light ---- */

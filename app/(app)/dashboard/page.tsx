@@ -386,7 +386,7 @@ export default function Dashboard() {
 
             {/* Right: Career path detail card */}
             {careerPath && (
-              <div className="lg:w-[260px] p-5 rounded-2xl bg-black/40 border border-white/[0.06] backdrop-blur">
+              <div className="lg:w-[260px] p-5 rounded-2xl bg-white/[0.06] border border-white/[0.08] backdrop-blur">
                 <div className="flex items-center gap-3 mb-4">
                   <div
                     className={`w-11 h-11 rounded-xl bg-gradient-to-br ${careerPath.gradient} flex items-center justify-center text-xl`}
