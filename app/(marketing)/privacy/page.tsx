@@ -193,7 +193,7 @@ export default function PrivacyPage() {
                 </a>
               </li>
               <li>
-                <strong>OpenAI</strong> (USA) — powers Jus AI responses (optional; only invoked
+                <strong>OpenAI</strong> (USA) — powers ForgeBot responses (optional; only invoked
                 if an API key is configured). Only your message text and minimal user context
                 (level, career path, active quest titles) are sent.{" "}
                 <a

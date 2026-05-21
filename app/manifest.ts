@@ -9,7 +9,7 @@ export default function manifest(): MetadataRoute.Manifest {
     name: "PathForge — Career growth, gamified",
     short_name: "PathForge",
     description:
-      "Personalized roadmaps, daily quests, and Jus AI — your career coach. Forge the career you actually want.",
+      "Personalized roadmaps, daily quests, and ForgeBot — your career coach. Forge the career you actually want.",
     start_url: "/dashboard",
     scope: "/",
     display: "standalone",

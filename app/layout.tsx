@@ -18,7 +18,7 @@ export const metadata: Metadata = {
   metadataBase: new URL(APP_URL),
   title: "PathForge — Forge the career you actually want",
   description:
-    "Personalized roadmaps, daily quests, and Jus AI — your career coach. Built for the ambitious, anywhere in the world.",
+    "Personalized roadmaps, daily quests, and ForgeBot — your career coach. Built for the ambitious, anywhere in the world.",
   applicationName: "PathForge",
   manifest: "/manifest.webmanifest",
   appleWebApp: {
@@ -29,14 +29,14 @@ export const metadata: Metadata = {
   openGraph: {
     title: "PathForge — Forge the career you actually want",
     description:
-      "Personalized roadmaps, daily quests, and Jus AI — your career coach.",
+      "Personalized roadmaps, daily quests, and ForgeBot — your career coach.",
     siteName: "PathForge",
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
     title: "PathForge — Forge the career you actually want",
-    description: "Career growth, gamified. Personalized roadmaps + Jus AI coach.",
+    description: "Career growth, gamified. Personalized roadmaps + ForgeBot coach.",
   },
 };
 

@@ -310,8 +310,8 @@ export default function Landing() {
             {[
               {
                 icon: Bot,
-                title: "Jus AI · your mentor",
-                description: "Jus is your AI career coach. Knows your goals, gaps, and progress. Direct answers in minutes.",
+                title: "ForgeBot · your mentor",
+                description: "ForgeBot is your AI career coach. Knows your goals, gaps, and progress. Direct answers in minutes.",
                 accent: "#a855f7",
               },
               {

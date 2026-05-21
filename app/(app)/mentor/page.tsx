@@ -109,7 +109,7 @@ export default function Mentor() {
       ]);
     } catch (error: any) {
       console.error(error);
-      toast.error("Jus is offline right now. Try again in a moment.");
+      toast.error("ForgeBot is offline right now. Try again in a moment.");
       // Remove the optimistic user message
       setMessages((prev) => prev.filter((m) => m.id !== userMsg.id));
       setInput(text);
@@ -151,7 +151,7 @@ export default function Mentor() {
           </div>
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2">
-              <h1 className="font-semibold text-base">Jus AI</h1>
+              <h1 className="font-semibold text-base">ForgeBot</h1>
               <span className="text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-violet-500/15 text-violet-300 border border-violet-500/30">
                 Your mentor
               </span>
@@ -179,7 +179,7 @@ export default function Mentor() {
                 </div>
               </div>
               <h2 className="text-xl font-semibold tracking-tight mb-2">
-                Hey, I'm Jus.
+                Hey, I'm ForgeBot.
               </h2>
               <p className="text-sm text-slate-400 max-w-md mb-8">
                 I know your career path, level, and goals. Ask me anything —
@@ -281,7 +281,7 @@ export default function Mentor() {
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder="Ask Jus anything..."
+              placeholder="Ask ForgeBot anything..."
               rows={1}
               disabled={loading}
               className="w-full pl-4 pr-12 py-3 bg-white/[0.03] border border-white/[0.06] rounded-2xl text-sm text-white placeholder-slate-500 focus:outline-none focus:border-violet-500/50 focus:ring-2 focus:ring-violet-500/20 transition-all resize-none disabled:opacity-50"

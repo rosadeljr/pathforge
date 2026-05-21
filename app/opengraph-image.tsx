@@ -121,7 +121,7 @@ export default function Image() {
             letterSpacing: "-0.01em",
           }}
         >
-          Personalized roadmaps · Daily quests · Jus AI career coach
+          Personalized roadmaps · Daily quests · ForgeBot career coach
         </div>
       </div>
     ),

@@ -71,7 +71,7 @@ export function QuestDetailModal({ quest, onClose, onComplete }: Props) {
   const [proofUrl, setProofUrl] = useState("");
   const [proofNotes, setProofNotes] = useState("");
   const [completing, setCompleting] = useState(false);
-  // After completion, Jus reviews the submission and shows feedback
+  // After completion, ForgeBot reviews the submission and shows feedback
   const [view, setView] = useState<"detail" | "assessed">("detail");
   const [assessment, setAssessment] = useState<QuestAssessment | null>(null);
 
@@ -105,7 +105,7 @@ export function QuestDetailModal({ quest, onClose, onComplete }: Props) {
       // 1. Complete the quest (parent handles XP/streak/achievements)
       await onComplete(quest.id, cleanUrl, cleanNotes);
 
-      // 2. Get Jus's assessment of the submission — instant local fallback,
+      // 2. Get ForgeBot's assessment of the submission — instant local fallback,
       //    then upgrade with the API response if it's better.
       const localAssessment = assessQuestSubmission({
         title: quest.title,
@@ -219,16 +219,16 @@ export function QuestDetailModal({ quest, onClose, onComplete }: Props) {
           </div>
         </div>
 
-        {/* ASSESSED VIEW — Jus AI's review of the submission */}
+        {/* ASSESSED VIEW — ForgeBot's review of the submission */}
         {view === "assessed" && assessment && (
           <div className="px-6 py-6 overflow-y-auto flex-1">
-            {/* Jus header */}
+            {/* ForgeBot header */}
             <div className="flex items-center gap-3 mb-5">
               <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center shadow-lg shadow-violet-500/25">
                 <Sparkles size={18} className="text-white" />
               </div>
               <div>
-                <div className="text-sm font-semibold">Jus reviewed your work</div>
+                <div className="text-sm font-semibold">ForgeBot reviewed your work</div>
                 <div className="text-xs text-slate-400">Quest complete · +{quest.xp_reward} XP banked</div>
               </div>
             </div>
@@ -254,7 +254,7 @@ export function QuestDetailModal({ quest, onClose, onComplete }: Props) {
             <div className="p-3.5 rounded-xl bg-indigo-500/[0.06] border border-indigo-500/20">
               <div className="text-[10px] uppercase tracking-wider text-indigo-300 font-semibold mb-1 flex items-center gap-1.5">
                 <ChevronRight size={11} />
-                Jus suggests
+                ForgeBot suggests
               </div>
               <p className="text-sm text-slate-200 leading-relaxed">{assessment.nextStep}</p>
             </div>

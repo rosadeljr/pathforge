@@ -490,12 +490,12 @@ export default function Dashboard() {
                 cta: "Start questing",
               },
               {
-                title: "Jus AI",
+                title: "ForgeBot",
                 description: "Get personalized advice",
                 href: "/mentor",
                 icon: Bot,
                 accent: "#a855f7",
-                cta: "Talk to Jus",
+                cta: "Talk to ForgeBot",
               },
               {
                 title: "Roadmap",
@@ -622,7 +622,7 @@ export default function Dashboard() {
                 href="/mentor"
                 className="flex-shrink-0 inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-white text-slate-900 text-sm font-semibold hover:bg-slate-100 transition-colors shadow-lg shadow-white/5"
               >
-                Talk to Jus
+                Talk to ForgeBot
                 <ArrowRight size={14} />
               </Link>
             </div>

@@ -107,7 +107,7 @@ export function HeroPreview() {
                 { label: "Dashboard", active: true },
                 { label: "Quests", active: false },
                 { label: "Roadmap", active: false },
-                { label: "Jus AI", active: false },
+                { label: "ForgeBot", active: false },
                 { label: "Portfolio", active: false },
               ].map((item, i) => (
                 <div

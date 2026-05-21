@@ -7,7 +7,7 @@ import {
 } from "@/lib/ai/quest-assessment";
 
 /**
- * Jus AI reviews a completed quest submission and returns feedback.
+ * ForgeBot reviews a completed quest submission and returns feedback.
  *
  * - Always works offline via pattern matching (quest-assessment.ts).
  * - Upgrades to OpenAI GPT-4o-mini when OPENAI_API_KEY is set.
@@ -47,8 +47,8 @@ export async function POST(request: Request) {
         const { OpenAI } = await import("openai");
         const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
-        const systemPrompt = `You are Jus AI — PathForge's career coach reviewing a user's completed quest.
-Be direct, warm, specific. Refer to yourself as "Jus" if needed. Never say "as an AI".
+        const systemPrompt = `You are ForgeBot — PathForge's career coach reviewing a user's completed quest.
+Be direct, warm, specific. Refer to yourself as "ForgeBot" if needed. Never say "as an AI".
 
 Return ONLY a JSON object with exactly these keys:
 - "verdict": a short headline (max 5 words)
@@ -100,7 +100,7 @@ User's notes: ${input.proofNotes || "(none)"}`;
     return NextResponse.json({
       verdict: "Quest cleared.",
       feedback:
-        "Nice work finishing this. Jus couldn't run a full review right now, but every quest completed is real progress.",
+        "Nice work finishing this. ForgeBot couldn't run a full review right now, but every quest completed is real progress.",
       nextStep: "Keep your momentum — pick your next quest.",
       strength: "good",
     });

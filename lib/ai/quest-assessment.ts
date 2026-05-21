@@ -1,7 +1,7 @@
 /**
- * Jus AI — Quest Submission Assessment
+ * ForgeBot — Quest Submission Assessment
  *
- * When a user completes a quest and submits proof, Jus reviews it and gives
+ * When a user completes a quest and submits proof, ForgeBot reviews it and gives
  * specific, useful feedback. Works fully offline via pattern matching;
  * the API route upgrades to OpenAI when a key is configured.
  */

@@ -43,10 +43,10 @@ const SLIDES = [
     accentLight: "from-amber-500 to-orange-600",
   },
   {
-    title: "Meet Jus.",
+    title: "Meet ForgeBot.",
     subtitle: "Your AI career coach.",
     description:
-      "Stuck? Confused? Wondering what to learn next? Jus knows your level, goals, and progress — and answers like a friend who's actually been there.",
+      "Stuck? Confused? Wondering what to learn next? ForgeBot knows your level, goals, and progress — and answers like a friend who's actually been there.",
     icon: Bot,
     accent: "#ec4899",
     accentLight: "from-pink-500 to-rose-600",
