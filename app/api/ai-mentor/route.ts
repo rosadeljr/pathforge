@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
 import { generateMentorReply } from "@/lib/ai/smart-mentor";
+import { getEntitlements } from "@/lib/entitlements";
 
 /**
  * AI Mentor endpoint.
@@ -38,7 +39,7 @@ export async function POST(request: Request) {
     const [{ data: profile }, { data: activeQuests }, { count: completedCount }] = await Promise.all([
       supabase
         .from("profiles")
-        .select("current_level, total_xp, streak_count, readiness_score, selected_career_path_id")
+        .select("current_level, total_xp, streak_count, readiness_score, selected_career_path_id, subscription_tier")
         .eq("id", user.id)
         .maybeSingle(),
       supabase
@@ -68,6 +69,28 @@ export async function POST(request: Request) {
       })),
       completedCount: completedCount || 0,
     };
+
+    // Free-tier daily message cap — Pro/Elite are unlimited.
+    const entitlements = getEntitlements(profile?.subscription_tier);
+    if (entitlements.forgeBotDailyMessages !== -1) {
+      const startOfDay = new Date();
+      startOfDay.setHours(0, 0, 0, 0);
+      const { count: todayCount } = await supabase
+        .from("ai_messages")
+        .select("id", { count: "exact", head: true })
+        .eq("user_id", user.id)
+        .eq("role", "user")
+        .gte("created_at", startOfDay.toISOString());
+      if ((todayCount ?? 0) >= entitlements.forgeBotDailyMessages) {
+        return NextResponse.json(
+          {
+            error: "daily_limit",
+            message: `You've used today's ${entitlements.forgeBotDailyMessages} free ForgeBot messages. Upgrade to Pro for unlimited coaching.`,
+          },
+          { status: 429 }
+        );
+      }
+    }
 
     // Try OpenAI first if configured
     let aiReply: string | null = null;

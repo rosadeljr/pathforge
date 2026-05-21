@@ -94,6 +94,19 @@ export default function Mentor() {
         body: JSON.stringify({ message: text }),
       });
 
+      if (response.status === 429) {
+        const data = await response.json().catch(() => ({}));
+        toast.error(
+          data.message ||
+            "Daily ForgeBot limit reached. Upgrade to Pro for unlimited coaching.",
+          { duration: 6000 }
+        );
+        setMessages((prev) => prev.filter((m) => m.id !== userMsg.id));
+        setInput(text);
+        setLoading(false);
+        return;
+      }
+
       if (!response.ok) throw new Error("Failed to get mentor response");
 
       const data = await response.json();

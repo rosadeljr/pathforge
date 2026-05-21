@@ -18,6 +18,7 @@ import {
   Sparkles,
   Sun,
   Moon,
+  GraduationCap,
 } from "lucide-react";
 import { useTheme } from "@/components/theme/ThemeProvider";
 
@@ -34,6 +35,7 @@ const navLinks = [
   { icon: LayoutDashboard, label: "Dashboard", href: "/dashboard", description: "Your command center" },
   { icon: Swords, label: "Quests", href: "/quests", description: "Daily missions" },
   { icon: Compass, label: "Roadmap", href: "/roadmap", description: "Your career path" },
+  { icon: GraduationCap, label: "Academy", href: "/academy", description: "Your certifications" },
   { icon: Bot, label: "ForgeBot", href: "/mentor", description: "Talk to your mentor" },
   { icon: Trophy, label: "Portfolio", href: "/portfolio", description: "Show your work" },
   { icon: Sparkles, label: "Achievements", href: "/achievements", description: "Your trophies" },
@@ -46,6 +48,7 @@ const mobileNavLinks = [
   { icon: LayoutDashboard, label: "Home", href: "/dashboard" },
   { icon: Swords, label: "Quests", href: "/quests" },
   { icon: Bot, label: "ForgeBot", href: "/mentor" },
+  { icon: GraduationCap, label: "Academy", href: "/academy" },
   { icon: Trophy, label: "Portfolio", href: "/portfolio" },
   { icon: SettingsIcon, label: "Settings", href: "/settings" },
 ];
