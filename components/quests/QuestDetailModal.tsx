@@ -421,7 +421,7 @@ export function QuestDetailModal({ quest, onClose, onComplete }: Props) {
                 ) : (
                   <>
                     <CheckCircle2 size={14} />
-                    <span className="hidden xs:inline">Complete · </span>
+                    <span className="hidden sm:inline">Complete · </span>
                     <span>+{quest.xp_reward} XP</span>
                   </>
                 )}

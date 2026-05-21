@@ -211,8 +211,8 @@ export default function PricingPage() {
                   Sign in
                 </Link>
                 <PrimaryLinkButton href="/signup" size="sm">
-                  <span className="hidden xs:inline">Get started</span>
-                  <span className="xs:hidden">Start</span>
+                  <span className="hidden sm:inline">Get started</span>
+                  <span className="sm:hidden">Start</span>
                   <ArrowRight size={12} />
                 </PrimaryLinkButton>
               </>
