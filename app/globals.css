@@ -461,11 +461,15 @@ p {
   @apply text-base leading-relaxed;
 }
 
-/* Links — inherit color by default; components style their own */
-a {
-  color: inherit;
-  text-decoration: none;
-  transition: color 150ms ease;
+/* Links — inherit color by default; components style their own.
+   MUST be in @layer base so Tailwind text-* utilities (in @layer utilities)
+   win. An unlayered rule here would override every text-color class on <a>. */
+@layer base {
+  a {
+    color: inherit;
+    text-decoration: none;
+    transition: color 150ms ease;
+  }
 }
 
 /* Focus Ring */
