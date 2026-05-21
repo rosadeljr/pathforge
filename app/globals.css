@@ -39,83 +39,74 @@
 
 /* When theme=light, swap the hardcoded surface colors across the app */
 [data-theme="light"] body {
-  background: #fafafa;
-  color: #0a0a0f;
+  background: #f7f7fb;
+  color: #0f172a;
 }
 
-/* Map common hardcoded dark surfaces to their light counterparts */
+/* ---- Base surfaces (#0a0a0f family) → light ---- */
 [data-theme="light"] .bg-\[\#0a0a0f\],
 [data-theme="light"] .bg-\[\#0a0a0f\]\/95,
 [data-theme="light"] .bg-\[\#0a0a0f\]\/90,
 [data-theme="light"] .bg-\[\#0a0a0f\]\/80 {
-  background-color: rgba(250, 250, 250, 0.95) !important;
+  background-color: #ffffff !important;
 }
-
 [data-theme="light"] .bg-\[\#070710\] {
-  background-color: #f4f4f8 !important;
+  background-color: #f0f0f5 !important;
 }
 
-/* Text colors: white → near-black in light mode */
-[data-theme="light"] .text-white {
-  color: #0a0a0f !important;
-}
-[data-theme="light"] .text-slate-300 {
-  color: #334155 !important;
-}
-[data-theme="light"] .text-slate-400 {
-  color: #475569 !important;
-}
-[data-theme="light"] .text-slate-500 {
-  color: #64748b !important;
-}
-[data-theme="light"] .text-slate-600 {
-  color: #94a3b8 !important;
+/* ---- Text: white + slate scale ---- */
+[data-theme="light"] .text-white { color: #0f172a !important; }
+[data-theme="light"] .text-slate-200 { color: #1e293b !important; }
+[data-theme="light"] .text-slate-300 { color: #334155 !important; }
+[data-theme="light"] .text-slate-400 { color: #475569 !important; }
+[data-theme="light"] .text-slate-500 { color: #64748b !important; }
+[data-theme="light"] .text-slate-600 { color: #94a3b8 !important; }
+
+/* ---- Borders: white-tinted → black-tinted (every opacity used) ---- */
+[data-theme="light"] .border-white\/\[0\.04\] { border-color: rgba(0,0,0,0.07) !important; }
+[data-theme="light"] .border-white\/\[0\.06\] { border-color: rgba(0,0,0,0.09) !important; }
+[data-theme="light"] .border-white\/\[0\.08\] { border-color: rgba(0,0,0,0.11) !important; }
+[data-theme="light"] .border-white\/\[0\.1\]  { border-color: rgba(0,0,0,0.13) !important; }
+[data-theme="light"] .border-white\/\[0\.12\] { border-color: rgba(0,0,0,0.15) !important; }
+[data-theme="light"] .border-white\/\[0\.16\] { border-color: rgba(0,0,0,0.18) !important; }
+[data-theme="light"] .border-white\/\[0\.2\]  { border-color: rgba(0,0,0,0.22) !important; }
+[data-theme="light"] .border-white\/10 { border-color: rgba(0,0,0,0.12) !important; }
+[data-theme="light"] .border-white\/20 { border-color: rgba(0,0,0,0.2) !important; }
+[data-theme="light"] .border-white\/30 { border-color: rgba(0,0,0,0.28) !important; }
+
+/* ---- Elevated surface fills (every opacity used) ---- */
+[data-theme="light"] .bg-white\/\[0\.01\] { background-color: rgba(0,0,0,0.02) !important; }
+[data-theme="light"] .bg-white\/\[0\.02\] { background-color: rgba(0,0,0,0.035) !important; }
+[data-theme="light"] .bg-white\/\[0\.03\] { background-color: rgba(0,0,0,0.05) !important; }
+[data-theme="light"] .bg-white\/\[0\.04\] { background-color: rgba(0,0,0,0.06) !important; }
+[data-theme="light"] .bg-white\/\[0\.05\] { background-color: rgba(0,0,0,0.07) !important; }
+[data-theme="light"] .bg-white\/\[0\.06\] { background-color: rgba(0,0,0,0.08) !important; }
+[data-theme="light"] .bg-white\/\[0\.08\] { background-color: rgba(0,0,0,0.1) !important; }
+[data-theme="light"] .bg-white\/\[0\.1\]  { background-color: rgba(0,0,0,0.12) !important; }
+
+/* ---- Hover surface fills ---- */
+[data-theme="light"] .hover\:bg-white\/\[0\.03\]:hover { background-color: rgba(0,0,0,0.05) !important; }
+[data-theme="light"] .hover\:bg-white\/\[0\.04\]:hover { background-color: rgba(0,0,0,0.06) !important; }
+[data-theme="light"] .hover\:bg-white\/\[0\.06\]:hover { background-color: rgba(0,0,0,0.08) !important; }
+[data-theme="light"] .hover\:bg-white\/\[0\.08\]:hover { background-color: rgba(0,0,0,0.1) !important; }
+
+/* ---- Gradient surface starts (premium cards) ---- */
+[data-theme="light"] .from-white\/\[0\.04\] { --tw-gradient-from: rgba(0,0,0,0.05) !important; }
+[data-theme="light"] .from-white\/\[0\.06\] { --tw-gradient-from: rgba(0,0,0,0.07) !important; }
+
+/* ---- Dividers ---- */
+[data-theme="light"] .divide-white\/\[0\.04\] > :not([hidden]) ~ :not([hidden]) {
+  border-color: rgba(0,0,0,0.07) !important;
 }
 
-/* Borders: white-tinted → black-tinted */
-[data-theme="light"] .border-white\/\[0\.06\] {
-  border-color: rgba(0, 0, 0, 0.06) !important;
-}
-[data-theme="light"] .border-white\/\[0\.08\] {
-  border-color: rgba(0, 0, 0, 0.08) !important;
-}
-[data-theme="light"] .border-white\/\[0\.1\] {
-  border-color: rgba(0, 0, 0, 0.1) !important;
-}
-[data-theme="light"] .border-white\/\[0\.12\] {
-  border-color: rgba(0, 0, 0, 0.12) !important;
-}
-[data-theme="light"] .border-white\/\[0\.16\] {
-  border-color: rgba(0, 0, 0, 0.16) !important;
-}
-[data-theme="light"] .border-white\/\[0\.2\] {
-  border-color: rgba(0, 0, 0, 0.2) !important;
-}
-[data-theme="light"] .border-white\/10 {
-  border-color: rgba(0, 0, 0, 0.1) !important;
-}
-[data-theme="light"] .border-white\/20 {
-  border-color: rgba(0, 0, 0, 0.2) !important;
-}
-
-/* Surface fills */
-[data-theme="light"] .bg-white\/\[0\.02\] {
-  background-color: rgba(0, 0, 0, 0.025) !important;
-}
-[data-theme="light"] .bg-white\/\[0\.03\] {
-  background-color: rgba(0, 0, 0, 0.035) !important;
-}
-[data-theme="light"] .bg-white\/\[0\.04\] {
-  background-color: rgba(0, 0, 0, 0.05) !important;
-}
-[data-theme="light"] .bg-white\/\[0\.06\] {
-  background-color: rgba(0, 0, 0, 0.07) !important;
-}
-
-/* White CTAs become dark in light mode for contrast */
+/* ---- White CTAs → dark for contrast ---- */
 [data-theme="light"] button.bg-white,
 [data-theme="light"] a.bg-white {
-  background-color: #0a0a0f !important;
+  background-color: #0f172a !important;
+  color: #ffffff !important;
+}
+[data-theme="light"] button.bg-white *,
+[data-theme="light"] a.bg-white * {
   color: #ffffff !important;
 }
 [data-theme="light"] button.hover\:bg-slate-100:hover,
@@ -123,30 +114,51 @@
   background-color: #1e293b !important;
 }
 
-/* Hover whites */
-[data-theme="light"] .hover\:bg-white\/\[0\.03\]:hover {
-  background-color: rgba(0, 0, 0, 0.035) !important;
-}
-[data-theme="light"] .hover\:bg-white\/\[0\.04\]:hover {
-  background-color: rgba(0, 0, 0, 0.05) !important;
-}
-[data-theme="light"] .hover\:bg-white\/\[0\.06\]:hover {
-  background-color: rgba(0, 0, 0, 0.07) !important;
-}
-
-/* Make grid lines visible in light mode */
+/* ---- Grid-line overlays → visible on light ---- */
 [data-theme="light"] [style*="rgba(255,255,255,1) 1px"] {
   background-image:
-    linear-gradient(rgba(0, 0, 0, 0.4) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(0, 0, 0, 0.4) 1px, transparent 1px) !important;
+    linear-gradient(rgba(0,0,0,0.35) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,0,0,0.35) 1px, transparent 1px) !important;
 }
 
-/* Soften the radial glows in light mode (less saturated) */
+/* ---- Ambient radial glows → faint on light (white shows color readily) ---- */
 [data-theme="light"] [style*="radial-gradient(circle, rgba(99,102,241"],
 [data-theme="light"] [style*="radial-gradient(circle, rgba(168,85,247"],
-[data-theme="light"] [style*="radial-gradient(circle, rgba(236,72,153"] {
-  opacity: 0.35;
+[data-theme="light"] [style*="radial-gradient(circle, rgba(236,72,153"],
+[data-theme="light"] [style*="radial-gradient(circle, rgba(6,182,212"],
+[data-theme="light"] [style*="radial-gradient(circle, rgba(245,158,11"],
+[data-theme="light"] [style*="radial-gradient(circle, rgba(16,185,129"],
+[data-theme="light"] [style*="radial-gradient(ellipse"] {
+  opacity: 0.15 !important;
 }
+
+/* ---- Conic prism accent → very subtle on light ---- */
+[data-theme="light"] [style*="conic-gradient"] {
+  opacity: 0.06 !important;
+}
+
+/* ---- Vignette overlays → near-invisible on light ---- */
+[data-theme="light"] [style*="rgba(0,0,0,0.5) 100%"] {
+  background: radial-gradient(ellipse at center, transparent 0%, rgba(0,0,0,0.04) 100%) !important;
+}
+
+/* ---- Gradient TEXT stops → saturated so they're readable on white ----
+   The pastel -300 stops vanish on a white bg. Darken them in light mode. */
+[data-theme="light"] .from-indigo-300 { --tw-gradient-from: #4f46e5 !important; }
+[data-theme="light"] .from-purple-300 { --tw-gradient-from: #9333ea !important; }
+[data-theme="light"] .from-pink-300   { --tw-gradient-from: #db2777 !important; }
+[data-theme="light"] .from-emerald-300 { --tw-gradient-from: #059669 !important; }
+[data-theme="light"] .via-purple-300  { --tw-gradient-via: #9333ea !important; }
+[data-theme="light"] .via-pink-300    { --tw-gradient-via: #db2777 !important; }
+[data-theme="light"] .via-cyan-300    { --tw-gradient-via: #0891b2 !important; }
+[data-theme="light"] .to-pink-300     { --tw-gradient-to: #db2777 !important; }
+[data-theme="light"] .to-indigo-300   { --tw-gradient-to: #4f46e5 !important; }
+[data-theme="light"] .to-blue-300     { --tw-gradient-to: #2563eb !important; }
+[data-theme="light"] .to-purple-300   { --tw-gradient-to: #9333ea !important; }
+
+/* ---- White shadows → subtle dark shadows on light ---- */
+[data-theme="light"] .shadow-white\/5  { --tw-shadow-color: rgba(15,23,42,0.08) !important; }
+[data-theme="light"] .shadow-white\/10 { --tw-shadow-color: rgba(15,23,42,0.12) !important; }
 
 /* ============================================================
    Comprehensive light-mode text color refinements
