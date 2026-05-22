@@ -205,3 +205,53 @@ export async function sendPaymentRejectedEmail(
     return false;
   }
 }
+
+// ============================================================
+// User: re-engagement nudge ("ForgeBot misses you")
+// ============================================================
+
+export async function sendReengagementEmail(
+  userEmail: string,
+  userName: string,
+  daysAway: number
+): Promise<boolean> {
+  const resend = getResend();
+  if (!resend) return false;
+
+  try {
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://pathforge-zeta.vercel.app";
+    const inner = `
+      <h1 style="margin:0 0 4px;font-size:18px;font-weight:600;color:#fff;">ForgeBot misses you 👋</h1>
+      <p style="margin:0 0 14px;font-size:13px;color:#94a3b8;line-height:1.6;">
+        Hi ${userName} — it's been ${daysAway} days. You were building real momentum
+        on your career path, and the forgers who get hired are the ones who keep
+        showing up.
+      </p>
+      <p style="margin:0 0 18px;font-size:13px;color:#94a3b8;line-height:1.6;">
+        You don't need a big session. One quest. Fifteen minutes. That's how the
+        climb compounds.
+      </p>
+      <a href="${appUrl}/dashboard"
+         style="display:inline-block;background:#fff;color:#0a0a0f;font-size:13px;font-weight:600;text-decoration:none;padding:10px 18px;border-radius:8px;">
+        Pick up where you left off →
+      </a>
+      <p style="margin:18px 0 0;font-size:11px;color:#64748b;">
+        — ForgeBot, your PathForge career coach
+      </p>`;
+
+    const { error } = await resend.emails.send({
+      from: EMAIL_FROM,
+      to: userEmail,
+      subject: `${userName}, your career path misses you`,
+      html: DARK_WRAP(inner),
+    });
+    if (error) {
+      console.warn("[email] reengagement email failed:", error);
+      return false;
+    }
+    return true;
+  } catch (err) {
+    console.warn("[email] reengagement email threw:", err);
+    return false;
+  }
+}
