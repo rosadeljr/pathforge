@@ -1,8 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { motion } from "framer-motion";
 import toast from "react-hot-toast";
 import {
   FileText,
@@ -10,9 +9,11 @@ import {
   Trash2,
   Sparkles,
   Download,
-  Save,
   Loader2,
   Lock,
+  Check,
+  Circle,
+  Gauge,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { CAREER_PATHS } from "@/lib/data/career-paths";
@@ -21,9 +22,13 @@ import {
   type ResumeData,
   type ResumeExperience,
   type ResumeEducation,
+  type ResumeCertification,
+  type ResumeAccent,
+  RESUME_ACCENTS,
   newId,
   normalizeResume,
   buildInitialResume,
+  scoreResume,
 } from "@/lib/resume";
 import { PageShimmer } from "@/components/ui/Shimmer";
 
@@ -41,14 +46,17 @@ interface ResumeCertificate {
   issued_at: string;
 }
 
+type SaveStatus = "idle" | "saving" | "saved" | "error";
+
 export default function ResumePage() {
   const [loading, setLoading] = useState(true);
   const [resume, setResume] = useState<ResumeData>(buildInitialResume({}));
   const [projects, setProjects] = useState<ResumeProject[]>([]);
   const [certificate, setCertificate] = useState<ResumeCertificate | null>(null);
   const [tier, setTier] = useState<string>("free");
-  const [saving, setSaving] = useState(false);
+  const [saveStatus, setSaveStatus] = useState<SaveStatus>("idle");
   const [aiBusy, setAiBusy] = useState<string | null>(null);
+  const loadedRef = useRef(false);
   const router = useRouter();
   const supabase = createClient();
 
@@ -107,10 +115,40 @@ export default function ResumePage() {
         console.error("Resume load error:", e);
       } finally {
         setLoading(false);
+        // Allow autosave only after the initial state is settled.
+        setTimeout(() => {
+          loadedRef.current = true;
+        }, 400);
       }
     }
     load();
   }, [supabase]);
+
+  const persist = useCallback(async (): Promise<boolean> => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.user) return false;
+      const { error } = await supabase
+        .from("resumes")
+        .upsert(
+          { user_id: session.user.id, data: resume, updated_at: new Date().toISOString() },
+          { onConflict: "user_id" }
+        );
+      return !error;
+    } catch {
+      return false;
+    }
+  }, [resume, supabase]);
+
+  // Autosave — debounced after any edit.
+  useEffect(() => {
+    if (!loadedRef.current) return;
+    setSaveStatus("saving");
+    const t = setTimeout(async () => {
+      setSaveStatus((await persist()) ? "saved" : "error");
+    }, 1200);
+    return () => clearTimeout(t);
+  }, [persist]);
 
   const update = (patch: Partial<ResumeData>) => setResume((r) => ({ ...r, ...patch }));
 
@@ -143,27 +181,24 @@ export default function ResumePage() {
   const removeEducation = (id: string) =>
     setResume((r) => ({ ...r, education: r.education.filter((e) => e.id !== id) }));
 
-  async function save(silent = false): Promise<boolean> {
-    setSaving(true);
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session?.user) throw new Error("Not signed in");
-      const { error } = await supabase
-        .from("resumes")
-        .upsert(
-          { user_id: session.user.id, data: resume, updated_at: new Date().toISOString() },
-          { onConflict: "user_id" }
-        );
-      if (error) throw error;
-      if (!silent) toast.success("Resume saved");
-      return true;
-    } catch (e: any) {
-      toast.error(e?.message || "Couldn't save your resume");
-      return false;
-    } finally {
-      setSaving(false);
-    }
-  }
+  const addCertification = () =>
+    setResume((r) => ({
+      ...r,
+      certifications: [
+        ...r.certifications,
+        { id: newId(), name: "", issuer: "", year: "" },
+      ],
+    }));
+  const updateCertification = (id: string, patch: Partial<ResumeCertification>) =>
+    setResume((r) => ({
+      ...r,
+      certifications: r.certifications.map((c) => (c.id === id ? { ...c, ...patch } : c)),
+    }));
+  const removeCertification = (id: string) =>
+    setResume((r) => ({
+      ...r,
+      certifications: r.certifications.filter((c) => c.id !== id),
+    }));
 
   async function polish(type: "summary" | "bullets", expId?: string) {
     setAiBusy(expId || "summary");
@@ -183,11 +218,8 @@ export default function ResumePage() {
       if (!res.ok) throw new Error("AI assist failed");
       const data = await res.json();
       if (!data.result) throw new Error("No result");
-      if (type === "summary") {
-        update({ summary: data.result });
-      } else if (expId) {
-        updateExperience(expId, { description: data.result });
-      }
+      if (type === "summary") update({ summary: data.result });
+      else if (expId) updateExperience(expId, { description: data.result });
       toast.success("Polished by ForgeBot");
     } catch {
       toast.error("ForgeBot couldn't polish that. Try again.");
@@ -204,16 +236,22 @@ export default function ResumePage() {
       router.push("/pricing");
       return;
     }
-    const ok = await save(true);
-    if (ok) setTimeout(() => window.print(), 150);
+    await persist();
+    setTimeout(() => window.print(), 150);
   }
 
   if (loading) return <PageShimmer />;
 
+  const accent = RESUME_ACCENTS[resume.accent];
+  const { score, checks } = scoreResume(resume, {
+    hasProjects: projects.length > 0,
+    hasCertificate: !!certificate,
+  });
+
   return (
     <div className="min-h-screen pb-12">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-10">
-        {/* Header — hidden when printing */}
+        {/* Header */}
         <div className="no-print flex items-start justify-between gap-4 flex-wrap mb-8">
           <div>
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/[0.04] border border-white/[0.06] mb-3">
@@ -226,18 +264,11 @@ export default function ResumePage() {
               Build your resume
             </h1>
             <p className="text-sm text-slate-400">
-              Pre-filled from your PathForge journey. Polish it and export.
+              Pre-filled from your PathForge journey. Polish it, then export.
             </p>
           </div>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => save()}
-              disabled={saving}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-white/[0.1] text-sm font-medium text-slate-200 hover:bg-white/[0.04] disabled:opacity-50 transition-colors"
-            >
-              {saving ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />}
-              Save
-            </button>
+          <div className="flex items-center gap-3">
+            <SaveIndicator status={saveStatus} />
             <button
               onClick={handleDownload}
               className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-white text-slate-900 text-sm font-semibold hover:bg-slate-100 transition-colors"
@@ -251,27 +282,104 @@ export default function ResumePage() {
         <div className="grid lg:grid-cols-2 gap-6">
           {/* Editor */}
           <div className="no-print space-y-5">
+            {/* Resume strength */}
+            <div className="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-5">
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-sm font-semibold flex items-center gap-2">
+                  <Gauge size={14} className="text-indigo-300" />
+                  Resume strength
+                </h3>
+                <span
+                  className={`text-lg font-bold tabular-nums ${
+                    score >= 80
+                      ? "text-emerald-300"
+                      : score >= 50
+                      ? "text-amber-300"
+                      : "text-rose-300"
+                  }`}
+                >
+                  {score}
+                  <span className="text-xs text-slate-500 font-normal">/100</span>
+                </span>
+              </div>
+              <div className="h-2 rounded-full bg-white/[0.06] overflow-hidden mb-4">
+                <div
+                  className={`h-full rounded-full transition-all duration-500 ${
+                    score >= 80
+                      ? "bg-emerald-500"
+                      : score >= 50
+                      ? "bg-amber-500"
+                      : "bg-rose-500"
+                  }`}
+                  style={{ width: `${score}%` }}
+                />
+              </div>
+              <div className="space-y-1.5">
+                {checks.map((c) => (
+                  <div key={c.label} className="flex items-start gap-2">
+                    {c.done ? (
+                      <div className="w-4 h-4 rounded-full bg-emerald-500/20 flex items-center justify-center flex-shrink-0 mt-0.5">
+                        <Check size={10} className="text-emerald-300" strokeWidth={3} />
+                      </div>
+                    ) : (
+                      <Circle size={16} className="text-slate-600 flex-shrink-0 mt-0.5" />
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <div
+                        className={`text-xs font-medium ${
+                          c.done ? "text-slate-400 line-through" : "text-slate-200"
+                        }`}
+                      >
+                        {c.label}
+                      </div>
+                      {!c.done && (
+                        <div className="text-[11px] text-slate-500">{c.hint}</div>
+                      )}
+                    </div>
+                    {!c.done && (
+                      <span className="text-[10px] font-semibold text-indigo-300 flex-shrink-0">
+                        +{c.points}
+                      </span>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+
             {/* Basics */}
             <Section title="Basics">
               <div className="grid sm:grid-cols-2 gap-3">
                 <Field label="Full name" value={resume.fullName} onChange={(v) => update({ fullName: v })} />
-                <Field label="Headline" value={resume.headline} onChange={(v) => update({ headline: v })} placeholder="Aspiring Software Engineer" />
+                <Field label="Headline" value={resume.headline} onChange={(v) => update({ headline: v })} placeholder="Front-End Developer" />
                 <Field label="Email" value={resume.email} onChange={(v) => update({ email: v })} />
                 <Field label="Phone" value={resume.phone} onChange={(v) => update({ phone: v })} />
                 <Field label="Location" value={resume.location} onChange={(v) => update({ location: v })} placeholder="Manila, Philippines" />
                 <Field label="Links" value={resume.links} onChange={(v) => update({ links: v })} placeholder="portfolio.com · linkedin.com/in/you" />
+              </div>
+              <div className="mt-4">
+                <label className="block text-xs font-medium text-slate-300 mb-1.5">Accent color</label>
+                <div className="flex gap-2">
+                  {(Object.keys(RESUME_ACCENTS) as ResumeAccent[]).map((key) => (
+                    <button
+                      key={key}
+                      onClick={() => update({ accent: key })}
+                      aria-label={key}
+                      className={`w-7 h-7 rounded-full transition-transform ${
+                        resume.accent === key
+                          ? "ring-2 ring-white ring-offset-2 ring-offset-[#0a0a0f] scale-105"
+                          : "hover:scale-110"
+                      }`}
+                      style={{ background: RESUME_ACCENTS[key] }}
+                    />
+                  ))}
+                </div>
               </div>
             </Section>
 
             {/* Summary */}
             <Section
               title="Professional summary"
-              action={
-                <AiButton
-                  busy={aiBusy === "summary"}
-                  onClick={() => polish("summary")}
-                />
-              }
+              action={<AiButton busy={aiBusy === "summary"} onClick={() => polish("summary")} />}
             >
               <textarea
                 value={resume.summary}
@@ -292,7 +400,7 @@ export default function ResumePage() {
               }
             >
               {resume.experience.length === 0 && (
-                <p className="text-xs text-slate-500">No experience added yet — internships and freelance count.</p>
+                <p className="text-xs text-slate-500">No experience yet — internships and freelance count.</p>
               )}
               <div className="space-y-3">
                 {resume.experience.map((exp) => (
@@ -305,11 +413,7 @@ export default function ResumePage() {
                     <div>
                       <div className="flex items-center justify-between mb-1">
                         <label className="text-xs font-medium text-slate-300">What you did</label>
-                        <AiButton
-                          label="Polish bullets"
-                          busy={aiBusy === exp.id}
-                          onClick={() => polish("bullets", exp.id)}
-                        />
+                        <AiButton label="Polish bullets" busy={aiBusy === exp.id} onClick={() => polish("bullets", exp.id)} />
                       </div>
                       <textarea
                         value={exp.description}
@@ -319,10 +423,7 @@ export default function ResumePage() {
                         className="w-full px-3 py-2 bg-white/[0.03] border border-white/[0.06] rounded-lg text-sm resize-none focus:outline-none focus:border-indigo-500/50"
                       />
                     </div>
-                    <button
-                      onClick={() => removeExperience(exp.id)}
-                      className="text-xs text-rose-300/80 hover:text-rose-300 inline-flex items-center gap-1"
-                    >
+                    <button onClick={() => removeExperience(exp.id)} className="text-xs text-rose-300/80 hover:text-rose-300 inline-flex items-center gap-1">
                       <Trash2 size={11} /> Remove
                     </button>
                   </div>
@@ -347,10 +448,7 @@ export default function ResumePage() {
                       <Field label="Degree / program" value={ed.degree} onChange={(v) => updateEducation(ed.id, { degree: v })} />
                       <Field label="Period" value={ed.period} onChange={(v) => updateEducation(ed.id, { period: v })} placeholder="2020 – 2024" />
                     </div>
-                    <button
-                      onClick={() => removeEducation(ed.id)}
-                      className="text-xs text-rose-300/80 hover:text-rose-300 inline-flex items-center gap-1"
-                    >
+                    <button onClick={() => removeEducation(ed.id)} className="text-xs text-rose-300/80 hover:text-rose-300 inline-flex items-center gap-1">
                       <Trash2 size={11} /> Remove
                     </button>
                   </div>
@@ -358,8 +456,39 @@ export default function ResumePage() {
               </div>
             </Section>
 
-            {/* Skills */}
-            <Section title="Skills">
+            {/* Certifications */}
+            <Section
+              title="Certifications"
+              action={
+                <button onClick={addCertification} className="text-xs font-medium text-indigo-300 hover:text-indigo-200 inline-flex items-center gap-1">
+                  <Plus size={12} /> Add
+                </button>
+              }
+            >
+              {certificate && (
+                <p className="text-[11px] text-slate-500 mb-2">
+                  Your PathForge AI Academy certificate is added automatically.
+                </p>
+              )}
+              <div className="space-y-3">
+                {resume.certifications.map((c) => (
+                  <div key={c.id} className="p-3 rounded-xl bg-white/[0.02] border border-white/[0.06] space-y-2">
+                    <Field label="Certification" value={c.name} onChange={(v) => updateCertification(c.id, { name: v })} placeholder="Google Data Analytics" />
+                    <div className="grid sm:grid-cols-2 gap-2">
+                      <Field label="Issuer" value={c.issuer} onChange={(v) => updateCertification(c.id, { issuer: v })} placeholder="Coursera" />
+                      <Field label="Year" value={c.year} onChange={(v) => updateCertification(c.id, { year: v })} placeholder="2025" />
+                    </div>
+                    <button onClick={() => removeCertification(c.id)} className="text-xs text-rose-300/80 hover:text-rose-300 inline-flex items-center gap-1">
+                      <Trash2 size={11} /> Remove
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </Section>
+
+            {/* Skills & Languages */}
+            <Section title="Skills & languages">
+              <label className="block text-xs font-medium text-slate-300 mb-1.5">Skills</label>
               <textarea
                 value={resume.skills}
                 onChange={(e) => update({ skills: e.target.value })}
@@ -367,7 +496,13 @@ export default function ResumePage() {
                 placeholder="React, TypeScript, Node.js, Communication"
                 className="w-full px-3.5 py-2.5 bg-white/[0.03] border border-white/[0.06] rounded-lg text-sm resize-none focus:outline-none focus:border-indigo-500/50"
               />
-              <p className="text-[10px] text-slate-500 mt-1">Comma-separated.</p>
+              <p className="text-[10px] text-slate-500 mt-1 mb-3">Comma-separated.</p>
+              <Field
+                label="Languages"
+                value={resume.languages}
+                onChange={(v) => update({ languages: v })}
+                placeholder="English (Fluent), Filipino (Native)"
+              />
             </Section>
 
             {!canExport && (
@@ -394,12 +529,12 @@ export default function ResumePage() {
               className="bg-white text-slate-800 rounded-xl p-7 sm:p-9 shadow-2xl"
             >
               {/* Header */}
-              <div className="border-b-2 border-slate-800 pb-3 mb-4">
-                <h2 className="text-2xl font-bold tracking-tight text-slate-900">
+              <div className="pb-3 mb-4" style={{ borderBottom: `2px solid ${accent}` }}>
+                <h2 className="text-[26px] leading-tight font-bold tracking-tight text-slate-900">
                   {resume.fullName || "Your Name"}
                 </h2>
                 {resume.headline && (
-                  <div className="text-sm font-medium text-indigo-700 mt-0.5">
+                  <div className="text-[13px] font-semibold mt-0.5" style={{ color: accent }}>
                     {resume.headline}
                   </div>
                 )}
@@ -407,19 +542,22 @@ export default function ResumePage() {
                   {[resume.email, resume.phone, resume.location, resume.links]
                     .filter(Boolean)
                     .map((item, i) => (
-                      <span key={i}>{i > 0 && <span className="mr-2">·</span>}{item}</span>
+                      <span key={i}>
+                        {i > 0 && <span className="mr-2 text-slate-300">•</span>}
+                        {item}
+                      </span>
                     ))}
                 </div>
               </div>
 
               {resume.summary && (
-                <ResumeSection title="Summary">
+                <ResumeSection title="Summary" accent={accent}>
                   <p className="text-[12.5px] leading-relaxed text-slate-700">{resume.summary}</p>
                 </ResumeSection>
               )}
 
               {resume.experience.some((e) => e.title || e.company) && (
-                <ResumeSection title="Experience">
+                <ResumeSection title="Experience" accent={accent}>
                   {resume.experience
                     .filter((e) => e.title || e.company)
                     .map((e) => (
@@ -427,9 +565,13 @@ export default function ResumePage() {
                         <div className="flex items-baseline justify-between gap-3">
                           <div className="text-[13px] font-bold text-slate-900">
                             {e.title || "Role"}
-                            {e.company && <span className="font-medium text-slate-600"> · {e.company}</span>}
+                            {e.company && (
+                              <span className="font-medium text-slate-600"> · {e.company}</span>
+                            )}
                           </div>
-                          {e.period && <div className="text-[11px] text-slate-500 flex-shrink-0">{e.period}</div>}
+                          {e.period && (
+                            <div className="text-[11px] text-slate-500 flex-shrink-0">{e.period}</div>
+                          )}
                         </div>
                         {e.description && (
                           <p className="text-[12px] leading-relaxed text-slate-700 mt-0.5 whitespace-pre-line">
@@ -442,7 +584,7 @@ export default function ResumePage() {
               )}
 
               {projects.length > 0 && (
-                <ResumeSection title="Projects">
+                <ResumeSection title="Projects" accent={accent}>
                   {projects.map((p, i) => (
                     <div key={i} className="mb-2.5 last:mb-0">
                       <div className="text-[13px] font-bold text-slate-900">{p.title}</div>
@@ -450,7 +592,7 @@ export default function ResumePage() {
                         <p className="text-[12px] leading-relaxed text-slate-700">{p.description}</p>
                       )}
                       {(p.project_url || p.github_url) && (
-                        <div className="text-[11px] text-indigo-700">
+                        <div className="text-[11px]" style={{ color: accent }}>
                           {p.project_url || p.github_url}
                         </div>
                       )}
@@ -459,14 +601,22 @@ export default function ResumePage() {
                 </ResumeSection>
               )}
 
-              {resume.skills.trim() && (
-                <ResumeSection title="Skills">
-                  <p className="text-[12px] leading-relaxed text-slate-700">{resume.skills}</p>
+              {(resume.skills.trim() || resume.languages.trim()) && (
+                <ResumeSection title="Skills" accent={accent}>
+                  {resume.skills.trim() && (
+                    <p className="text-[12px] leading-relaxed text-slate-700">{resume.skills}</p>
+                  )}
+                  {resume.languages.trim() && (
+                    <p className="text-[12px] leading-relaxed text-slate-700 mt-1">
+                      <span className="font-semibold text-slate-900">Languages: </span>
+                      {resume.languages}
+                    </p>
+                  )}
                 </ResumeSection>
               )}
 
               {resume.education.some((e) => e.school || e.degree) && (
-                <ResumeSection title="Education">
+                <ResumeSection title="Education" accent={accent}>
                   {resume.education
                     .filter((e) => e.school || e.degree)
                     .map((e) => (
@@ -475,24 +625,37 @@ export default function ResumePage() {
                           <span className="font-bold text-slate-900">{e.school || "School"}</span>
                           {e.degree && <span className="text-slate-600"> — {e.degree}</span>}
                         </div>
-                        {e.period && <div className="text-[11px] text-slate-500 flex-shrink-0">{e.period}</div>}
+                        {e.period && (
+                          <div className="text-[11px] text-slate-500 flex-shrink-0">{e.period}</div>
+                        )}
                       </div>
                     ))}
                 </ResumeSection>
               )}
 
-              {certificate && (
-                <ResumeSection title="Certifications">
-                  <div className="text-[12px] text-slate-700">
-                    <span className="font-bold text-slate-900">
-                      {certificate.career_path_title} Program
-                    </span>{" "}
-                    — PathForge AI Academy
-                    <span className="text-slate-500">
-                      {" "}· Credential {certificate.credential_id} ·{" "}
-                      {new Date(certificate.issued_at).getFullYear()}
-                    </span>
-                  </div>
+              {(certificate || resume.certifications.some((c) => c.name.trim())) && (
+                <ResumeSection title="Certifications" accent={accent}>
+                  {certificate && (
+                    <div className="text-[12px] text-slate-700 mb-1">
+                      <span className="font-bold text-slate-900">
+                        {certificate.career_path_title} Program
+                      </span>{" "}
+                      — PathForge AI Academy
+                      <span className="text-slate-500">
+                        {" "}· {certificate.credential_id} ·{" "}
+                        {new Date(certificate.issued_at).getFullYear()}
+                      </span>
+                    </div>
+                  )}
+                  {resume.certifications
+                    .filter((c) => c.name.trim())
+                    .map((c) => (
+                      <div key={c.id} className="text-[12px] text-slate-700 mb-1 last:mb-0">
+                        <span className="font-bold text-slate-900">{c.name}</span>
+                        {c.issuer && <span className="text-slate-600"> — {c.issuer}</span>}
+                        {c.year && <span className="text-slate-500"> · {c.year}</span>}
+                      </div>
+                    ))}
                 </ResumeSection>
               )}
             </div>
@@ -501,6 +664,17 @@ export default function ResumePage() {
       </div>
     </div>
   );
+}
+
+function SaveIndicator({ status }: { status: SaveStatus }) {
+  if (status === "idle") return null;
+  const map = {
+    saving: { text: "Saving…", cls: "text-slate-400" },
+    saved: { text: "All changes saved", cls: "text-emerald-300" },
+    error: { text: "Couldn't save — keep editing, we'll retry", cls: "text-rose-300" },
+  } as const;
+  const s = map[status];
+  return <span className={`text-xs ${s.cls}`}>{s.text}</span>;
 }
 
 function Section({
@@ -568,10 +742,21 @@ function AiButton({
   );
 }
 
-function ResumeSection({ title, children }: { title: string; children: React.ReactNode }) {
+function ResumeSection({
+  title,
+  accent,
+  children,
+}: {
+  title: string;
+  accent: string;
+  children: React.ReactNode;
+}) {
   return (
     <div className="mb-4 last:mb-0">
-      <h3 className="text-[11px] font-bold uppercase tracking-wider text-slate-900 border-b border-slate-300 pb-1 mb-2">
+      <h3
+        className="text-[11px] font-bold uppercase tracking-wider pb-1 mb-2"
+        style={{ color: accent, borderBottom: `1px solid ${accent}33` }}
+      >
         {title}
       </h3>
       {children}
