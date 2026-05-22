@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { createClient } from "@/lib/supabase/client";
 import toast from "react-hot-toast";
-import { Send, Bot, Sparkles, Loader2, User } from "lucide-react";
+import { Send, Bot, Sparkles, Loader2, User, Trash2 } from "lucide-react";
 
 interface Message {
   id: string;
@@ -41,6 +41,7 @@ export default function Mentor() {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
+  const [clearing, setClearing] = useState(false);
   const supabase = createClient();
   const messagesEnd = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -143,6 +144,27 @@ export default function Mentor() {
     }
   };
 
+  const clearConversation = async () => {
+    if (
+      !window.confirm(
+        "Clear your entire ForgeBot conversation? This can't be undone."
+      )
+    ) {
+      return;
+    }
+    setClearing(true);
+    try {
+      const res = await fetch("/api/ai-mentor", { method: "DELETE" });
+      if (!res.ok) throw new Error("Failed to clear");
+      setMessages([]);
+      toast.success("Conversation cleared");
+    } catch {
+      toast.error("Couldn't clear the conversation. Try again.");
+    } finally {
+      setClearing(false);
+    }
+  };
+
   if (initialLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -174,6 +196,21 @@ export default function Mentor() {
               <p className="text-xs text-slate-400">Online · Knows your goals & progress</p>
             </div>
           </div>
+          {!isEmpty && (
+            <button
+              onClick={clearConversation}
+              disabled={clearing}
+              aria-label="Clear conversation"
+              className="flex-shrink-0 inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-white/[0.08] text-xs font-medium text-slate-400 hover:text-white hover:bg-white/[0.04] disabled:opacity-50 transition-colors"
+            >
+              {clearing ? (
+                <Loader2 size={13} className="animate-spin" />
+              ) : (
+                <Trash2 size={13} />
+              )}
+              <span className="hidden sm:inline">Clear</span>
+            </button>
+          )}
         </div>
 
         {/* Messages */}
