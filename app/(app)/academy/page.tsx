@@ -13,6 +13,7 @@ import {
   Sparkles,
   ArrowRight,
   Trophy,
+  FileText,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import {
@@ -273,6 +274,40 @@ export default function AcademyPage() {
             </Link>
           </motion.div>
         )}
+
+        {/* Resume nudge — turn the journey into a resume */}
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.15 }}
+          className="relative overflow-hidden rounded-2xl border border-indigo-500/20 bg-gradient-to-br from-indigo-500/[0.1] via-indigo-500/[0.04] to-transparent p-6"
+        >
+          <div
+            className="absolute -top-16 -right-16 w-44 h-44 rounded-full opacity-25 pointer-events-none"
+            style={{ background: "radial-gradient(circle, rgba(99,102,241,0.5), transparent 70%)" }}
+          />
+          <div className="relative flex flex-col sm:flex-row sm:items-center gap-5">
+            <div className="flex-shrink-0 w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-lg shadow-indigo-500/25">
+              <FileText size={20} className="text-white" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <h3 className="text-base font-semibold mb-1">
+                Turn your progress into a resume
+              </h3>
+              <p className="text-xs text-slate-400 leading-relaxed">
+                Your skills, projects, and certificate — built into a recruiter-ready
+                resume in minutes, polished by ForgeBot.
+              </p>
+            </div>
+            <Link
+              href="/resume"
+              className="flex-shrink-0 inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-white text-slate-900 text-sm font-semibold hover:bg-slate-100 transition-colors shadow-lg shadow-white/5"
+            >
+              Build my resume
+              <ArrowRight size={14} />
+            </Link>
+          </div>
+        </motion.div>
 
         {/* How it works */}
         <motion.div
