@@ -17,12 +17,15 @@ import {
   Clock,
   Calendar,
   Zap,
+  Crown,
+  GraduationCap,
 } from "lucide-react";
 import Link from "next/link";
 import { CAREER_PATHS, RANK_META, formatPhp } from "@/lib/data/career-paths";
 import { WelcomeModal } from "@/components/onboarding/WelcomeModal";
 import { PageShimmer } from "@/components/ui/Shimmer";
 import { StreakHeatmap } from "@/components/dashboard/StreakHeatmap";
+import { isPaid } from "@/lib/entitlements";
 
 interface Profile {
   id: string;
@@ -37,6 +40,7 @@ interface Profile {
   target_timeline_months?: number;
   weekly_availability_hours?: number;
   primary_goal?: string;
+  subscription_tier?: string;
 }
 
 // Compute level rank using Solo Leveling-style ranks
@@ -543,7 +547,7 @@ export default function Dashboard() {
           >
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-sm font-semibold text-slate-300 uppercase tracking-wider">
-                Your next quest
+                {profile.total_xp === 0 ? "Start here — your first quest" : "Your next quest"}
               </h3>
               <Link
                 href="/quests"
@@ -553,6 +557,11 @@ export default function Dashboard() {
                 <ArrowRight size={11} />
               </Link>
             </div>
+            {profile.total_xp === 0 && (
+              <p className="text-xs text-slate-400 -mt-2 mb-4">
+                Complete one quest to earn your first XP, level up, and start your streak. 🔥
+              </p>
+            )}
             <Link
               href="/quests"
               className="group relative overflow-hidden block rounded-2xl border border-white/[0.06] p-6 hover:border-white/[0.16] transition-all"
@@ -615,7 +624,7 @@ export default function Dashboard() {
                 <div className="text-xs text-slate-400 mb-1">Today's focus</div>
                 <h4 className="text-base font-semibold mb-1">All quests cleared — well done</h4>
                 <p className="text-xs text-slate-400">
-                  Ask your AI mentor to generate more, or take a well-earned break.
+                  Ask ForgeBot to generate more, or take a well-earned break.
                 </p>
               </div>
               <Link
@@ -623,6 +632,49 @@ export default function Dashboard() {
                 className="flex-shrink-0 inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-white text-slate-900 text-sm font-semibold hover:bg-slate-100 transition-colors shadow-lg shadow-white/5"
               >
                 Talk to ForgeBot
+                <ArrowRight size={14} />
+              </Link>
+            </div>
+          </motion.div>
+        )}
+
+        {/* Pro upsell — free users only */}
+        {profile && !isPaid(profile.subscription_tier) && (
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.33 }}
+            className="relative overflow-hidden rounded-2xl border border-violet-500/20 bg-gradient-to-br from-violet-500/[0.1] via-violet-500/[0.04] to-transparent p-6"
+          >
+            <div
+              className="absolute -top-16 -right-16 w-48 h-48 rounded-full opacity-30 pointer-events-none"
+              style={{ background: "radial-gradient(circle, rgba(168,85,247,0.5), transparent 70%)" }}
+            />
+            <div className="relative flex flex-col sm:flex-row sm:items-center gap-5">
+              <div className="flex-shrink-0 w-12 h-12 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center shadow-lg shadow-violet-500/25">
+                <Crown size={20} className="text-white" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="text-[10px] uppercase tracking-wider text-violet-300 font-semibold mb-1">
+                  PathForge Pro
+                </div>
+                <h4 className="text-base font-semibold mb-2">Unlock the full forge</h4>
+                <div className="flex flex-wrap gap-x-4 gap-y-1.5 text-xs text-slate-400">
+                  <span className="inline-flex items-center gap-1.5">
+                    <GraduationCap size={12} className="text-violet-300" />
+                    Download &amp; share your certificates
+                  </span>
+                  <span className="inline-flex items-center gap-1.5">
+                    <Bot size={12} className="text-violet-300" />
+                    Unlimited ForgeBot coaching
+                  </span>
+                </div>
+              </div>
+              <Link
+                href="/pricing"
+                className="flex-shrink-0 inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-white text-slate-900 text-sm font-semibold hover:bg-slate-100 transition-colors shadow-lg shadow-white/5"
+              >
+                See Pro · ₱249/mo
                 <ArrowRight size={14} />
               </Link>
             </div>

@@ -12,6 +12,8 @@ import {
   Zap,
   Globe2,
   Check,
+  GraduationCap,
+  ShieldCheck,
 } from "lucide-react";
 import { Logo } from "@/components/brand/Logo";
 import { PrimaryLinkButton } from "@/components/ui/PrimaryButton";
@@ -157,8 +159,8 @@ export default function Landing() {
             transition={{ duration: 0.7, delay: 0.15 }}
             className="text-balance text-lg sm:text-xl text-slate-400 max-w-2xl mx-auto mb-10 leading-relaxed"
           >
-            Personalized roadmaps, daily quests, and an AI mentor — all in one workspace.
-            Built for the next generation of remote talent — anywhere in the world.
+            Personalized roadmaps, daily quests, and ForgeBot — your AI career coach.
+            Finish your program and earn a verifiable certificate that lands the job.
           </motion.p>
 
           {/* CTAs */}
@@ -420,8 +422,8 @@ export default function Landing() {
               },
               {
                 step: "03",
-                title: "Level up",
-                description: "Complete quests, build streaks, climb ranks, ship a portfolio that lands the job.",
+                title: "Level up & get certified",
+                description: "Complete quests, climb ranks, and earn a verifiable PathForge certificate that proves it.",
               },
             ].map((step, i) => (
               <motion.div
@@ -440,6 +442,100 @@ export default function Landing() {
               </motion.div>
             ))}
           </div>
+        </div>
+      </section>
+
+      {/* Certification */}
+      <section className="relative z-10 py-24">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-100px" }}
+            transition={{ duration: 0.8 }}
+            className="relative rounded-3xl overflow-hidden border border-white/[0.08] bg-gradient-to-br from-white/[0.04] to-transparent p-6 lg:p-12"
+          >
+            <div
+              className="absolute -top-20 right-1/4 w-[500px] h-[300px] opacity-30 pointer-events-none"
+              style={{ background: "radial-gradient(ellipse, rgba(99,102,241,0.4), transparent 70%)" }}
+            />
+            <div className="relative grid lg:grid-cols-2 gap-12 items-center">
+              {/* Copy */}
+              <div>
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/[0.04] border border-white/[0.08] mb-4">
+                  <GraduationCap size={11} className="text-indigo-400" />
+                  <span className="text-xs font-medium text-slate-300 tracking-wide">
+                    PathForge AI Academy
+                  </span>
+                </div>
+                <h2 className="text-3xl sm:text-4xl font-semibold tracking-tight mb-4">
+                  Finish a program.
+                  <br />
+                  Earn a real credential.
+                </h2>
+                <p className="text-base text-slate-400 leading-relaxed mb-6">
+                  Complete your career program and PathForge issues a verifiable
+                  Certificate of Completion — the kind of proof recruiters can actually
+                  check, not just another badge.
+                </p>
+                <div className="space-y-2.5 mb-7">
+                  {[
+                    "Unique credential ID + public verification page",
+                    "One-click Add to LinkedIn",
+                    "Skills, rank, and quests cleared — all on the certificate",
+                  ].map((item, i) => (
+                    <div key={i} className="flex items-start gap-3 text-sm text-slate-300">
+                      <div className="mt-0.5 w-5 h-5 rounded-full bg-white/[0.05] border border-white/[0.1] flex items-center justify-center flex-shrink-0">
+                        <Check size={12} className="text-indigo-300" strokeWidth={3} />
+                      </div>
+                      <span>{item}</span>
+                    </div>
+                  ))}
+                </div>
+                <PrimaryLinkButton href="/signup" size="lg">
+                  Start earning yours
+                  <ArrowRight size={14} className="group-hover:translate-x-0.5 transition-transform" />
+                </PrimaryLinkButton>
+              </div>
+
+              {/* Sample certificate */}
+              <div className="relative">
+                <div className="rounded-2xl border border-white/[0.12] bg-gradient-to-br from-white/[0.06] to-transparent p-6 sm:p-8 text-center">
+                  <div className="inline-flex items-center gap-2 mb-5">
+                    <Logo size={22} />
+                    <span className="text-xs font-semibold tracking-tight">
+                      PathForge AI Academy
+                    </span>
+                  </div>
+                  <div className="text-[9px] uppercase tracking-[0.2em] text-slate-500 font-semibold mb-2">
+                    Certificate of Completion
+                  </div>
+                  <div className="text-xs text-slate-500 mb-1">This certifies that</div>
+                  <div className="text-xl font-semibold tracking-tight mb-1">Maria Santos</div>
+                  <div className="text-xs text-slate-400 mb-4">
+                    completed the{" "}
+                    <span className="text-white">Software Engineer</span> program
+                  </div>
+                  <div className="flex flex-wrap justify-center gap-1.5 mb-5">
+                    {["React", "TypeScript", "Node.js", "APIs"].map((s) => (
+                      <span
+                        key={s}
+                        className="text-[10px] px-2 py-0.5 rounded-md bg-white/[0.04] border border-white/[0.08] text-slate-300"
+                      >
+                        {s}
+                      </span>
+                    ))}
+                  </div>
+                  <div className="flex items-center justify-center gap-2 pt-4 border-t border-white/[0.06]">
+                    <ShieldCheck size={12} className="text-emerald-300" />
+                    <span className="text-[10px] text-emerald-200 font-medium">
+                      Verified · PF-7K2MX9QA
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </motion.div>
         </div>
       </section>
 
