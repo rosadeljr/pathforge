@@ -410,6 +410,7 @@ export default function Dashboard() {
                     <span className="text-slate-500">Target salary</span>
                     <span className="font-medium tabular-nums">
                       {formatPhp(careerPath.salaryMinPhp)}–{formatPhp(careerPath.salaryMaxPhp)}
+                      <span className="text-slate-500 font-normal"> /yr</span>
                     </span>
                   </div>
                   {profile.target_timeline_months && (

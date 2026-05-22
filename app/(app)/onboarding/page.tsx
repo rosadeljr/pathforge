@@ -498,6 +498,7 @@ export default function Onboarding() {
                           </div>
                           <div className="text-sm font-semibold tracking-tight">
                             {formatPhp(path.salaryMinPhp)} – {formatPhp(path.salaryMaxPhp)}
+                            <span className="text-slate-500 font-normal text-xs"> /yr</span>
                           </div>
                         </div>
                         {path.remote && (
@@ -548,7 +549,7 @@ export default function Onboarding() {
                     <div className="grid grid-cols-3 gap-2 mb-4">
                       <div className="p-2.5 rounded-xl bg-white/[0.03] border border-white/[0.06]">
                         <div className="text-[9px] uppercase tracking-wider text-slate-500 mb-0.5">
-                          You could earn
+                          Annual pay
                         </div>
                         <div className="text-xs font-bold text-emerald-300">
                           {formatPhp(selectedPathData.salaryMinPhp)}–{formatPhp(selectedPathData.salaryMaxPhp)}

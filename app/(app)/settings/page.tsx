@@ -260,7 +260,7 @@ export default function Settings() {
                 </div>
                 <div className="text-sm font-semibold tabular-nums">
                   {profile.target_salary_min && profile.target_salary_max
-                    ? `${formatPhp(profile.target_salary_min)} – ${formatPhp(profile.target_salary_max)}`
+                    ? `${formatPhp(profile.target_salary_min)} – ${formatPhp(profile.target_salary_max)} /yr`
                     : "Not set"}
                 </div>
               </div>
