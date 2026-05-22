@@ -7,6 +7,7 @@ import { createClient } from "@/lib/supabase/client";
 import toast from "react-hot-toast";
 import Link from "next/link";
 import { Logo } from "@/components/brand/Logo";
+import { GoogleButton } from "@/components/auth/GoogleButton";
 import { track } from "@/lib/analytics/track";
 import {
   AlertCircle,
@@ -496,6 +497,11 @@ export default function SignUp() {
               <div className="flex-1 h-px bg-white/[0.06]" />
               <span className="text-xs text-slate-500">or</span>
               <div className="flex-1 h-px bg-white/[0.06]" />
+            </div>
+
+            {/* Google sign-up */}
+            <div className="mb-6">
+              <GoogleButton label="Sign up with Google" />
             </div>
 
             {/* Login link */}

@@ -544,6 +544,31 @@ export default function Onboarding() {
                     style={{ background: `radial-gradient(circle, ${selectedPathData.accentColor}, transparent 70%)` }}
                   />
                   <div className="relative">
+                    {/* The payoff — what this path gets you */}
+                    <div className="grid grid-cols-3 gap-2 mb-4">
+                      <div className="p-2.5 rounded-xl bg-white/[0.03] border border-white/[0.06]">
+                        <div className="text-[9px] uppercase tracking-wider text-slate-500 mb-0.5">
+                          You could earn
+                        </div>
+                        <div className="text-xs font-bold text-emerald-300">
+                          {formatPhp(selectedPathData.salaryMinPhp)}–{formatPhp(selectedPathData.salaryMaxPhp)}
+                        </div>
+                      </div>
+                      <div className="p-2.5 rounded-xl bg-white/[0.03] border border-white/[0.06]">
+                        <div className="text-[9px] uppercase tracking-wider text-slate-500 mb-0.5">
+                          Job-ready in
+                        </div>
+                        <div className="text-xs font-bold text-indigo-300">
+                          ~{selectedPathData.timelineMonths} months
+                        </div>
+                      </div>
+                      <div className="p-2.5 rounded-xl bg-white/[0.03] border border-white/[0.06]">
+                        <div className="text-[9px] uppercase tracking-wider text-slate-500 mb-0.5">
+                          You&apos;ll earn a
+                        </div>
+                        <div className="text-xs font-bold text-violet-300">Certificate</div>
+                      </div>
+                    </div>
                     <div className="flex items-center gap-2 mb-3">
                       <Sparkles size={12} className="text-indigo-300" />
                       <span className="text-[10px] uppercase tracking-wider text-slate-400 font-semibold">

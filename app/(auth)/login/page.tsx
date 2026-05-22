@@ -8,6 +8,7 @@ import { LoginSchema } from "@/lib/validations";
 import toast from "react-hot-toast";
 import Link from "next/link";
 import { Logo } from "@/components/brand/Logo";
+import { GoogleButton } from "@/components/auth/GoogleButton";
 import {
   AlertCircle,
   Mail,
@@ -375,6 +376,11 @@ export default function Login() {
               <div className="flex-1 h-px bg-white/[0.06]" />
               <span className="text-xs text-slate-500">or</span>
               <div className="flex-1 h-px bg-white/[0.06]" />
+            </div>
+
+            {/* Google sign-in */}
+            <div className="mb-6">
+              <GoogleButton label="Sign in with Google" />
             </div>
 
             {/* Signup link */}
