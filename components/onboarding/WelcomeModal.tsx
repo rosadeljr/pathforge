@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   X,
@@ -58,6 +59,8 @@ const LOCAL_STORAGE_KEY = "pathforge-welcome-seen-v1";
 export function WelcomeModal() {
   const [open, setOpen] = useState(false);
   const [slide, setSlide] = useState(0);
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
 
   useEffect(() => {
     // Show only if never seen
@@ -88,7 +91,9 @@ export function WelcomeModal() {
   const isLast = slide === SLIDES.length - 1;
   const Icon = current.icon;
 
-  return (
+  if (!mounted) return null;
+
+  return createPortal(
     <AnimatePresence>
       {open && (
         <motion.div
@@ -198,6 +203,7 @@ export function WelcomeModal() {
           </motion.div>
         </motion.div>
       )}
-    </AnimatePresence>
+    </AnimatePresence>,
+    document.body
   );
 }

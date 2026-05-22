@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, ArrowRight, ArrowLeft, Sparkles, Check } from "lucide-react";
 import { CAREER_PATHS, type CareerPath } from "@/lib/data/career-paths";
@@ -114,7 +115,11 @@ export function RecommendQuiz({ onClose, onRecommend }: Props) {
 
   const recommended = showResult ? recommend(answers) : null;
 
-  return (
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+  if (!mounted) return null;
+
+  return createPortal(
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
@@ -301,6 +306,7 @@ export function RecommendQuiz({ onClose, onRecommend }: Props) {
           </motion.div>
         )}
       </motion.div>
-    </motion.div>
+    </motion.div>,
+    document.body
   );
 }

@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { motion } from "framer-motion";
 import {
   X,
@@ -74,6 +75,10 @@ export function QuestDetailModal({ quest, onClose, onComplete }: Props) {
   // After completion, ForgeBot reviews the submission and shows feedback
   const [view, setView] = useState<"detail" | "assessed">("detail");
   const [assessment, setAssessment] = useState<QuestAssessment | null>(null);
+  // Portal the modal to <body> so a transformed ancestor can't trap its
+  // position:fixed and crop the sticky footer off-screen.
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
 
   // Look up matching template for steps/resources
   const template = useMemo(() => {
@@ -147,7 +152,9 @@ export function QuestDetailModal({ quest, onClose, onComplete }: Props) {
     }
   };
 
-  return (
+  if (!mounted) return null;
+
+  return createPortal(
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
@@ -430,6 +437,7 @@ export function QuestDetailModal({ quest, onClose, onComplete }: Props) {
           )}
         </div>
       </motion.div>
-    </motion.div>
+    </motion.div>,
+    document.body
   );
 }
