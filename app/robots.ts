@@ -15,6 +15,7 @@ export default function robots(): MetadataRoute.Robots {
         "/quests",
         "/roadmap",
         "/academy",
+        "/resume",
         "/mentor",
         "/portfolio",
         "/achievements",

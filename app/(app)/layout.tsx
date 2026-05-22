@@ -19,6 +19,7 @@ import {
   Sun,
   Moon,
   GraduationCap,
+  FileText,
 } from "lucide-react";
 import { useTheme } from "@/components/theme/ThemeProvider";
 
@@ -38,6 +39,7 @@ const navLinks = [
   { icon: GraduationCap, label: "Academy", href: "/academy", description: "Your certifications" },
   { icon: Bot, label: "ForgeBot", href: "/mentor", description: "Talk to your mentor" },
   { icon: Trophy, label: "Portfolio", href: "/portfolio", description: "Show your work" },
+  { icon: FileText, label: "Resume", href: "/resume", description: "Build your resume" },
   { icon: Sparkles, label: "Achievements", href: "/achievements", description: "Your trophies" },
   { icon: Crown, label: "Leaderboard", href: "/leaderboard", description: "Top forgers" },
   { icon: SettingsIcon, label: "Settings", href: "/settings", description: "Preferences" },
@@ -50,6 +52,7 @@ const mobileNavLinks = [
   { icon: Bot, label: "ForgeBot", href: "/mentor" },
   { icon: GraduationCap, label: "Academy", href: "/academy" },
   { icon: Trophy, label: "Portfolio", href: "/portfolio" },
+  { icon: FileText, label: "Resume", href: "/resume" },
   { icon: SettingsIcon, label: "Settings", href: "/settings" },
 ];
 

@@ -15,6 +15,8 @@ export interface Entitlements {
   forgeBotDailyMessages: number;
   /** Can download + share the PathForge AI Academy certificate. */
   canDownloadCertificate: boolean;
+  /** Can export the built resume to PDF (everyone can build & preview). */
+  canExportResume: boolean;
   /** Resume optimizer + interview prep tools (Elite). */
   resumeTools: boolean;
   prioritySupport: boolean;
@@ -27,6 +29,7 @@ const TIERS: Record<Tier, Entitlements> = {
     maxCareerPaths: 1,
     forgeBotDailyMessages: 10,
     canDownloadCertificate: false,
+    canExportResume: false,
     resumeTools: false,
     prioritySupport: false,
   },
@@ -36,6 +39,7 @@ const TIERS: Record<Tier, Entitlements> = {
     maxCareerPaths: -1,
     forgeBotDailyMessages: -1,
     canDownloadCertificate: true,
+    canExportResume: true,
     resumeTools: false,
     prioritySupport: true,
   },
@@ -45,6 +49,7 @@ const TIERS: Record<Tier, Entitlements> = {
     maxCareerPaths: -1,
     forgeBotDailyMessages: -1,
     canDownloadCertificate: true,
+    canExportResume: true,
     resumeTools: true,
     prioritySupport: true,
   },
