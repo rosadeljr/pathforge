@@ -41,7 +41,9 @@ export async function POST(request: Request) {
     const [{ data: profile }, { data: activeQuests }, { count: completedCount }] = await Promise.all([
       supabase
         .from("profiles")
-        .select("current_level, total_xp, streak_count, readiness_score, selected_career_path_id, subscription_tier")
+        .select(
+          "current_level, total_xp, streak_count, readiness_score, selected_career_path_id, subscription_tier, user_mode, learner_grade, learner_subjects"
+        )
         .eq("id", user.id)
         .maybeSingle(),
       supabase
@@ -71,6 +73,13 @@ export async function POST(request: Request) {
       })),
       completedCount: completedCount || 0,
     };
+
+    // Learner mode → kid-safe tutor. Career mode → existing career coach.
+    const isLearner = profile?.user_mode === "learner";
+    const learnerGrade: number | null = profile?.learner_grade ?? null;
+    const learnerSubjects: string[] = Array.isArray(profile?.learner_subjects)
+      ? profile.learner_subjects
+      : [];
 
     // Free-tier daily message cap — Pro/Elite are unlimited.
     const entitlements = getEntitlements(profile?.subscription_tier);
@@ -130,7 +139,31 @@ export async function POST(request: Request) {
             )
             .join(", ") || "none";
 
-        const systemPrompt = `You are ForgeBot — PathForge's AI career coach AND a knowledgeable mentor on anything that helps the user grow. You can help across career strategy, learning, technical concepts, life advice, and motivation. You know this user's journey from PathForge.
+        const learnerPrompt = `You are a friendly tutor in PathForge — a fun learning app for Filipino students in Grades 1–10. Your job is to help with school subjects: Math, English, Filipino, Science, and Araling Panlipunan.
+
+THE STUDENT:
+- Grade: ${learnerGrade ?? "not set yet"}
+- Subjects they picked: ${learnerSubjects.length ? learnerSubjects.join(", ") : "none yet"}
+
+YOUR STYLE:
+- Warm, patient, encouraging — like a kind kuya or ate. Celebrate small wins. Never make a student feel bad for a wrong answer.
+- Use simple words and short sentences. Match their grade level — younger kids get simpler language.
+- It's OK to mix in a little Filipino if the student writes in Filipino or if it helps them feel comfortable.
+
+HOW TO HELP:
+- Homework / schoolwork: walk through it step-by-step with examples. Don't just give the answer — explain the thinking.
+- "I don't understand X": break it down to smaller pieces. Use everyday examples (peso, pandesal, jeepney, sari-sari store) where they fit.
+- Stuck or frustrated: be encouraging. Remind them every expert was once a beginner.
+
+WHAT YOU WILL NOT DO:
+- You will NOT discuss anything unsafe for kids — no violence, weapons, adult relationships, drugs, alcohol, scary topics, or anything else inappropriate for a child.
+- If a student asks about something off-topic or unsafe, gently say: "Let's ask a trusted grown-up about that one. For now, want to try a quiz on [subject]?" Then suggest a school topic.
+- You will NOT give personal information about real people, including teachers or classmates.
+- You will NOT pretend to be a person, monster, or anything that isn't a friendly tutor.
+
+Keep replies short and clear. End with a small question or a "you got this!" when it fits.`;
+
+        const careerPrompt = `You are ForgeBot — PathForge's AI career coach AND a knowledgeable mentor on anything that helps the user grow. You can help across career strategy, learning, technical concepts, life advice, and motivation. You know this user's journey from PathForge.
 
 THE USER:
 - Level ${ctx.level} · ${ctx.totalXp.toLocaleString()} XP · ${ctx.streak}-day streak · Readiness ${ctx.readinessScore}%
@@ -153,6 +186,8 @@ HOW TO ANSWER:
 
 You're a coach, a mentor, AND a tutor. Don't hide knowledge behind brevity.`;
 
+        const systemPrompt = isLearner ? learnerPrompt : careerPrompt;
+
         const completion = await openai.chat.completions.create({
           model: "gpt-4o",
           messages: [
@@ -160,8 +195,8 @@ You're a coach, a mentor, AND a tutor. Don't hide knowledge behind brevity.`;
             ...priorTurns,
             { role: "user", content: message },
           ],
-          temperature: 0.7,
-          max_tokens: 900,
+          temperature: isLearner ? 0.6 : 0.7,
+          max_tokens: isLearner ? 500 : 900,
         });
 
         aiReply = completion.choices[0]?.message?.content?.trim() || null;

@@ -64,6 +64,7 @@ const mobileNavLinks = [
 // Learner-mode navigation — kid-friendly, fewer items, no career stuff.
 const learnerNavLinks = [
   { icon: Home, label: "Home", href: "/learn", description: "Today's learning" },
+  { icon: Bot, label: "Tutor", href: "/mentor", description: "Ask the tutor anything" },
   { icon: Sparkles, label: "Achievements", href: "/achievements", description: "Badges you've earned" },
   { icon: Crown, label: "Leaderboard", href: "/leaderboard", description: "Top learners" },
   { icon: SettingsIcon, label: "Settings", href: "/settings", description: "Preferences" },
@@ -71,6 +72,7 @@ const learnerNavLinks = [
 
 const learnerMobileNavLinks = [
   { icon: Home, label: "Home", href: "/learn" },
+  { icon: Bot, label: "Tutor", href: "/mentor" },
   { icon: Sparkles, label: "Badges", href: "/achievements" },
   { icon: Crown, label: "Ranks", href: "/leaderboard" },
   { icon: SettingsIcon, label: "Settings", href: "/settings" },
