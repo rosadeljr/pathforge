@@ -328,7 +328,9 @@ export default function Roadmap() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: 0.1 + index * 0.05 }}
                 className={`relative overflow-hidden rounded-2xl border transition-all ${
-                  isUnlocked
+                  isInProgress
+                    ? "border-indigo-500/40 bg-white/[0.03] shadow-lg shadow-indigo-500/10"
+                    : isUnlocked
                     ? "border-white/[0.08] bg-white/[0.02]"
                     : "border-white/[0.04] bg-white/[0.01] opacity-60"
                 }`}
@@ -376,7 +378,13 @@ export default function Roadmap() {
                           <span className="text-[10px] text-emerald-400 font-medium">Completed</span>
                         )}
                         {isUnlocked && isInProgress && (
-                          <span className="text-[10px] text-indigo-300 font-medium">In progress</span>
+                          <span className="inline-flex items-center gap-1.5 text-[10px] text-indigo-300 font-semibold">
+                            <span className="relative flex h-1.5 w-1.5">
+                              <span className="absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75 animate-ping" />
+                              <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-indigo-400" />
+                            </span>
+                            You're here
+                          </span>
                         )}
                       </div>
                       <h3 className="text-xl font-semibold tracking-tight mb-1">{phase.title}</h3>

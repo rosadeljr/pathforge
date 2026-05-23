@@ -385,7 +385,20 @@ export default function Quests() {
             Today's missions
           </h1>
           <p className="text-sm text-slate-400">
-            Complete quests to earn XP, build skills, and level up your career.
+            {filteredQuests.length > 0 ? (
+              <>
+                <span className="text-white font-semibold tabular-nums">
+                  {filteredQuests.length}
+                </span>{" "}
+                {filteredQuests.length === 1 ? "quest" : "quests"} ·{" "}
+                <span className="text-indigo-300 font-semibold tabular-nums">
+                  +{totalXpAvailable.toLocaleString()} XP
+                </span>{" "}
+                up for grabs. Pick one and ship it.
+              </>
+            ) : (
+              <>All caught up — generate more or take a well-earned break.</>
+            )}
           </p>
         </motion.div>
 

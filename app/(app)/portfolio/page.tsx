@@ -14,6 +14,7 @@ import {
   Star,
   Calendar,
   Loader2,
+  FileText,
 } from "lucide-react";
 import Link from "next/link";
 import { ACHIEVEMENT_IDS, awardAchievements } from "@/lib/gamification/progression";
@@ -126,6 +127,35 @@ export default function Portfolio() {
                 {avgScore > 0 ? avgScore.toFixed(1) : "—"}
               </div>
             </div>
+          </motion.div>
+        )}
+
+        {/* Resume cross-promo — your projects feed straight into your resume */}
+        {projects.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.08 }}
+            className="rounded-2xl border border-indigo-500/20 bg-gradient-to-br from-indigo-500/[0.06] to-transparent p-4 flex items-center gap-3 flex-wrap"
+          >
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-lg shadow-indigo-500/20 flex-shrink-0">
+              <FileText size={16} className="text-white" />
+            </div>
+            <div className="flex-1 min-w-0 text-sm">
+              <div className="font-semibold text-white">
+                Your projects auto-fill your resume
+              </div>
+              <div className="text-xs text-slate-400">
+                Open the Resume Builder and let ForgeBot polish them into recruiter-ready bullets.
+              </div>
+            </div>
+            <Link
+              href="/resume"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/[0.06] border border-white/[0.1] text-xs font-semibold text-white hover:bg-white/[0.1] transition-colors flex-shrink-0"
+            >
+              Open Resume
+              <ArrowRight size={11} />
+            </Link>
           </motion.div>
         )}
 

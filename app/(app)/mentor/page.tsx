@@ -42,12 +42,13 @@ export default function Mentor() {
   const [loading, setLoading] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
   const [clearing, setClearing] = useState(false);
+  const [tier, setTier] = useState<string>("free");
   const supabase = createClient();
   const messagesEnd = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
-    async function loadMessages() {
+    async function load() {
       try {
         const { data: { session } } = await supabase.auth.getSession();
         if (!session?.user) {
@@ -55,7 +56,15 @@ export default function Mentor() {
           return;
         }
 
-        const response = await fetch("/api/ai-mentor", { method: "GET" });
+        const [profileRes, response] = await Promise.all([
+          supabase
+            .from("profiles")
+            .select("subscription_tier")
+            .eq("id", session.user.id)
+            .maybeSingle(),
+          fetch("/api/ai-mentor", { method: "GET" }),
+        ]);
+        if (profileRes.data?.subscription_tier) setTier(profileRes.data.subscription_tier);
         if (response.ok) {
           const data = await response.json();
           setMessages(data.messages || []);
@@ -66,7 +75,7 @@ export default function Mentor() {
         setInitialLoading(false);
       }
     }
-    loadMessages();
+    load();
   }, [supabase]);
 
   useEffect(() => {
@@ -175,6 +184,16 @@ export default function Mentor() {
 
   const isEmpty = messages.length === 0;
 
+  // Daily message counter (free tier only — Pro/Elite are unlimited).
+  const isPaid = tier === "pro" || tier === "elite";
+  const startOfDay = new Date();
+  startOfDay.setHours(0, 0, 0, 0);
+  const usedToday = messages.filter(
+    (m) => m.role === "user" && new Date(m.created_at) >= startOfDay
+  ).length;
+  const dailyLimit = 10;
+  const remaining = Math.max(0, dailyLimit - usedToday);
+
   return (
     <div className="min-h-screen flex flex-col">
       <div className="flex-1 flex flex-col max-w-3xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
@@ -190,6 +209,24 @@ export default function Mentor() {
               <span className="text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-violet-500/15 text-violet-300 border border-violet-500/30">
                 Your mentor
               </span>
+              {!isPaid && (
+                <span
+                  className={`text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded border ${
+                    remaining === 0
+                      ? "bg-rose-500/15 text-rose-300 border-rose-500/30"
+                      : remaining <= 3
+                      ? "bg-amber-500/15 text-amber-300 border-amber-500/30"
+                      : "bg-white/[0.04] text-slate-400 border-white/[0.08]"
+                  }`}
+                  title={
+                    remaining === 0
+                      ? "Daily limit hit. Upgrade to Pro for unlimited."
+                      : `${remaining} of ${dailyLimit} free messages left today`
+                  }
+                >
+                  {remaining}/{dailyLimit} today
+                </span>
+              )}
             </div>
             <div className="flex items-center gap-1.5">
               <div className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
