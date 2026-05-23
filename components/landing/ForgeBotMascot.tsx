@@ -1,48 +1,49 @@
 "use client";
 
 /**
- * ForgeBot Mascot — a 3D-style SVG character that brings PathForge to life.
+ * ForgeBot Mascot v2 — holographic guardian style.
  *
- * Built without any 3D library (no three.js, no r3f). We get the dimensional
- * feel via:
- *   - Layered radial gradients suggesting light direction (top-left)
- *   - Drop-shadow filters for depth
- *   - perspective + rotateY/rotateX on the parent for parallax to cursor
- *   - Framer Motion for floating, blinking, head tilts, antenna pulse
- *
- * Designed to delight kids AND look premium for adults — Pixar-y but clean.
+ * Inspired by Iron Man's HUD + BB-8 + a futuristic Disney mascot.
+ * Built with pure SVG + Framer Motion (no 3D library). The "wow"
+ * comes from:
+ *   - Sleek cohesive silhouette (no floating disconnected parts)
+ *   - Multi-layer glow filters (rim light + bloom + drop shadow)
+ *   - Orbiting saturn-like holographic ring with depth
+ *   - Pulsing power core with concentric energy rings
+ *   - Holographic visor with twin glowing pupils that track the cursor
+ *   - Streaming data particles + lens flare at antenna tip
+ *   - Parallax tilt to mouse via CSS perspective
  */
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { motion, useMotionValue, useSpring, useTransform } from "framer-motion";
 
 interface ForgeBotMascotProps {
   size?: number;
-  /** Optional: react to a hovered area outside the mascot (used for hero CTA hover). */
   className?: string;
 }
 
-export function ForgeBotMascot({ size = 280, className = "" }: ForgeBotMascotProps) {
+export function ForgeBotMascot({ size = 320, className = "" }: ForgeBotMascotProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mouseX = useMotionValue(0);
   const mouseY = useMotionValue(0);
   const springConfig = { stiffness: 80, damping: 14, mass: 0.6 };
-  const rotateY = useSpring(useTransform(mouseX, [-1, 1], [12, -12]), springConfig);
-  const rotateX = useSpring(useTransform(mouseY, [-1, 1], [-8, 8]), springConfig);
-  const eyeOffsetX = useSpring(useTransform(mouseX, [-1, 1], [-2.5, 2.5]), springConfig);
-  const eyeOffsetY = useSpring(useTransform(mouseY, [-1, 1], [-1.5, 1.5]), springConfig);
+  const rotateY = useSpring(useTransform(mouseX, [-1, 1], [16, -16]), springConfig);
+  const rotateX = useSpring(useTransform(mouseY, [-1, 1], [-10, 10]), springConfig);
+  const eyeOffsetX = useSpring(useTransform(mouseX, [-1, 1], [-3.5, 3.5]), springConfig);
+  const eyeOffsetY = useSpring(useTransform(mouseY, [-1, 1], [-2, 2]), springConfig);
 
   const [blink, setBlink] = useState(false);
-  const [wave, setWave] = useState(false);
+  const [pulse, setPulse] = useState(false);
 
-  // Blink occasionally — feels alive
+  // Blink randomly — feels alive
   useEffect(() => {
     let timer: any;
     const schedule = () => {
-      const delay = 2000 + Math.random() * 3500;
+      const delay = 2200 + Math.random() * 3500;
       timer = setTimeout(() => {
         setBlink(true);
-        setTimeout(() => setBlink(false), 130);
+        setTimeout(() => setBlink(false), 110);
         schedule();
       }, delay);
     };
@@ -50,21 +51,20 @@ export function ForgeBotMascot({ size = 280, className = "" }: ForgeBotMascotPro
     return () => clearTimeout(timer);
   }, []);
 
-  // Wave hand every ~8 seconds
+  // Periodic power-core pulse (extra burst)
   useEffect(() => {
     let timer: any;
     const schedule = () => {
       timer = setTimeout(() => {
-        setWave(true);
-        setTimeout(() => setWave(false), 1400);
+        setPulse(true);
+        setTimeout(() => setPulse(false), 800);
         schedule();
-      }, 7000 + Math.random() * 4000);
+      }, 6000 + Math.random() * 3000);
     };
     schedule();
     return () => clearTimeout(timer);
   }, []);
 
-  // Track mouse for parallax — looks like it's watching you
   function handleMove(e: React.MouseEvent<HTMLDivElement>) {
     if (!containerRef.current) return;
     const rect = containerRef.current.getBoundingClientRect();
@@ -79,31 +79,53 @@ export function ForgeBotMascot({ size = 280, className = "" }: ForgeBotMascotPro
     mouseY.set(0);
   }
 
+  // Particle ring positions (calculated once)
+  const dataParticles = useMemo(
+    () =>
+      Array.from({ length: 14 }).map((_, i) => ({
+        angle: (i / 14) * Math.PI * 2,
+        delay: (i / 14) * 2,
+        size: 1.5 + Math.random() * 1.5,
+      })),
+    []
+  );
+
   return (
     <div
       ref={containerRef}
       onMouseMove={handleMove}
       onMouseLeave={handleLeave}
       className={`relative inline-block ${className}`}
-      style={{ width: size, height: size, perspective: "1000px" }}
+      style={{ width: size, height: size, perspective: "1200px" }}
     >
-      {/* Ambient halo behind the mascot — radiates light */}
+      {/* Outer glow halo */}
+      <motion.div
+        animate={{ opacity: [0.6, 0.85, 0.6], scale: [1, 1.08, 1] }}
+        transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          background:
+            "radial-gradient(circle at 50% 45%, rgba(99,102,241,0.45), rgba(168,85,247,0.20) 30%, transparent 60%)",
+          filter: "blur(6px)",
+        }}
+      />
+      {/* Cyan rim glow */}
       <div
         className="absolute inset-0 pointer-events-none"
         style={{
           background:
-            "radial-gradient(circle at 50% 45%, rgba(168,85,247,0.35), rgba(99,102,241,0.15) 35%, transparent 65%)",
-          filter: "blur(8px)",
+            "radial-gradient(circle at 50% 38%, rgba(34,211,238,0.25), transparent 45%)",
+          filter: "blur(12px)",
         }}
       />
 
-      {/* Floating wrapper — bobs up and down forever */}
+      {/* Bobbing wrapper */}
       <motion.div
-        animate={{ y: [0, -10, 0] }}
-        transition={{ duration: 3.5, repeat: Infinity, ease: "easeInOut" }}
+        animate={{ y: [0, -12, 0] }}
+        transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
         style={{ width: "100%", height: "100%" }}
       >
-        {/* Tilt wrapper — responds to mouse */}
+        {/* Tilt wrapper */}
         <motion.div
           style={{
             rotateY,
@@ -114,294 +136,570 @@ export function ForgeBotMascot({ size = 280, className = "" }: ForgeBotMascotPro
           }}
         >
           <svg
-            viewBox="0 0 240 280"
+            viewBox="0 0 320 360"
             width="100%"
             height="100%"
             xmlns="http://www.w3.org/2000/svg"
-            style={{ filter: "drop-shadow(0 24px 40px rgba(99,102,241,0.35))" }}
+            style={{ filter: "drop-shadow(0 30px 50px rgba(99,102,241,0.4))" }}
           >
             <defs>
-              {/* Head gradient — top-lit purple-to-indigo */}
-              <radialGradient id="headGrad" cx="35%" cy="25%" r="80%">
-                <stop offset="0%" stopColor="#c4b5fd" />
-                <stop offset="40%" stopColor="#a78bfa" />
-                <stop offset="80%" stopColor="#7c3aed" />
-                <stop offset="100%" stopColor="#5b21b6" />
+              {/* ── HEAD GRADIENTS ─────────────────────────── */}
+              <radialGradient id="helmetGrad" cx="35%" cy="22%" r="85%">
+                <stop offset="0%" stopColor="#f0f9ff" />
+                <stop offset="15%" stopColor="#c7d2fe" />
+                <stop offset="45%" stopColor="#818cf8" />
+                <stop offset="80%" stopColor="#4f46e5" />
+                <stop offset="100%" stopColor="#1e1b4b" />
               </radialGradient>
-              {/* Face/screen — glassy dark with violet glow */}
-              <radialGradient id="faceGrad" cx="30%" cy="30%" r="80%">
-                <stop offset="0%" stopColor="#1e1b4b" />
-                <stop offset="60%" stopColor="#0c0a1f" />
-                <stop offset="100%" stopColor="#020014" />
+              {/* Rim light on right side of helmet (cool blue) */}
+              <linearGradient id="rimGrad" x1="100%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stopColor="#22d3ee" stopOpacity="0.8" />
+                <stop offset="50%" stopColor="#22d3ee" stopOpacity="0.15" />
+                <stop offset="100%" stopColor="transparent" />
+              </linearGradient>
+              {/* Visor — glassy dark with cyan tint */}
+              <radialGradient id="visorGrad" cx="35%" cy="25%" r="90%">
+                <stop offset="0%" stopColor="#0c1437" />
+                <stop offset="50%" stopColor="#020617" />
+                <stop offset="100%" stopColor="#000000" />
               </radialGradient>
-              {/* Body gradient */}
+              {/* Body */}
               <radialGradient id="bodyGrad" cx="35%" cy="20%" r="90%">
-                <stop offset="0%" stopColor="#a5b4fc" />
-                <stop offset="40%" stopColor="#818cf8" />
-                <stop offset="100%" stopColor="#4338ca" />
+                <stop offset="0%" stopColor="#c7d2fe" />
+                <stop offset="30%" stopColor="#818cf8" />
+                <stop offset="70%" stopColor="#4338ca" />
+                <stop offset="100%" stopColor="#1e1b4b" />
               </radialGradient>
-              {/* Antenna glow */}
+              {/* Power core */}
+              <radialGradient id="coreGrad" cx="50%" cy="50%" r="50%">
+                <stop offset="0%" stopColor="#ffffff" />
+                <stop offset="20%" stopColor="#fde68a" />
+                <stop offset="55%" stopColor="#f59e0b" />
+                <stop offset="100%" stopColor="#b45309" stopOpacity="0" />
+              </radialGradient>
+              {/* Eyes */}
+              <radialGradient id="eyeGrad" cx="50%" cy="50%" r="50%">
+                <stop offset="0%" stopColor="#ffffff" />
+                <stop offset="25%" stopColor="#67e8f9" />
+                <stop offset="70%" stopColor="#06b6d4" />
+                <stop offset="100%" stopColor="#0e7490" stopOpacity="0" />
+              </radialGradient>
+              {/* Antenna tip */}
               <radialGradient id="antennaGrad" cx="50%" cy="50%" r="50%">
-                <stop offset="0%" stopColor="#fef08a" />
-                <stop offset="40%" stopColor="#facc15" />
-                <stop offset="100%" stopColor="#ca8a04" />
+                <stop offset="0%" stopColor="#ffffff" />
+                <stop offset="30%" stopColor="#fef08a" />
+                <stop offset="70%" stopColor="#facc15" />
+                <stop offset="100%" stopColor="#a16207" stopOpacity="0" />
               </radialGradient>
-              {/* Eye — bright cyan with white shine */}
-              <radialGradient id="eyeGrad" cx="35%" cy="30%" r="70%">
-                <stop offset="0%" stopColor="#cffafe" />
-                <stop offset="30%" stopColor="#22d3ee" />
-                <stop offset="100%" stopColor="#0e7490" />
-              </radialGradient>
-              {/* Chest screen — pulsing core */}
-              <radialGradient id="chestGrad" cx="50%" cy="50%" r="60%">
-                <stop offset="0%" stopColor="#fbbf24" />
-                <stop offset="50%" stopColor="#f59e0b" />
-                <stop offset="100%" stopColor="#b45309" />
-              </radialGradient>
-              {/* Shadow filter */}
-              <filter id="softShadow" x="-30%" y="-30%" width="160%" height="160%">
-                <feGaussianBlur in="SourceAlpha" stdDeviation="4" />
-                <feOffset dy="4" />
-                <feComponentTransfer>
-                  <feFuncA type="linear" slope="0.35" />
-                </feComponentTransfer>
+              {/* Holographic ring */}
+              <linearGradient id="ringGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stopColor="#22d3ee" stopOpacity="0" />
+                <stop offset="30%" stopColor="#22d3ee" stopOpacity="0.85" />
+                <stop offset="50%" stopColor="#a78bfa" stopOpacity="1" />
+                <stop offset="70%" stopColor="#22d3ee" stopOpacity="0.85" />
+                <stop offset="100%" stopColor="#22d3ee" stopOpacity="0" />
+              </linearGradient>
+
+              {/* Glow filter */}
+              <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+                <feGaussianBlur stdDeviation="4" result="b1" />
                 <feMerge>
-                  <feMergeNode />
+                  <feMergeNode in="b1" />
                   <feMergeNode in="SourceGraphic" />
                 </feMerge>
               </filter>
+              {/* Strong glow for power core */}
+              <filter id="strongGlow" x="-100%" y="-100%" width="300%" height="300%">
+                <feGaussianBlur stdDeviation="6" result="b1" />
+                <feGaussianBlur stdDeviation="14" result="b2" />
+                <feMerge>
+                  <feMergeNode in="b2" />
+                  <feMergeNode in="b1" />
+                  <feMergeNode in="SourceGraphic" />
+                </feMerge>
+              </filter>
+              {/* Circuit pattern for body */}
+              <pattern id="circuit" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse">
+                <path
+                  d="M 0 10 L 5 10 L 5 5 L 10 5 M 15 5 L 15 10 L 20 10 M 10 15 L 10 20"
+                  stroke="rgba(255,255,255,0.08)"
+                  strokeWidth="0.5"
+                  fill="none"
+                />
+              </pattern>
             </defs>
 
-            {/* Ground shadow */}
-            <ellipse
-              cx="120"
-              cy="265"
-              rx="55"
+            {/* ╔═══════════════════════════════════════════╗
+                BACKGROUND — holographic orbiting ring
+                Sits BEHIND the bot to create depth
+                ╚═══════════════════════════════════════════╝ */}
+            <motion.g
+              animate={{ rotate: 360 }}
+              transition={{ duration: 12, repeat: Infinity, ease: "linear" }}
+              style={{ transformOrigin: "160px 200px" }}
+            >
+              {/* Outer ellipse — perspective-tilted to suggest 3D rotation */}
+              <ellipse
+                cx="160"
+                cy="200"
+                rx="135"
+                ry="38"
+                fill="none"
+                stroke="url(#ringGrad)"
+                strokeWidth="1.5"
+                opacity="0.6"
+                style={{ filter: "drop-shadow(0 0 8px rgba(34,211,238,0.6))" }}
+              />
+              {/* Inner ring slightly offset */}
+              <ellipse
+                cx="160"
+                cy="205"
+                rx="120"
+                ry="32"
+                fill="none"
+                stroke="url(#ringGrad)"
+                strokeWidth="0.8"
+                opacity="0.4"
+                strokeDasharray="3 6"
+              />
+            </motion.g>
+
+            {/* Floating data particles around the bot */}
+            {dataParticles.map((p, i) => {
+              const cx = 160 + Math.cos(p.angle) * 130;
+              const cy = 200 + Math.sin(p.angle) * 36;
+              return (
+                <motion.circle
+                  key={i}
+                  cx={cx}
+                  cy={cy}
+                  r={p.size}
+                  fill="#22d3ee"
+                  animate={{
+                    opacity: [0, 0.9, 0],
+                    scale: [0.5, 1.4, 0.5],
+                  }}
+                  transition={{
+                    duration: 2.5,
+                    delay: p.delay,
+                    repeat: Infinity,
+                    ease: "easeInOut",
+                  }}
+                  style={{ filter: "drop-shadow(0 0 4px #22d3ee)" }}
+                />
+              );
+            })}
+
+            {/* Ground reflection oval */}
+            <motion.ellipse
+              cx="160"
+              cy="340"
+              rx="78"
               ry="6"
-              fill="rgba(0,0,0,0.4)"
-              filter="blur(4px)"
+              fill="rgba(0,0,0,0.55)"
+              animate={{ rx: [78, 72, 78], opacity: [0.55, 0.4, 0.55] }}
+              transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+              style={{ filter: "blur(5px)" }}
+            />
+            {/* Cyan ground glow reflection */}
+            <ellipse
+              cx="160"
+              cy="338"
+              rx="60"
+              ry="4"
+              fill="rgba(34,211,238,0.4)"
+              style={{ filter: "blur(10px)" }}
             />
 
-            {/* Antenna stem */}
+            {/* ╔═══════════════════════════════════════════╗
+                ANTENNA
+                ╚═══════════════════════════════════════════╝ */}
+            {/* Stem */}
             <line
-              x1="120"
-              y1="48"
-              x2="120"
-              y2="22"
-              stroke="#7c3aed"
-              strokeWidth="4"
+              x1="160"
+              y1="68"
+              x2="160"
+              y2="38"
+              stroke="url(#helmetGrad)"
+              strokeWidth="3"
               strokeLinecap="round"
             />
-            {/* Antenna glowing tip with pulse */}
+            {/* Outer pulsing rings around antenna tip */}
             <motion.circle
-              cx="120"
-              cy="18"
-              r="7"
-              fill="url(#antennaGrad)"
-              animate={{ r: [7, 9, 7], opacity: [1, 0.85, 1] }}
-              transition={{ duration: 1.8, repeat: Infinity, ease: "easeInOut" }}
-              style={{ filter: "drop-shadow(0 0 8px #facc15)" }}
+              cx="160"
+              cy="32"
+              r="14"
+              fill="none"
+              stroke="#facc15"
+              strokeWidth="1"
+              animate={{ r: [10, 22, 10], opacity: [0.8, 0, 0.8] }}
+              transition={{ duration: 1.8, repeat: Infinity, ease: "easeOut" }}
             />
+            <motion.circle
+              cx="160"
+              cy="32"
+              r="14"
+              fill="none"
+              stroke="#facc15"
+              strokeWidth="1"
+              animate={{ r: [10, 22, 10], opacity: [0.8, 0, 0.8] }}
+              transition={{
+                duration: 1.8,
+                repeat: Infinity,
+                ease: "easeOut",
+                delay: 0.6,
+              }}
+            />
+            {/* Glowing tip */}
+            <motion.circle
+              cx="160"
+              cy="32"
+              r="8"
+              fill="url(#antennaGrad)"
+              animate={{ r: [7, 9, 7] }}
+              transition={{ duration: 1.6, repeat: Infinity, ease: "easeInOut" }}
+              style={{ filter: "drop-shadow(0 0 12px #facc15)" }}
+            />
+            {/* Lens flare cross */}
+            <g style={{ filter: "drop-shadow(0 0 4px #ffffff)" }} opacity="0.9">
+              <line x1="160" y1="22" x2="160" y2="42" stroke="white" strokeWidth="0.6" strokeLinecap="round" />
+              <line x1="150" y1="32" x2="170" y2="32" stroke="white" strokeWidth="0.6" strokeLinecap="round" />
+            </g>
 
-            {/* ============ HEAD (capsule shape, depth shaded) ============ */}
+            {/* ╔═══════════════════════════════════════════╗
+                HEAD / HELMET (cohesive with body)
+                ╚═══════════════════════════════════════════╝ */}
             <motion.g
-              animate={{ rotate: [0, -2, 0, 2, 0] }}
-              transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
-              style={{ transformOrigin: "120px 110px" }}
+              animate={{ rotate: [0, -1.5, 0, 1.5, 0] }}
+              transition={{ duration: 7, repeat: Infinity, ease: "easeInOut" }}
+              style={{ transformOrigin: "160px 130px" }}
             >
-              {/* Head main body */}
-              <rect
-                x="55"
-                y="55"
-                width="130"
-                height="115"
-                rx="40"
-                fill="url(#headGrad)"
-              />
-              {/* Top-left highlight crescent — sells the 3D illusion */}
+              {/* Helmet base — sleek rounded shape that connects to body */}
               <path
-                d="M 70 75 Q 95 60 130 60"
-                stroke="rgba(255,255,255,0.4)"
-                strokeWidth="5"
+                d="M 95 75
+                   Q 95 60 110 60
+                   L 210 60
+                   Q 225 60 225 75
+                   L 225 165
+                   Q 225 180 210 185
+                   L 200 188
+                   L 200 195
+                   L 120 195
+                   L 120 188
+                   L 110 185
+                   Q 95 180 95 165
+                   Z"
+                fill="url(#helmetGrad)"
+              />
+              {/* Circuit overlay on helmet */}
+              <path
+                d="M 95 75
+                   Q 95 60 110 60
+                   L 210 60
+                   Q 225 60 225 75
+                   L 225 165
+                   Q 225 180 210 185
+                   L 200 188
+                   L 200 195
+                   L 120 195
+                   L 120 188
+                   L 110 185
+                   Q 95 180 95 165
+                   Z"
+                fill="url(#circuit)"
+              />
+              {/* Rim light (right side highlight) */}
+              <path
+                d="M 218 75 Q 225 75 225 85 L 225 160"
+                stroke="url(#rimGrad)"
+                strokeWidth="3"
+                fill="none"
+                strokeLinecap="round"
+              />
+              {/* Top-left highlight crescent */}
+              <path
+                d="M 105 75 Q 130 65 165 65"
+                stroke="rgba(255,255,255,0.55)"
+                strokeWidth="3"
                 strokeLinecap="round"
                 fill="none"
               />
-              {/* Bottom-right shadow */}
+              {/* Subtle inner shadow on bottom */}
               <path
-                d="M 175 130 Q 175 155 155 165"
-                stroke="rgba(0,0,0,0.18)"
+                d="M 100 165 Q 160 195 220 165"
+                stroke="rgba(0,0,0,0.25)"
                 strokeWidth="8"
                 strokeLinecap="round"
                 fill="none"
               />
 
-              {/* Face screen — recessed glass */}
-              <rect
-                x="68"
-                y="74"
-                width="104"
-                height="74"
-                rx="22"
-                fill="url(#faceGrad)"
-              />
-              {/* Screen reflection highlight (top edge) */}
+              {/* ── VISOR (single glassy panel housing both eyes) ── */}
               <path
-                d="M 78 82 Q 100 78 160 80"
-                stroke="rgba(255,255,255,0.18)"
-                strokeWidth="2"
+                d="M 115 88
+                   Q 115 80 124 80
+                   L 196 80
+                   Q 205 80 205 88
+                   L 205 140
+                   Q 205 152 193 152
+                   L 127 152
+                   Q 115 152 115 140
+                   Z"
+                fill="url(#visorGrad)"
+              />
+              {/* Visor top reflection */}
+              <path
+                d="M 122 88 Q 145 84 198 86"
+                stroke="rgba(255,255,255,0.22)"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+                fill="none"
+              />
+              {/* Visor bottom reflection */}
+              <path
+                d="M 130 145 Q 160 148 190 145"
+                stroke="rgba(34,211,238,0.15)"
+                strokeWidth="1"
                 strokeLinecap="round"
                 fill="none"
               />
 
-              {/* ============ EYES — track mouse + blink ============ */}
+              {/* ── EYES (track mouse + blink) ── */}
               <motion.g style={{ x: eyeOffsetX, y: eyeOffsetY }}>
                 {/* Left eye */}
-                <motion.ellipse
-                  cx="98"
-                  cy="108"
-                  rx="13"
-                  ry={blink ? 1.5 : 13}
-                  fill="url(#eyeGrad)"
-                  style={{ filter: "drop-shadow(0 0 6px rgba(34,211,238,0.6))" }}
+                <motion.g
+                  animate={blink ? { scaleY: 0.05 } : { scaleY: 1 }}
                   transition={{ duration: 0.08 }}
-                />
-                {!blink && (
-                  <>
-                    {/* Pupil */}
-                    <ellipse cx="100" cy="106" rx="5" ry="6" fill="#0c4a6e" />
-                    {/* Highlight */}
-                    <ellipse cx="102" cy="103" rx="2.5" ry="3" fill="white" />
-                  </>
-                )}
-
+                  style={{ transformOrigin: "140px 115px" }}
+                >
+                  <circle
+                    cx="140"
+                    cy="115"
+                    r="14"
+                    fill="url(#eyeGrad)"
+                    filter="url(#glow)"
+                  />
+                  <circle cx="140" cy="115" r="7" fill="#0e7490" />
+                  <circle cx="142" cy="112" r="2.5" fill="white" />
+                </motion.g>
                 {/* Right eye */}
-                <motion.ellipse
-                  cx="142"
-                  cy="108"
-                  rx="13"
-                  ry={blink ? 1.5 : 13}
-                  fill="url(#eyeGrad)"
-                  style={{ filter: "drop-shadow(0 0 6px rgba(34,211,238,0.6))" }}
+                <motion.g
+                  animate={blink ? { scaleY: 0.05 } : { scaleY: 1 }}
                   transition={{ duration: 0.08 }}
-                />
-                {!blink && (
-                  <>
-                    <ellipse cx="144" cy="106" rx="5" ry="6" fill="#0c4a6e" />
-                    <ellipse cx="146" cy="103" rx="2.5" ry="3" fill="white" />
-                  </>
-                )}
+                  style={{ transformOrigin: "180px 115px" }}
+                >
+                  <circle
+                    cx="180"
+                    cy="115"
+                    r="14"
+                    fill="url(#eyeGrad)"
+                    filter="url(#glow)"
+                  />
+                  <circle cx="180" cy="115" r="7" fill="#0e7490" />
+                  <circle cx="182" cy="112" r="2.5" fill="white" />
+                </motion.g>
               </motion.g>
 
-              {/* Smile — friendly curve */}
+              {/* Smile — soft glowing curve */}
               <path
-                d="M 95 132 Q 120 145 145 132"
-                stroke="#cffafe"
-                strokeWidth="3.5"
+                d="M 138 138 Q 160 146 182 138"
+                stroke="#67e8f9"
+                strokeWidth="2.5"
                 strokeLinecap="round"
                 fill="none"
+                style={{ filter: "drop-shadow(0 0 4px #22d3ee)" }}
               />
-              {/* Tiny cheek blushes for warmth */}
-              <ellipse cx="78" cy="130" rx="6" ry="4" fill="rgba(244,114,182,0.35)" />
-              <ellipse cx="162" cy="130" rx="6" ry="4" fill="rgba(244,114,182,0.35)" />
+
+              {/* Tiny HUD details */}
+              <text x="200" y="98" fontSize="6" fill="rgba(34,211,238,0.5)" fontFamily="monospace">
+                ⚡01
+              </text>
+              <text x="120" y="148" fontSize="6" fill="rgba(34,211,238,0.5)" fontFamily="monospace">
+                v2.0
+              </text>
             </motion.g>
 
-            {/* ============ BODY ============ */}
-            {/* Neck shadow */}
-            <ellipse cx="120" cy="172" rx="24" ry="5" fill="rgba(0,0,0,0.25)" />
-            {/* Body main */}
-            <rect
-              x="68"
-              y="170"
-              width="104"
-              height="80"
-              rx="26"
+            {/* ╔═══════════════════════════════════════════╗
+                BODY — connects seamlessly to head
+                ╚═══════════════════════════════════════════╝ */}
+            {/* Neck transition piece */}
+            <rect x="142" y="190" width="36" height="14" rx="3" fill="url(#bodyGrad)" />
+
+            {/* Main body */}
+            <path
+              d="M 100 200
+                 Q 100 195 105 195
+                 L 215 195
+                 Q 220 195 220 200
+                 L 220 285
+                 Q 220 300 205 305
+                 L 115 305
+                 Q 100 300 100 285
+                 Z"
               fill="url(#bodyGrad)"
+            />
+            {/* Circuit pattern overlay */}
+            <path
+              d="M 100 200
+                 Q 100 195 105 195
+                 L 215 195
+                 Q 220 195 220 200
+                 L 220 285
+                 Q 220 300 205 305
+                 L 115 305
+                 Q 100 300 100 285
+                 Z"
+              fill="url(#circuit)"
+            />
+            {/* Body rim light */}
+            <path
+              d="M 215 200 Q 220 200 220 210 L 220 280"
+              stroke="url(#rimGrad)"
+              strokeWidth="2.5"
+              fill="none"
+              strokeLinecap="round"
             />
             {/* Body top-left highlight */}
             <path
-              d="M 80 185 Q 105 175 135 175"
-              stroke="rgba(255,255,255,0.35)"
-              strokeWidth="4"
+              d="M 110 210 Q 140 200 175 200"
+              stroke="rgba(255,255,255,0.4)"
+              strokeWidth="2"
               strokeLinecap="round"
               fill="none"
             />
-            {/* Body bottom shadow */}
+
+            {/* Holographic chest core area */}
+            {/* Outer ring */}
+            <motion.circle
+              cx="160"
+              cy="250"
+              r={pulse ? 36 : 28}
+              fill="none"
+              stroke="#22d3ee"
+              strokeWidth="0.8"
+              opacity="0.4"
+              animate={{
+                r: [26, 32, 26],
+                opacity: [0.5, 0.2, 0.5],
+              }}
+              transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
+            />
+            {/* Middle ring (rotating) */}
+            <motion.g
+              animate={{ rotate: 360 }}
+              transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
+              style={{ transformOrigin: "160px 250px" }}
+            >
+              <circle
+                cx="160"
+                cy="250"
+                r="22"
+                fill="none"
+                stroke="#a78bfa"
+                strokeWidth="0.8"
+                strokeDasharray="2 4"
+                opacity="0.6"
+              />
+            </motion.g>
+            {/* Power core */}
+            <motion.circle
+              cx="160"
+              cy="250"
+              r="18"
+              fill="url(#coreGrad)"
+              animate={{
+                r: pulse ? [18, 26, 18] : [16, 19, 16],
+                opacity: [1, 0.85, 1],
+              }}
+              transition={{ duration: pulse ? 0.8 : 2, repeat: Infinity, ease: "easeInOut" }}
+              filter="url(#strongGlow)"
+            />
+            {/* Lightning bolt inside core */}
             <path
-              d="M 80 240 Q 120 250 160 240"
-              stroke="rgba(0,0,0,0.15)"
-              strokeWidth="6"
-              strokeLinecap="round"
-              fill="none"
+              d="M 162 240 L 154 252 L 159 252 L 156 262 L 165 248 L 160 248 Z"
+              fill="white"
+              opacity="0.95"
+              style={{ filter: "drop-shadow(0 0 3px white)" }}
             />
 
-            {/* Chest screen — pulsing power core */}
+            {/* ╔═══════════════════════════════════════════╗
+                ARMS — attached to body shoulders
+                ╚═══════════════════════════════════════════╝ */}
+            {/* Left shoulder + arm */}
+            <ellipse cx="100" cy="205" rx="12" ry="10" fill="url(#bodyGrad)" />
             <motion.g
-              animate={{ scale: [1, 1.05, 1] }}
-              transition={{ duration: 2.2, repeat: Infinity, ease: "easeInOut" }}
-              style={{ transformOrigin: "120px 210px" }}
+              animate={{ rotate: [0, -4, 0, 4, 0] }}
+              transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
+              style={{ transformOrigin: "100px 205px" }}
             >
-              <rect
-                x="100"
-                y="190"
-                width="40"
-                height="40"
-                rx="10"
-                fill="url(#chestGrad)"
-                style={{ filter: "drop-shadow(0 0 12px rgba(251,191,36,0.6))" }}
-              />
-              {/* Lightning bolt */}
+              <rect x="88" y="210" width="20" height="55" rx="9" fill="url(#bodyGrad)" />
+              {/* Forearm rim */}
               <path
-                d="M 122 198 L 113 215 L 119 215 L 116 226 L 128 209 L 122 209 Z"
-                fill="white"
-                opacity="0.95"
+                d="M 105 215 L 105 260"
+                stroke="rgba(34,211,238,0.5)"
+                strokeWidth="1.5"
+                strokeLinecap="round"
               />
+              {/* Hand */}
+              <circle cx="98" cy="270" r="12" fill="url(#bodyGrad)" />
+              <circle cx="98" cy="269" r="3" fill="#22d3ee" opacity="0.7" style={{ filter: "drop-shadow(0 0 4px #22d3ee)" }} />
             </motion.g>
 
-            {/* ============ ARMS ============ */}
-            {/* Left arm — static */}
-            <rect
-              x="42"
-              y="180"
-              width="22"
-              height="50"
-              rx="11"
-              fill="url(#bodyGrad)"
-            />
-            <ellipse cx="53" cy="232" rx="13" ry="11" fill="url(#bodyGrad)" />
-
-            {/* Right arm — waves periodically */}
+            {/* Right shoulder + arm */}
+            <ellipse cx="220" cy="205" rx="12" ry="10" fill="url(#bodyGrad)" />
             <motion.g
-              animate={
-                wave
-                  ? { rotate: [0, -45, -25, -45, -25, 0] }
-                  : { rotate: 0 }
-              }
-              transition={{ duration: 1.4, ease: "easeInOut" }}
-              style={{ transformOrigin: "187px 187px" }}
+              animate={{ rotate: [0, 4, 0, -4, 0] }}
+              transition={{ duration: 5, repeat: Infinity, ease: "easeInOut", delay: 0.5 }}
+              style={{ transformOrigin: "220px 205px" }}
             >
-              <rect
-                x="176"
-                y="180"
-                width="22"
-                height="50"
-                rx="11"
-                fill="url(#bodyGrad)"
+              <rect x="212" y="210" width="20" height="55" rx="9" fill="url(#bodyGrad)" />
+              <path
+                d="M 215 215 L 215 260"
+                stroke="rgba(34,211,238,0.5)"
+                strokeWidth="1.5"
+                strokeLinecap="round"
               />
-              <ellipse cx="187" cy="232" rx="13" ry="11" fill="url(#bodyGrad)" />
+              <circle cx="222" cy="270" r="12" fill="url(#bodyGrad)" />
+              <circle cx="222" cy="269" r="3" fill="#22d3ee" opacity="0.7" style={{ filter: "drop-shadow(0 0 4px #22d3ee)" }} />
             </motion.g>
 
-            {/* Decorative bolts on body shoulders */}
-            <circle cx="80" cy="185" r="2.5" fill="rgba(0,0,0,0.3)" />
-            <circle cx="160" cy="185" r="2.5" fill="rgba(0,0,0,0.3)" />
+            {/* Shoulder light ports (top) */}
+            <circle cx="118" cy="200" r="2" fill="#22d3ee" style={{ filter: "drop-shadow(0 0 3px #22d3ee)" }} />
+            <circle cx="202" cy="200" r="2" fill="#22d3ee" style={{ filter: "drop-shadow(0 0 3px #22d3ee)" }} />
+
+            {/* ╔═══════════════════════════════════════════╗
+                FOREGROUND ORBITING RING — passes IN FRONT
+                Gives depth illusion
+                ╚═══════════════════════════════════════════╝ */}
+            <motion.g
+              animate={{ rotate: 360 }}
+              transition={{ duration: 12, repeat: Infinity, ease: "linear" }}
+              style={{ transformOrigin: "160px 200px" }}
+            >
+              {/* Only render the front half by clipping the rotation phase — keep ring */}
+              <ellipse
+                cx="160"
+                cy="200"
+                rx="135"
+                ry="38"
+                fill="none"
+                stroke="url(#ringGrad)"
+                strokeWidth="2"
+                opacity="0.4"
+                strokeDasharray="80 600"
+                style={{ filter: "drop-shadow(0 0 6px rgba(34,211,238,0.8))" }}
+              />
+            </motion.g>
           </svg>
         </motion.div>
       </motion.div>
 
-      {/* Floating sparkles around the mascot — magical feel */}
-      <FloatingSparkle delay={0} top="10%" left="8%" />
-      <FloatingSparkle delay={1.5} top="20%" right="6%" />
-      <FloatingSparkle delay={3} bottom="22%" left="2%" />
-      <FloatingSparkle delay={2} bottom="14%" right="4%" />
+      {/* Floating sparkles outside the SVG */}
+      <FloatingSparkle delay={0} top="8%" left="6%" emoji="✨" />
+      <FloatingSparkle delay={1.5} top="18%" right="4%" emoji="⚡" />
+      <FloatingSparkle delay={3} bottom="24%" left="2%" emoji="✦" />
+      <FloatingSparkle delay={2} bottom="14%" right="6%" emoji="✨" />
+      <FloatingSparkle delay={1} top="40%" left="0%" emoji="·" />
+      <FloatingSparkle delay={2.5} top="55%" right="0%" emoji="·" />
     </div>
   );
 }
@@ -412,31 +710,41 @@ function FloatingSparkle({
   bottom,
   left,
   right,
+  emoji = "✨",
 }: {
   delay: number;
   top?: string;
   bottom?: string;
   left?: string;
   right?: string;
+  emoji?: string;
 }) {
   return (
     <motion.div
-      className="absolute text-amber-300 pointer-events-none"
-      style={{ top, bottom, left, right, fontSize: "16px" }}
+      className="absolute pointer-events-none"
+      style={{
+        top,
+        bottom,
+        left,
+        right,
+        fontSize: "14px",
+        color: "#67e8f9",
+        textShadow: "0 0 8px rgba(34,211,238,0.8)",
+      }}
       animate={{
-        y: [0, -12, 0],
+        y: [0, -14, 0],
         opacity: [0, 1, 0],
-        scale: [0.5, 1.1, 0.5],
-        rotate: [0, 25, 0],
+        scale: [0.4, 1.2, 0.4],
+        rotate: [0, 30, 0],
       }}
       transition={{
-        duration: 3,
+        duration: 3.2,
         delay,
         repeat: Infinity,
         ease: "easeInOut",
       }}
     >
-      ✨
+      {emoji}
     </motion.div>
   );
 }
