@@ -12,7 +12,13 @@ import {
   ArrowRight,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
-import { SUBJECTS, type Subject } from "@/lib/data/learner";
+import {
+  SUBJECTS,
+  type Subject,
+  ageTierForGrade,
+  tierGreeting,
+  TIER_COPY,
+} from "@/lib/data/learner";
 import { PageShimmer } from "@/components/ui/Shimmer";
 
 interface LearnerProfile {
@@ -66,6 +72,9 @@ export default function LearnPage() {
   const streak = profile?.streak_count || 0;
   const totalXp = profile?.total_xp || 0;
   const level = profile?.current_level || 1;
+  const tier = ageTierForGrade(grade);
+  const tierCopy = TIER_COPY[tier];
+  const heading = tierGreeting(tier, name);
 
   // Highlight subjects the user picked; show the rest as discoverable.
   const picked = new Set(profile?.learner_subjects || []);
@@ -84,8 +93,9 @@ export default function LearnPage() {
           transition={{ duration: 0.5 }}
         >
           <div className="flex items-center gap-2 text-sm text-slate-400 mb-1 flex-wrap">
-            <span>
-              Kumusta, <span className="text-white font-medium">{name}</span>!
+            <span className="inline-flex items-center gap-1.5">
+              <span>{tierCopy.emoji}</span>
+              <span className="text-white font-medium">{tierCopy.label}</span>
             </span>
             {streak > 0 && (
               <>
@@ -106,8 +116,9 @@ export default function LearnPage() {
             )}
           </div>
           <h1 className="text-3xl sm:text-4xl font-semibold tracking-tight">
-            Let's learn something today!
+            {heading}
           </h1>
+          <p className="text-sm text-slate-400 mt-1">{tierCopy.tagline}</p>
         </motion.div>
 
         {/* Stats */}
@@ -147,7 +158,7 @@ export default function LearnPage() {
           </div>
         </motion.div>
 
-        {/* Daily mission placeholder */}
+        {/* Tier-appropriate spotlight */}
         <motion.div
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
@@ -164,12 +175,21 @@ export default function LearnPage() {
             </div>
             <div className="flex-1 min-w-0">
               <div className="text-[10px] uppercase tracking-wider text-amber-300 font-semibold mb-1">
-                Coming soon
+                {tier === "teen" ? "College & career" : tier === "junior" ? "Today's focus" : "Today's fun"}
               </div>
-              <h3 className="text-base font-semibold mb-1">Interactive lessons land next</h3>
+              <h3 className="text-base font-semibold mb-1">
+                {tier === "teen"
+                  ? "Subjects unlock your future"
+                  : tier === "junior"
+                  ? "Level up one lesson at a time"
+                  : "Pick a subject and play"}
+              </h3>
               <p className="text-xs text-slate-400">
-                Phase 1 ships Math, English, and Filipino lessons for Grades 3–5
-                with quizzes, mini-games, and instant feedback.
+                {tier === "teen"
+                  ? "Senior High content stretches into functions, calculus prep, rhetoric, and college-essay craft. Your tutor adapts to your level."
+                  : tier === "junior"
+                  ? "Mid-grade lessons build the core skills — ratios, algebra basics, essay structure, and science fundamentals."
+                  : "Bright, friendly lessons for younger learners — count, read, write, and learn with characters and rewards."}
               </p>
             </div>
           </div>

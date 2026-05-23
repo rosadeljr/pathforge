@@ -22,8 +22,10 @@ import {
   FileText,
   Briefcase,
   Home,
+  Users,
 } from "lucide-react";
 import { useTheme } from "@/components/theme/ThemeProvider";
+import { ageTierForGrade } from "@/lib/data/learner";
 
 interface Profile {
   username: string | null;
@@ -45,6 +47,7 @@ const navLinks = [
   { icon: Trophy, label: "Portfolio", href: "/portfolio", description: "Show your work" },
   { icon: FileText, label: "Resume", href: "/resume", description: "Build your resume" },
   { icon: Briefcase, label: "Mock Interview", href: "/mock-interview", description: "Practice with ForgeBot" },
+  { icon: Users, label: "Friends", href: "/friends", description: "Your forger crew" },
   { icon: Sparkles, label: "Achievements", href: "/achievements", description: "Your trophies" },
   { icon: Crown, label: "Leaderboard", href: "/leaderboard", description: "Top forgers" },
   { icon: SettingsIcon, label: "Settings", href: "/settings", description: "Preferences" },
@@ -61,10 +64,12 @@ const mobileNavLinks = [
   { icon: SettingsIcon, label: "Settings", href: "/settings" },
 ];
 
-// Learner-mode navigation — kid-friendly, fewer items, no career stuff.
+// Learner-mode navigation — student-friendly, no career stuff.
+// Same shape for ages 6–18, but labels adapt to age tier (see below).
 const learnerNavLinks = [
   { icon: Home, label: "Home", href: "/learn", description: "Today's learning" },
   { icon: Bot, label: "Tutor", href: "/mentor", description: "Ask the tutor anything" },
+  { icon: Users, label: "Friends", href: "/friends", description: "Your study crew" },
   { icon: Sparkles, label: "Achievements", href: "/achievements", description: "Badges you've earned" },
   { icon: Crown, label: "Leaderboard", href: "/leaderboard", description: "Top learners" },
   { icon: SettingsIcon, label: "Settings", href: "/settings", description: "Preferences" },
@@ -73,13 +78,13 @@ const learnerNavLinks = [
 const learnerMobileNavLinks = [
   { icon: Home, label: "Home", href: "/learn" },
   { icon: Bot, label: "Tutor", href: "/mentor" },
+  { icon: Users, label: "Friends", href: "/friends" },
   { icon: Sparkles, label: "Badges", href: "/achievements" },
   { icon: Crown, label: "Ranks", href: "/leaderboard" },
-  { icon: SettingsIcon, label: "Settings", href: "/settings" },
 ];
 
 // Onboarding + welcome don't show the sidebar
-const FULLSCREEN_ROUTES = ["/onboarding", "/welcome"];
+const FULLSCREEN_ROUTES = ["/onboarding", "/welcome", "/learn/setup"];
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -167,21 +172,31 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     }
   }, [authState, router]);
 
-  // Learner mode → apply kid-friendly visual layer (cream bg, brighter
-  // accents) by setting [data-mode="learner"] on <html>, and force the
-  // light base theme since dark is jarring for kids.
+  // Learner mode → apply student-friendly visual layer by setting
+  // [data-mode="learner"] on <html>. The age tier (little/junior/teen)
+  // drives sub-variants for tone:
+  //   - little (G1–3): brightest, biggest, most playful (force light)
+  //   - junior (G4–7): balanced, friendly (force light)
+  //   - teen (G8–12):  mature study UI, respects user's theme choice
   useEffect(() => {
     if (typeof document === "undefined") return;
     if (profile?.user_mode === "learner") {
+      const tier = ageTierForGrade(profile?.learner_grade);
       document.documentElement.setAttribute("data-mode", "learner");
-      document.documentElement.setAttribute("data-theme", "light");
+      document.documentElement.setAttribute("data-age-tier", tier);
+      // Teen learners can keep their dark/light pick; younger get forced light.
+      if (tier !== "teen") {
+        document.documentElement.setAttribute("data-theme", "light");
+      }
     } else {
       document.documentElement.removeAttribute("data-mode");
+      document.documentElement.removeAttribute("data-age-tier");
     }
     return () => {
       document.documentElement.removeAttribute("data-mode");
+      document.documentElement.removeAttribute("data-age-tier");
     };
-  }, [profile?.user_mode]);
+  }, [profile?.user_mode, profile?.learner_grade]);
 
   // Route users to the right experience based on their picked mode.
   useEffect(() => {
@@ -195,6 +210,15 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     // Learners landing on the career dashboard get bounced to /learn.
     if (profile.user_mode === "learner" && pathname === "/dashboard") {
       router.replace("/learn");
+      return;
+    }
+    // Learner without grade picked → setup flow.
+    if (
+      profile.user_mode === "learner" &&
+      profile.learner_grade == null &&
+      !onFullscreen
+    ) {
+      router.replace("/learn/setup");
     }
   }, [authState, profile, pathname, router]);
 

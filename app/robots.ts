@@ -25,6 +25,7 @@ export default function robots(): MetadataRoute.Robots {
         "/leaderboard",
         "/settings",
         "/onboarding",
+        "/friends",
       ],
     },
     sitemap: `${APP_URL}/sitemap.xml`,

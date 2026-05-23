@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import {
@@ -13,7 +13,7 @@ import {
   Zap,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
-import { getSubject, SUBJECTS, type SubjectId } from "@/lib/data/learner";
+import { getSubject, type SubjectId } from "@/lib/data/learner";
 import {
   getLessonsBySubject,
   type Lesson,
@@ -22,12 +22,12 @@ import { PageShimmer } from "@/components/ui/Shimmer";
 
 export default function SubjectLessonsPage() {
   const params = useParams();
-  const router = useRouter();
   const supabase = createClient();
   const subjectId = (params?.subject as string) || "";
   const subject = getSubject(subjectId);
 
   const [completedIds, setCompletedIds] = useState<Set<string>>(new Set());
+  const [userGrade, setUserGrade] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -46,17 +46,25 @@ export default function SubjectLessonsPage() {
           setLoading(false);
           return;
         }
-        const { data } = await supabase
-          .from("analytics_events")
-          .select("event_payload")
-          .eq("user_id", session.user.id)
-          .eq("event_type", "lesson_completed");
+        const [{ data: events }, { data: profile }] = await Promise.all([
+          supabase
+            .from("analytics_events")
+            .select("event_payload")
+            .eq("user_id", session.user.id)
+            .eq("event_type", "lesson_completed"),
+          supabase
+            .from("profiles")
+            .select("learner_grade")
+            .eq("id", session.user.id)
+            .maybeSingle(),
+        ]);
         const done = new Set<string>(
-          (data || [])
+          (events || [])
             .map((e: any) => e?.event_payload?.lesson_id)
             .filter(Boolean)
         );
         setCompletedIds(done);
+        setUserGrade(profile?.learner_grade ?? null);
       } catch (e) {
         console.error("Subject lessons load error:", e);
       } finally {
@@ -101,7 +109,22 @@ export default function SubjectLessonsPage() {
     );
   }
 
-  const lessons = getLessonsBySubject(subject.id as SubjectId);
+  const allLessons = getLessonsBySubject(subject.id as SubjectId);
+  // Group by grade. If we know the learner's grade, surface their grade
+  // first, then nearby grades (above + below) as "explore further".
+  const lessonsByGrade = allLessons.reduce<Record<number, Lesson[]>>((acc, l) => {
+    (acc[l.grade] ||= []).push(l);
+    return acc;
+  }, {});
+  const gradesPresent = Object.keys(lessonsByGrade)
+    .map((g) => parseInt(g))
+    .sort((a, b) => a - b);
+  // Order: user's grade first, then adjacent grades expanding outward.
+  const orderedGrades = userGrade
+    ? gradesPresent.slice().sort((a, b) => Math.abs(a - userGrade) - Math.abs(b - userGrade))
+    : gradesPresent;
+
+  const lessons = allLessons; // all of them, just grouped below
   const doneCount = lessons.filter((l) => completedIds.has(l.id)).length;
   const totalXp = lessons.reduce((sum, l) => sum + l.xpReward, 0);
   const earnedXp = lessons
@@ -163,7 +186,7 @@ export default function SubjectLessonsPage() {
           </motion.div>
         )}
 
-        {/* Lessons */}
+        {/* Lessons — grouped by grade so a 1st grader doesn't see calculus */}
         {lessons.length === 0 ? (
           <div className="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-12 text-center">
             <p className="text-sm text-slate-400">
@@ -171,22 +194,47 @@ export default function SubjectLessonsPage() {
             </p>
           </div>
         ) : (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.5, delay: 0.1 }}
-            className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3"
-          >
-            {lessons.map((lesson, i) => (
-              <LessonCard
-                key={lesson.id}
-                lesson={lesson}
-                subjectId={subject.id as SubjectId}
-                isDone={completedIds.has(lesson.id)}
-                index={i}
-              />
-            ))}
-          </motion.div>
+          <div className="space-y-8">
+            {orderedGrades.map((g, gi) => {
+              const gradeLessons = lessonsByGrade[g] || [];
+              const isUserGrade = userGrade === g;
+              return (
+                <motion.div
+                  key={g}
+                  initial={{ opacity: 0, y: 6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.4, delay: 0.05 + gi * 0.04 }}
+                >
+                  <div className="flex items-baseline justify-between mb-3">
+                    <div className="flex items-center gap-2">
+                      <h2 className="text-sm font-semibold text-slate-300 uppercase tracking-wider">
+                        Grade {g}
+                      </h2>
+                      {isUserGrade && (
+                        <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md bg-indigo-500/15 text-indigo-300 border border-indigo-500/30">
+                          Your grade
+                        </span>
+                      )}
+                    </div>
+                    <span className="text-xs text-slate-500">
+                      {gradeLessons.filter((l) => completedIds.has(l.id)).length}/{gradeLessons.length} done
+                    </span>
+                  </div>
+                  <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                    {gradeLessons.map((lesson, i) => (
+                      <LessonCard
+                        key={lesson.id}
+                        lesson={lesson}
+                        subjectId={subject.id as SubjectId}
+                        isDone={completedIds.has(lesson.id)}
+                        index={i}
+                      />
+                    ))}
+                  </div>
+                </motion.div>
+              );
+            })}
+          </div>
         )}
       </div>
     </div>

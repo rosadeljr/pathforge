@@ -175,12 +175,12 @@ export default function WelcomePage() {
                     <GraduationCap size={20} className="text-white" />
                   </div>
                   <h3 className="text-xl font-semibold tracking-tight mb-2">
-                    I'm a learner (kid)
+                    I'm a student (ages 6–18)
                   </h3>
                   <p className="text-sm text-slate-400 leading-relaxed mb-6">
-                    Fun lessons in Math, English, and Filipino — built for
-                    Grades 1–10 in the Philippines. Quests, streaks, levels,
-                    and friends.
+                    Fun, interactive lessons across Math, English, Filipino,
+                    Science, and Araling Panlipunan — built for Grades 1–12
+                    in the Philippines. Quests, streaks, levels, and friends.
                   </p>
                   <div className="inline-flex items-center gap-1.5 text-sm font-semibold text-amber-300">
                     {picking === "learner" ? (

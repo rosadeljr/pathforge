@@ -915,3 +915,64 @@ textarea:focus-visible {
   background: rgba(255, 255, 255, 0.85) !important;
   border-color: rgba(15, 23, 42, 0.08) !important;
 }
+
+/* ============================================
+   Learner age-tier variants
+   - "little"  Grades 1–3   (6–9):   biggest, brightest, most playful
+   - "junior"  Grades 4–7   (10–13): balanced, friendly
+   - "teen"    Grades 8–12  (14–18): mature study UI, calmer
+   ============================================ */
+
+/* LITTLE — boost size, contrast, playful color */
+[data-age-tier="little"] {
+  font-size: 17px;
+}
+[data-age-tier="little"] h1 {
+  font-size: 2.5rem;
+  line-height: 1.05;
+}
+[data-age-tier="little"] body {
+  /* sunnier gradient */
+  background:
+    linear-gradient(180deg, #fff5e0 0%, #ffe9c4 35%, #fef3c7 70%, #e0f2fe 100%) fixed !important;
+}
+/* Bigger touch targets on buttons for tiny fingers */
+[data-age-tier="little"] button {
+  min-height: 44px;
+}
+[data-age-tier="little"] .rounded-xl,
+[data-age-tier="little"] .rounded-2xl {
+  border-radius: 1.25rem !important;
+}
+
+/* JUNIOR — balanced, slightly softer than little */
+[data-age-tier="junior"] body {
+  background:
+    linear-gradient(180deg, #fffbf0 0%, #fef9e7 40%, #ecfeff 100%) fixed !important;
+}
+
+/* TEEN — mature, study-focused, less playful, supports both light/dark */
+[data-age-tier="teen"][data-mode="learner"] body {
+  /* calmer, more neutral — designed for longer study sessions */
+  background:
+    linear-gradient(180deg, #f8fafc 0%, #f1f5f9 60%, #e2e8f0 100%) fixed !important;
+}
+[data-age-tier="teen"][data-mode="learner"] {
+  font-size: 15px;
+}
+[data-age-tier="teen"][data-mode="learner"] h1 {
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+/* Teens get the regular sober card shadows, not the playful kid-pop */
+[data-age-tier="teen"][data-mode="learner"] .bg-white\/\[0\.02\],
+[data-age-tier="teen"][data-mode="learner"] .bg-white\/\[0\.03\] {
+  background-color: #ffffff !important;
+  border-color: rgba(15, 23, 42, 0.08) !important;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04) !important;
+}
+/* Quieter "Next" button for teens — gradient still pops but smaller halo */
+[data-age-tier="teen"][data-mode="learner"] button.bg-white {
+  background: linear-gradient(135deg, #4f46e5, #7c3aed) !important;
+  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.18) !important;
+}
