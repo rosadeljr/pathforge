@@ -852,3 +852,66 @@ textarea:focus-visible {
   }
   @page { margin: 1.4cm; }
 }
+
+/* ============================================
+   Learner mode — kid-friendly visual layer
+   Built ON TOP of light theme. Force light is set on <html> via JS.
+   ============================================ */
+[data-mode="learner"] body {
+  /* Soft warm cream → soft blue gradient. Friendly, energetic, not loud. */
+  background:
+    linear-gradient(180deg, #fffbf0 0%, #fef9e7 35%, #f0f9ff 100%) fixed !important;
+}
+
+[data-mode="learner"] {
+  /* Slightly larger base text — easier on younger eyes. */
+  font-size: 16px;
+}
+
+/* Stronger headings in learner mode (more confident, kid-friendly) */
+[data-mode="learner"] h1 {
+  letter-spacing: -0.02em;
+  font-weight: 700;
+}
+[data-mode="learner"] h2,
+[data-mode="learner"] h3 {
+  font-weight: 700;
+}
+
+/* Cards get a touch more warmth — softer borders, gentle shadow */
+[data-mode="learner"] .bg-white\/\[0\.02\],
+[data-mode="learner"] .bg-white\/\[0\.03\] {
+  background-color: #ffffff !important;
+  border-color: rgba(15, 23, 42, 0.06) !important;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04), 0 2px 8px rgba(15, 23, 42, 0.03) !important;
+}
+
+/* The "Done" / "Picked" badge — pop more for kids */
+[data-mode="learner"] .bg-emerald-500\/15 {
+  background-color: rgba(16, 185, 129, 0.18) !important;
+}
+
+/* Friendlier subject-card hover lift */
+[data-mode="learner"] a[href^="/learn/"]:hover {
+  transform: translateY(-2px);
+  transition: transform 0.18s ease-out;
+}
+
+/* Lesson "Next" / "Finish" button — make it pop on kid screens */
+[data-mode="learner"] button.bg-white {
+  background: linear-gradient(135deg, #6366f1, #a855f7) !important;
+  color: #ffffff !important;
+  box-shadow: 0 8px 20px rgba(99, 102, 241, 0.25) !important;
+}
+[data-mode="learner"] button.bg-white:hover {
+  background: linear-gradient(135deg, #4f46e5, #9333ea) !important;
+}
+[data-mode="learner"] button.bg-white * {
+  color: #ffffff !important;
+}
+
+/* Mobile bottom nav: rounder, brighter active indicator for learner mode */
+[data-mode="learner"] nav .border-t {
+  background: rgba(255, 255, 255, 0.85) !important;
+  border-color: rgba(15, 23, 42, 0.08) !important;
+}

@@ -167,6 +167,22 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     }
   }, [authState, router]);
 
+  // Learner mode → apply kid-friendly visual layer (cream bg, brighter
+  // accents) by setting [data-mode="learner"] on <html>, and force the
+  // light base theme since dark is jarring for kids.
+  useEffect(() => {
+    if (typeof document === "undefined") return;
+    if (profile?.user_mode === "learner") {
+      document.documentElement.setAttribute("data-mode", "learner");
+      document.documentElement.setAttribute("data-theme", "light");
+    } else {
+      document.documentElement.removeAttribute("data-mode");
+    }
+    return () => {
+      document.documentElement.removeAttribute("data-mode");
+    };
+  }, [profile?.user_mode]);
+
   // Route users to the right experience based on their picked mode.
   useEffect(() => {
     if (authState !== "authenticated" || !profile || !pathname) return;
@@ -372,21 +388,23 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                   </span>
                 </Link>
               )}
-              {/* Theme toggle */}
-              <button
-                onClick={toggleTheme}
-                className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-slate-400 hover:bg-white/[0.03] hover:text-white transition-all"
-                aria-label={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}
-              >
-                {theme === "dark" ? (
-                  <Sun size={17} strokeWidth={2} />
-                ) : (
-                  <Moon size={17} strokeWidth={2} />
-                )}
-                <span className="font-medium">
-                  {theme === "dark" ? "Light mode" : "Dark mode"}
-                </span>
-              </button>
+              {/* Theme toggle — hidden in learner mode (force light + kid theme). */}
+              {!isLearner && (
+                <button
+                  onClick={toggleTheme}
+                  className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-slate-400 hover:bg-white/[0.03] hover:text-white transition-all"
+                  aria-label={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}
+                >
+                  {theme === "dark" ? (
+                    <Sun size={17} strokeWidth={2} />
+                  ) : (
+                    <Moon size={17} strokeWidth={2} />
+                  )}
+                  <span className="font-medium">
+                    {theme === "dark" ? "Light mode" : "Dark mode"}
+                  </span>
+                </button>
+              )}
               <button
                 onClick={handleSignOut}
                 className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-slate-400 hover:bg-white/[0.03] hover:text-white transition-all"
