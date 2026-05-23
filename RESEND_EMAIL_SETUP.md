@@ -60,10 +60,10 @@ Resend account email. To email *users* on approval/rejection, verify a
 domain:
 
 1. Resend Dashboard → **Domains** → **Add Domain**
-2. Enter your domain (e.g. `pathforge.app`)
+2. Enter your domain (e.g. `pathforger.app`)
 3. Add the DNS records Resend shows you (at your domain registrar)
 4. Wait for verification (~15 min – few hours)
-5. In Vercel, set `EMAIL_FROM` = `PathForge <noreply@pathforge.app>`
+5. In Vercel, set `EMAIL_FROM` = `PathForge <noreply@pathforger.app>`
 6. Redeploy
 
 Until you do this, approval/rejection emails simply won't send — the

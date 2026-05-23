@@ -9,7 +9,7 @@ import Stripe from "stripe";
  *   STRIPE_SECRET_KEY                    — Stripe secret key (sk_test_... or sk_live_...)
  *   STRIPE_PRICE_PRO                     — Stripe Price ID for Pro tier
  *   STRIPE_PRICE_ELITE                   — Stripe Price ID for Elite tier
- *   NEXT_PUBLIC_APP_URL                  — Public site URL (e.g. https://pathforge.app)
+ *   NEXT_PUBLIC_APP_URL                  — Public site URL (e.g. https://pathforger.app)
  */
 
 function getStripe(): Stripe | null {

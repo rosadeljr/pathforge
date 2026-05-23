@@ -103,7 +103,7 @@ const FAQS = [
   },
   {
     q: "Is there a refund policy?",
-    a: "Yes — 30-day refund window from your first paid subscription. Just email support@pathforge.app. After 30 days, you can cancel anytime to stop future charges.",
+    a: "Yes — 30-day refund window from your first paid subscription. Just email support@pathforger.app. After 30 days, you can cancel anytime to stop future charges.",
   },
 ];
 

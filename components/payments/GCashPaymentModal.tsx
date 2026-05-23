@@ -253,7 +253,7 @@ export function GCashPaymentModal({ tier, amount, onClose }: Props) {
                   <AlertCircle size={14} className="text-amber-300 flex-shrink-0 mt-0.5" />
                   <div className="text-xs text-amber-100/90 leading-relaxed">
                     Manual review takes <strong>up to 4 hours</strong> during PH business hours.
-                    You'll be emailed once approved. Need help? <strong>support@pathforge.app</strong>
+                    You'll be emailed once approved. Need help? <strong>support@pathforger.app</strong>
                   </div>
                 </div>
               </motion.div>

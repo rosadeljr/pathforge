@@ -6,11 +6,11 @@
 export const BRAND = {
   productName: "PathForge",
   companyName: "ZenForge Technologies",
-  domain: "pathforge.app",
+  domain: "pathforger.app",
   contact: {
-    support: "support@pathforge.app",
-    privacy: "privacy@pathforge.app",
-    legal: "legal@pathforge.app",
+    support: "support@pathforger.app",
+    privacy: "privacy@pathforger.app",
+    legal: "legal@pathforger.app",
   },
 } as const;
 

@@ -157,8 +157,8 @@ export default function CookiesPage() {
           <Section title="Contact">
             <p>
               Questions about our use of cookies? Email{" "}
-              <a href="mailto:privacy@pathforge.app" className="text-indigo-300 underline">
-                privacy@pathforge.app
+              <a href="mailto:privacy@pathforger.app" className="text-indigo-300 underline">
+                privacy@pathforger.app
               </a>
               .
             </p>

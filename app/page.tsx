@@ -642,7 +642,7 @@ export default function Landing() {
                 </li>
                 <li>
                   <a
-                    href="mailto:privacy@pathforge.app"
+                    href="mailto:privacy@pathforger.app"
                     className="text-slate-400 hover:text-white transition-colors"
                   >
                     Data requests

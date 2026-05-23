@@ -54,8 +54,8 @@ export default function PrivacyPage() {
               <strong>Data Protection Officer (DPO):</strong>
               <br />
               Email:{" "}
-              <a href="mailto:privacy@pathforge.app" className="text-indigo-300 underline">
-                privacy@pathforge.app
+              <a href="mailto:privacy@pathforger.app" className="text-indigo-300 underline">
+                privacy@pathforger.app
               </a>
             </div>
           </Section>
@@ -270,8 +270,8 @@ export default function PrivacyPage() {
             </ul>
             <p className="mt-3">
               To exercise any of these rights, email{" "}
-              <a href="mailto:privacy@pathforge.app" className="text-indigo-300 underline">
-                privacy@pathforge.app
+              <a href="mailto:privacy@pathforger.app" className="text-indigo-300 underline">
+                privacy@pathforger.app
               </a>{" "}
               with your request. We will respond within seven (7) business days. Verification
               of identity may be required.
@@ -350,8 +350,8 @@ export default function PrivacyPage() {
               we have inadvertently collected data from a child under sixteen, we will delete
               it promptly. Parents or guardians who believe their child has provided us
               personal data may contact us at{" "}
-              <a href="mailto:privacy@pathforge.app" className="text-indigo-300 underline">
-                privacy@pathforge.app
+              <a href="mailto:privacy@pathforger.app" className="text-indigo-300 underline">
+                privacy@pathforger.app
               </a>
               .
             </p>
@@ -389,8 +389,8 @@ export default function PrivacyPage() {
               <p>ZenForge Technologies</p>
               <p>
                 Email:{" "}
-                <a href="mailto:privacy@pathforge.app" className="text-indigo-300 underline">
-                  privacy@pathforge.app
+                <a href="mailto:privacy@pathforger.app" className="text-indigo-300 underline">
+                  privacy@pathforger.app
                 </a>
               </p>
               <p>Response time: within 7 business days</p>

@@ -251,6 +251,6 @@ For full local PH payment support (GCash, Maya, bank transfer), consider integra
 
 - Stripe support: https://support.stripe.com
 - For PH-specific questions: https://stripe.com/en-ph
-- Your DPO email for billing privacy queries: privacy@pathforge.app
+- Your DPO email for billing privacy queries: privacy@pathforger.app
 
 Last updated: May 2026

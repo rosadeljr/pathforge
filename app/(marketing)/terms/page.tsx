@@ -75,8 +75,8 @@ export default function TermsPage() {
               You agree to provide accurate, current, and complete information during
               registration. You are solely responsible for safeguarding your password and for
               all activities that occur under your account. You must notify us immediately at{" "}
-              <a href="mailto:support@pathforge.app" className="text-indigo-300 underline">
-                support@pathforge.app
+              <a href="mailto:support@pathforger.app" className="text-indigo-300 underline">
+                support@pathforger.app
               </a>{" "}
               of any unauthorized access or security breach.
             </p>
@@ -147,8 +147,8 @@ export default function TermsPage() {
               cancel. As required under the
               Consumer Act of the Philippines (R.A. 7394), a refund is available within thirty
               (30) days of your first paid subscription upon written request to{" "}
-              <a href="mailto:support@pathforge.app" className="text-indigo-300 underline">
-                support@pathforge.app
+              <a href="mailto:support@pathforger.app" className="text-indigo-300 underline">
+                support@pathforger.app
               </a>
               , subject to verification of eligibility.
             </p>
@@ -285,13 +285,13 @@ export default function TermsPage() {
               DTI Business Name Registration · Philippines
               <br />
               Legal:{" "}
-              <a href="mailto:legal@pathforge.app" className="text-indigo-300 underline">
-                legal@pathforge.app
+              <a href="mailto:legal@pathforger.app" className="text-indigo-300 underline">
+                legal@pathforger.app
               </a>
               <br />
               Support:{" "}
-              <a href="mailto:support@pathforge.app" className="text-indigo-300 underline">
-                support@pathforge.app
+              <a href="mailto:support@pathforger.app" className="text-indigo-300 underline">
+                support@pathforger.app
               </a>
             </p>
           </Section>

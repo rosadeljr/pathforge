@@ -185,7 +185,7 @@ export async function sendPaymentRejectedEmail(
           : ""
       }
       <p style="margin:0;font-size:13px;color:#94a3b8;line-height:1.6;">
-        Reply to this email or contact <strong style="color:#e2e8f0;">support@pathforge.app</strong>
+        Reply to this email or contact <strong style="color:#e2e8f0;">support@pathforger.app</strong>
         and we'll sort it out. No charge has been applied.
       </p>`;
 
