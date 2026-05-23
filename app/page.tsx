@@ -120,14 +120,17 @@ export default function Landing() {
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
-            className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/[0.04] border border-white/[0.08] mb-7 shadow-lg shadow-black/40"
+            className="inline-flex items-center gap-2.5 px-4 py-2 rounded-full bg-white/[0.05] border border-white/[0.12] mb-7 shadow-lg shadow-black/40 backdrop-blur-md"
           >
-            <div className="relative">
+            <div className="relative flex-shrink-0">
               <div className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
               <div className="absolute inset-0 w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping opacity-50" />
             </div>
-            <span className="text-xs font-medium text-slate-300 tracking-wide">
-              Career growth, gamified
+            <span className="text-[13px] font-semibold text-white tracking-[0.04em]">
+              Career growth,{" "}
+              <span className="bg-gradient-to-r from-indigo-300 via-purple-300 to-pink-300 bg-clip-text text-transparent">
+                gamified
+              </span>
             </span>
           </motion.div>
 
@@ -182,6 +185,28 @@ export default function Landing() {
             >
               See how it works
             </Link>
+          </motion.div>
+
+          {/* Trust micro-strip */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.7, delay: 0.4 }}
+            className="flex items-center justify-center gap-x-5 gap-y-2 text-xs text-slate-500 flex-wrap"
+          >
+            <span className="inline-flex items-center gap-1.5">
+              <Check size={11} className="text-emerald-400" />
+              No credit card
+            </span>
+            <span className="text-slate-700" aria-hidden>·</span>
+            <span className="inline-flex items-center gap-1.5">
+              <Check size={11} className="text-emerald-400" />
+              16 career paths
+            </span>
+            <span className="text-slate-700" aria-hidden>·</span>
+            <span className="inline-flex items-center gap-1.5">
+              🇵🇭 Built in the Philippines
+            </span>
           </motion.div>
 
         </div>

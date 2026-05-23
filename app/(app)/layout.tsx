@@ -21,6 +21,7 @@ import {
   GraduationCap,
   FileText,
   Briefcase,
+  Home,
 } from "lucide-react";
 import { useTheme } from "@/components/theme/ThemeProvider";
 
@@ -31,6 +32,8 @@ interface Profile {
   total_xp: number;
   streak_count: number;
   is_admin?: boolean;
+  user_mode?: "career" | "learner" | null;
+  learner_grade?: number | null;
 }
 
 const navLinks = [
@@ -58,8 +61,23 @@ const mobileNavLinks = [
   { icon: SettingsIcon, label: "Settings", href: "/settings" },
 ];
 
-// Onboarding doesn't show the sidebar
-const FULLSCREEN_ROUTES = ["/onboarding"];
+// Learner-mode navigation — kid-friendly, fewer items, no career stuff.
+const learnerNavLinks = [
+  { icon: Home, label: "Home", href: "/learn", description: "Today's learning" },
+  { icon: Sparkles, label: "Achievements", href: "/achievements", description: "Badges you've earned" },
+  { icon: Crown, label: "Leaderboard", href: "/leaderboard", description: "Top learners" },
+  { icon: SettingsIcon, label: "Settings", href: "/settings", description: "Preferences" },
+];
+
+const learnerMobileNavLinks = [
+  { icon: Home, label: "Home", href: "/learn" },
+  { icon: Sparkles, label: "Badges", href: "/achievements" },
+  { icon: Crown, label: "Ranks", href: "/leaderboard" },
+  { icon: SettingsIcon, label: "Settings", href: "/settings" },
+];
+
+// Onboarding + welcome don't show the sidebar
+const FULLSCREEN_ROUTES = ["/onboarding", "/welcome"];
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -90,7 +108,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       // Try to load profile (use maybeSingle so 0 rows doesn't throw)
       const { data: existing } = await supabase
         .from("profiles")
-        .select("username, current_level, current_xp, total_xp, streak_count, is_admin")
+        .select(
+          "username, current_level, current_xp, total_xp, streak_count, is_admin, user_mode, learner_grade"
+        )
         .eq("id", userId)
         .maybeSingle();
 
@@ -113,7 +133,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           username: fallbackUsername,
           full_name: meta?.full_name || null,
         })
-        .select("username, current_level, current_xp, total_xp, streak_count, is_admin")
+        .select(
+          "username, current_level, current_xp, total_xp, streak_count, is_admin, user_mode, learner_grade"
+        )
         .single();
       if (mounted && created) setProfile(created as Profile);
     });
@@ -142,6 +164,21 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       router.replace("/login");
     }
   }, [authState, router]);
+
+  // Route users to the right experience based on their picked mode.
+  useEffect(() => {
+    if (authState !== "authenticated" || !profile || !pathname) return;
+    const onFullscreen = FULLSCREEN_ROUTES.some((r) => pathname.startsWith(r));
+    // Hasn't picked yet → mode-selector welcome screen.
+    if (profile.user_mode == null && !onFullscreen) {
+      router.replace("/welcome");
+      return;
+    }
+    // Learners landing on the career dashboard get bounced to /learn.
+    if (profile.user_mode === "learner" && pathname === "/dashboard") {
+      router.replace("/learn");
+    }
+  }, [authState, profile, pathname, router]);
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();
@@ -182,6 +219,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const xpProgress = Math.min((xp / xpForNextLevel) * 100, 100);
   const username = profile?.username ?? "Hunter";
   const initials = username.slice(0, 2).toUpperCase();
+  const isLearner = profile?.user_mode === "learner";
+  const activeNavLinks = isLearner ? learnerNavLinks : navLinks;
+  const activeMobileNavLinks = isLearner ? learnerMobileNavLinks : mobileNavLinks;
 
   return (
     <div className="min-h-screen bg-[#0a0a0f] text-white">
@@ -291,7 +331,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
               <div className="px-3 mb-2 text-[10px] uppercase tracking-wider text-slate-500 font-semibold">
                 Menu
               </div>
-              {navLinks.map(({ icon: Icon, label, href }) => {
+              {activeNavLinks.map(({ icon: Icon, label, href }) => {
                 const isActive = pathname === href;
                 return (
                   <Link
@@ -369,7 +409,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
         >
           <div className="flex items-stretch justify-around h-16 px-1">
-            {mobileNavLinks.map(({ icon: Icon, label, href }) => {
+            {activeMobileNavLinks.map(({ icon: Icon, label, href }) => {
               const isActive = pathname === href;
               return (
                 <Link
