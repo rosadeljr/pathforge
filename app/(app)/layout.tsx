@@ -20,6 +20,7 @@ import {
   Moon,
   GraduationCap,
   FileText,
+  Briefcase,
 } from "lucide-react";
 import { useTheme } from "@/components/theme/ThemeProvider";
 
@@ -40,6 +41,7 @@ const navLinks = [
   { icon: Bot, label: "ForgeBot", href: "/mentor", description: "Talk to your mentor" },
   { icon: Trophy, label: "Portfolio", href: "/portfolio", description: "Show your work" },
   { icon: FileText, label: "Resume", href: "/resume", description: "Build your resume" },
+  { icon: Briefcase, label: "Mock Interview", href: "/mock-interview", description: "Practice with ForgeBot" },
   { icon: Sparkles, label: "Achievements", href: "/achievements", description: "Your trophies" },
   { icon: Crown, label: "Leaderboard", href: "/leaderboard", description: "Top forgers" },
   { icon: SettingsIcon, label: "Settings", href: "/settings", description: "Preferences" },

@@ -19,6 +19,8 @@ export interface Entitlements {
   canExportResume: boolean;
   /** Resume optimizer + interview prep tools (Elite). */
   resumeTools: boolean;
+  /** AI Mock Interview — ForgeBot role-plays interviews with feedback. */
+  canMockInterview: boolean;
   prioritySupport: boolean;
 }
 
@@ -31,6 +33,7 @@ const TIERS: Record<Tier, Entitlements> = {
     canDownloadCertificate: false,
     canExportResume: false,
     resumeTools: false,
+    canMockInterview: false,
     prioritySupport: false,
   },
   pro: {
@@ -41,6 +44,7 @@ const TIERS: Record<Tier, Entitlements> = {
     canDownloadCertificate: true,
     canExportResume: true,
     resumeTools: false,
+    canMockInterview: false,
     prioritySupport: true,
   },
   elite: {
@@ -51,6 +55,7 @@ const TIERS: Record<Tier, Entitlements> = {
     canDownloadCertificate: true,
     canExportResume: true,
     resumeTools: true,
+    canMockInterview: true,
     prioritySupport: true,
   },
 };
