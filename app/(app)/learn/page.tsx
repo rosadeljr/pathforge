@@ -1,15 +1,17 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import {
   Sparkles,
   Flame,
   Star,
-  Trophy,
   Lock,
   ArrowRight,
+  Zap,
+  Target,
+  PlayCircle,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import {
@@ -18,7 +20,9 @@ import {
   ageTierForGrade,
   tierGreeting,
   TIER_COPY,
+  type SubjectId,
 } from "@/lib/data/learner";
+import { LESSONS, type Lesson } from "@/lib/data/learner-lessons";
 import { PageShimmer } from "@/components/ui/Shimmer";
 
 interface LearnerProfile {
@@ -31,12 +35,20 @@ interface LearnerProfile {
   longest_streak: number;
 }
 
+interface CompletionEvent {
+  lesson_id: string;
+  ts: string;
+}
+
 /**
- * Learner home — the kid-mode dashboard. Bright, friendly, subject-first.
- * Phase 0 scaffold; lesson playback ships in Phase 1.
+ * Learner home — kid-mode dashboard. Bright, friendly, subject-first.
+ * Surfaces a daily mission, a resume card, and a daily XP goal so kids
+ * always know what to do next.
  */
 export default function LearnPage() {
   const [profile, setProfile] = useState<LearnerProfile | null>(null);
+  const [completions, setCompletions] = useState<CompletionEvent[]>([]);
+  const [todayXp, setTodayXp] = useState(0);
   const [loading, setLoading] = useState(true);
   const supabase = createClient();
 
@@ -48,14 +60,47 @@ export default function LearnPage() {
           setLoading(false);
           return;
         }
-        const { data } = await supabase
-          .from("profiles")
-          .select(
-            "username, learner_grade, learner_subjects, current_level, total_xp, streak_count, longest_streak"
+        const uid = session.user.id;
+        const startOfDay = new Date();
+        startOfDay.setHours(0, 0, 0, 0);
+
+        const [{ data: prof }, { data: events }, { data: todayEvents }] = await Promise.all([
+          supabase
+            .from("profiles")
+            .select(
+              "username, learner_grade, learner_subjects, current_level, total_xp, streak_count, longest_streak"
+            )
+            .eq("id", uid)
+            .maybeSingle(),
+          supabase
+            .from("analytics_events")
+            .select("event_payload, created_at")
+            .eq("user_id", uid)
+            .eq("event_type", "lesson_completed")
+            .order("created_at", { ascending: false })
+            .limit(50),
+          supabase
+            .from("analytics_events")
+            .select("xp_delta")
+            .eq("user_id", uid)
+            .gte("created_at", startOfDay.toISOString()),
+        ]);
+
+        if (prof) setProfile(prof as LearnerProfile);
+        setCompletions(
+          (events || [])
+            .map((e: any) => ({
+              lesson_id: e?.event_payload?.lesson_id,
+              ts: e?.created_at,
+            }))
+            .filter((c: any) => c.lesson_id)
+        );
+        setTodayXp(
+          (todayEvents || []).reduce(
+            (sum: number, e: any) => sum + (e?.xp_delta || 0),
+            0
           )
-          .eq("id", session.user.id)
-          .maybeSingle();
-        if (data) setProfile(data as LearnerProfile);
+        );
       } catch (e) {
         console.error("Learn home load error:", e);
       } finally {
@@ -65,27 +110,91 @@ export default function LearnPage() {
     load();
   }, [supabase]);
 
+  // ─── Derived state ─────────────────────────────────────────────
+  const completedIds = useMemo(
+    () => new Set(completions.map((c) => c.lesson_id)),
+    [completions]
+  );
+
+  const grade = profile?.learner_grade ?? null;
+  const tier = ageTierForGrade(grade);
+  const picked = profile?.learner_subjects || [];
+
+  // Today's mission: pick the first un-done lesson at the user's grade in a
+  // picked subject. Falls back to grade-only, then to any unfinished lesson.
+  const todaysMission = useMemo<Lesson | null>(() => {
+    if (!grade) return null;
+    const inGradeAndPicked = LESSONS.find(
+      (l) =>
+        l.grade === grade &&
+        (picked.length === 0 || picked.includes(l.subject)) &&
+        !completedIds.has(l.id)
+    );
+    if (inGradeAndPicked) return inGradeAndPicked;
+    const inGrade = LESSONS.find(
+      (l) => l.grade === grade && !completedIds.has(l.id)
+    );
+    if (inGrade) return inGrade;
+    // Nothing left at their grade — suggest from adjacent grade
+    const nearby = LESSONS.filter((l) => !completedIds.has(l.id)).sort(
+      (a, b) => Math.abs(a.grade - grade) - Math.abs(b.grade - grade)
+    );
+    return nearby[0] || null;
+  }, [grade, picked, completedIds]);
+
+  // Resume: most recent lesson if it has more lessons in its subject left
+  const resumeLesson = useMemo<Lesson | null>(() => {
+    if (!completions.length) return null;
+    const lastDoneId = completions[0]?.lesson_id;
+    const last = LESSONS.find((l) => l.id === lastDoneId);
+    if (!last) return null;
+    // Find the next un-done lesson in same subject at same grade or close
+    const next = LESSONS.find(
+      (l) =>
+        l.subject === last.subject &&
+        !completedIds.has(l.id) &&
+        l.id !== todaysMission?.id
+    );
+    return next || null;
+  }, [completions, completedIds, todaysMission]);
+
   if (loading) return <PageShimmer />;
 
   const name = profile?.username || "friend";
-  const grade = profile?.learner_grade;
   const streak = profile?.streak_count || 0;
   const totalXp = profile?.total_xp || 0;
   const level = profile?.current_level || 1;
-  const tier = ageTierForGrade(grade);
   const tierCopy = TIER_COPY[tier];
   const heading = tierGreeting(tier, name);
 
+  // Daily XP goal scales by tier — kids get smaller wins, teens earn more per lesson
+  const dailyGoal = tier === "little" ? 100 : tier === "junior" ? 200 : 300;
+  const goalPct = Math.min((todayXp / dailyGoal) * 100, 100);
+  const goalHit = todayXp >= dailyGoal;
+
   // Highlight subjects the user picked; show the rest as discoverable.
-  const picked = new Set(profile?.learner_subjects || []);
+  const pickedSet = new Set(picked);
   const orderedSubjects: Subject[] = [
-    ...SUBJECTS.filter((s) => picked.has(s.id)),
-    ...SUBJECTS.filter((s) => !picked.has(s.id)),
+    ...SUBJECTS.filter((s) => pickedSet.has(s.id)),
+    ...SUBJECTS.filter((s) => !pickedSet.has(s.id)),
   ];
+
+  // Subject progress map — how many lessons done per subject
+  const subjectProgress: Record<SubjectId, { done: number; total: number }> = SUBJECTS.reduce(
+    (acc, s) => {
+      const subjectLessons = LESSONS.filter((l) => l.subject === s.id);
+      acc[s.id] = {
+        done: subjectLessons.filter((l) => completedIds.has(l.id)).length,
+        total: subjectLessons.length,
+      };
+      return acc;
+    },
+    {} as Record<SubjectId, { done: number; total: number }>
+  );
 
   return (
     <div className="min-h-screen pb-12">
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-10 space-y-8">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-10 space-y-7">
         {/* Greeting */}
         <motion.div
           initial={{ opacity: 0, y: 8 }}
@@ -93,10 +202,14 @@ export default function LearnPage() {
           transition={{ duration: 0.5 }}
         >
           <div className="flex items-center gap-2 text-sm text-slate-400 mb-1 flex-wrap">
-            <span className="inline-flex items-center gap-1.5">
-              <span>{tierCopy.emoji}</span>
+            <motion.span
+              animate={tier === "little" ? { rotate: [0, -8, 8, 0] } : {}}
+              transition={{ duration: 1.2, repeat: Infinity, repeatDelay: 4 }}
+              className="inline-flex items-center gap-1.5"
+            >
+              <span className="text-base">{tierCopy.emoji}</span>
               <span className="text-white font-medium">{tierCopy.label}</span>
-            </span>
+            </motion.span>
             {streak > 0 && (
               <>
                 <span className="text-slate-600">·</span>
@@ -121,30 +234,112 @@ export default function LearnPage() {
           <p className="text-sm text-slate-400 mt-1">{tierCopy.tagline}</p>
         </motion.div>
 
-        {/* Stats */}
+        {/* Daily goal — the most important hook on this page */}
         <motion.div
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.05 }}
+          className="relative overflow-hidden rounded-3xl border border-white/[0.08] bg-gradient-to-br from-indigo-500/[0.08] via-purple-500/[0.04] to-transparent p-5"
+        >
+          <div
+            className="absolute -top-20 -right-20 w-56 h-56 rounded-full opacity-30 pointer-events-none"
+            style={{
+              background: "radial-gradient(circle, rgba(99,102,241,0.6), transparent 70%)",
+            }}
+          />
+          <div className="relative flex items-center gap-4">
+            <motion.div
+              animate={goalHit ? { rotate: [0, -10, 10, 0], scale: [1, 1.1, 1] } : {}}
+              transition={{ duration: 0.6, repeat: goalHit ? Infinity : 0, repeatDelay: 2 }}
+              className={`flex-shrink-0 w-12 h-12 rounded-2xl ${
+                goalHit
+                  ? "bg-gradient-to-br from-emerald-400 to-teal-500"
+                  : "bg-gradient-to-br from-indigo-500 to-purple-600"
+              } flex items-center justify-center shadow-lg`}
+            >
+              <Target size={20} className="text-white" />
+            </motion.div>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-baseline justify-between gap-2 mb-1 flex-wrap">
+                <div className="text-sm font-semibold">
+                  {goalHit
+                    ? tier === "little"
+                      ? "Daily goal SMASHED! 🎉"
+                      : "Daily goal hit"
+                    : "Today's XP goal"}
+                </div>
+                <div className="text-xs text-slate-400 tabular-nums">
+                  <span className={goalHit ? "text-emerald-300 font-semibold" : "text-white"}>
+                    {todayXp}
+                  </span>
+                  <span> / {dailyGoal} XP</span>
+                </div>
+              </div>
+              <div className="h-2 rounded-full bg-white/[0.06] overflow-hidden">
+                <motion.div
+                  initial={{ width: 0 }}
+                  animate={{ width: `${goalPct}%` }}
+                  transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+                  className={`h-full ${
+                    goalHit
+                      ? "bg-gradient-to-r from-emerald-400 to-teal-500"
+                      : "bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500"
+                  }`}
+                />
+              </div>
+            </div>
+          </div>
+        </motion.div>
+
+        {/* Stats */}
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.08 }}
           className="grid grid-cols-3 gap-3"
         >
           <StatCard label="Level" value={level} icon={Star} accent="#a855f7" />
-          <StatCard label="XP" value={totalXp.toLocaleString()} icon={Sparkles} accent="#6366f1" />
+          <StatCard label="Total XP" value={totalXp.toLocaleString()} icon={Sparkles} accent="#6366f1" />
           <StatCard label="Streak" value={`${streak}d`} icon={Flame} accent="#f59e0b" />
         </motion.div>
+
+        {/* Today's mission + Resume — the most actionable cards */}
+        {(todaysMission || resumeLesson) && (
+          <div className="grid sm:grid-cols-2 gap-3">
+            {todaysMission && (
+              <MissionCard
+                lesson={todaysMission}
+                title={tier === "little" ? "Today's quest" : "Today's mission"}
+                accent="indigo"
+                tier={tier}
+                delay={0.1}
+              />
+            )}
+            {resumeLesson && (
+              <MissionCard
+                lesson={resumeLesson}
+                title="Pick up where you left off"
+                accent="amber"
+                tier={tier}
+                delay={0.12}
+                subtle
+              />
+            )}
+          </div>
+        )}
 
         {/* Subjects */}
         <motion.div
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.1 }}
+          transition={{ duration: 0.5, delay: 0.15 }}
         >
           <div className="flex items-baseline justify-between mb-4">
             <h2 className="text-sm font-semibold text-slate-300 uppercase tracking-wider">
-              Pick a subject
+              {tier === "little" ? "Pick a subject to play" : "Pick a subject"}
             </h2>
             <span className="text-xs text-slate-500">
-              {grade ? `Grade ${grade} lessons` : "Set your grade in Settings"}
+              {grade ? `Grade ${grade} lessons highlighted` : "Set your grade in Settings"}
             </span>
           </div>
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -152,46 +347,10 @@ export default function LearnPage() {
               <SubjectCard
                 key={subject.id}
                 subject={subject}
-                isPicked={picked.has(subject.id)}
+                isPicked={pickedSet.has(subject.id)}
+                progress={subjectProgress[subject.id]}
               />
             ))}
-          </div>
-        </motion.div>
-
-        {/* Tier-appropriate spotlight */}
-        <motion.div
-          initial={{ opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.15 }}
-          className="relative overflow-hidden rounded-2xl border border-amber-500/20 bg-gradient-to-br from-amber-500/[0.08] via-amber-500/[0.03] to-transparent p-6"
-        >
-          <div
-            className="absolute -top-16 -right-16 w-48 h-48 rounded-full opacity-30 pointer-events-none"
-            style={{ background: "radial-gradient(circle, rgba(245,158,11,0.5), transparent 70%)" }}
-          />
-          <div className="relative flex flex-col sm:flex-row sm:items-center gap-4">
-            <div className="flex-shrink-0 w-12 h-12 rounded-2xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center shadow-lg shadow-amber-500/30">
-              <Trophy size={20} className="text-white" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <div className="text-[10px] uppercase tracking-wider text-amber-300 font-semibold mb-1">
-                {tier === "teen" ? "College & career" : tier === "junior" ? "Today's focus" : "Today's fun"}
-              </div>
-              <h3 className="text-base font-semibold mb-1">
-                {tier === "teen"
-                  ? "Subjects unlock your future"
-                  : tier === "junior"
-                  ? "Level up one lesson at a time"
-                  : "Pick a subject and play"}
-              </h3>
-              <p className="text-xs text-slate-400">
-                {tier === "teen"
-                  ? "Senior High content stretches into functions, calculus prep, rhetoric, and college-essay craft. Your tutor adapts to your level."
-                  : tier === "junior"
-                  ? "Mid-grade lessons build the core skills — ratios, algebra basics, essay structure, and science fundamentals."
-                  : "Bright, friendly lessons for younger learners — count, read, write, and learn with characters and rewards."}
-              </p>
-            </div>
           </div>
         </motion.div>
       </div>
@@ -229,62 +388,181 @@ function StatCard({
   );
 }
 
+function MissionCard({
+  lesson,
+  title,
+  accent,
+  tier,
+  delay,
+  subtle,
+}: {
+  lesson: Lesson;
+  title: string;
+  accent: "indigo" | "amber";
+  tier: "little" | "junior" | "teen";
+  delay: number;
+  subtle?: boolean;
+}) {
+  const subject = SUBJECTS.find((s) => s.id === lesson.subject);
+  const accentMap = {
+    indigo: {
+      bg: "from-indigo-500/[0.12] via-purple-500/[0.05]",
+      border: "border-indigo-400/30",
+      pill: "text-indigo-300 bg-indigo-500/15 border-indigo-500/30",
+      icon: "from-indigo-500 to-purple-600",
+      glow: "rgba(99,102,241,0.5)",
+    },
+    amber: {
+      bg: "from-amber-500/[0.10] via-orange-500/[0.04]",
+      border: "border-amber-400/30",
+      pill: "text-amber-300 bg-amber-500/15 border-amber-500/30",
+      icon: "from-amber-400 to-orange-500",
+      glow: "rgba(245,158,11,0.5)",
+    },
+  }[accent];
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5, delay }}
+      whileHover={{ y: -2 }}
+    >
+      <Link
+        href={`/learn/${lesson.subject}/${lesson.id}`}
+        className={`group relative overflow-hidden block rounded-3xl border ${accentMap.border} bg-gradient-to-br ${accentMap.bg} to-transparent p-5 transition-all hover:shadow-xl`}
+        style={{ boxShadow: `0 8px 28px ${accentMap.glow}10` }}
+      >
+        <div
+          className="absolute -top-16 -right-16 w-44 h-44 rounded-full opacity-30 pointer-events-none group-hover:opacity-50 transition-opacity"
+          style={{ background: `radial-gradient(circle, ${accentMap.glow}, transparent 70%)` }}
+        />
+        <div className="relative">
+          <div className="flex items-center gap-2 mb-3 flex-wrap">
+            <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md border ${accentMap.pill}`}>
+              {title}
+            </span>
+            {subject && (
+              <span className="text-[10px] text-slate-400">
+                {subject.title} · Grade {lesson.grade}
+              </span>
+            )}
+          </div>
+          <div className="flex items-start gap-3">
+            <motion.div
+              animate={!subtle && tier === "little" ? { y: [0, -3, 0] } : {}}
+              transition={{ duration: 1.8, repeat: Infinity, repeatDelay: 1 }}
+              className="text-3xl flex-shrink-0"
+            >
+              {lesson.emoji}
+            </motion.div>
+            <div className="flex-1 min-w-0">
+              <h3 className="text-base sm:text-lg font-semibold tracking-tight mb-0.5 leading-tight">
+                {lesson.title}
+              </h3>
+              <p className="text-xs text-slate-400 line-clamp-2 leading-relaxed">
+                {lesson.description}
+              </p>
+            </div>
+          </div>
+          <div className="mt-4 flex items-center justify-between">
+            <div className="flex items-center gap-3 text-xs">
+              <span className="inline-flex items-center gap-1 text-indigo-300 font-semibold">
+                <Zap size={11} />+{lesson.xpReward} XP
+              </span>
+              <span className="text-slate-500">
+                {lesson.questions.length} questions
+              </span>
+            </div>
+            <span className="inline-flex items-center gap-1 text-xs font-semibold text-white group-hover:translate-x-0.5 transition-transform">
+              <PlayCircle size={14} />
+              {tier === "little" ? "Play" : "Start"}
+            </span>
+          </div>
+        </div>
+      </Link>
+    </motion.div>
+  );
+}
+
 function SubjectCard({
   subject,
   isPicked,
+  progress,
 }: {
   subject: Subject;
   isPicked: boolean;
+  progress?: { done: number; total: number };
 }) {
   const disabled = !subject.available;
   const Wrapper: any = disabled ? "div" : Link;
   const wrapperProps = disabled ? {} : { href: `/learn/${subject.id}` };
+  const pct = progress?.total ? Math.round((progress.done / progress.total) * 100) : 0;
   return (
-    <Wrapper
-      {...wrapperProps}
-      className={`group relative overflow-hidden rounded-2xl border p-5 transition-all ${
-        disabled
-          ? "border-white/[0.04] bg-white/[0.01] opacity-70 cursor-default"
-          : isPicked
-          ? "border-white/[0.16] bg-white/[0.04] hover:bg-white/[0.06] hover:border-white/[0.24]"
-          : "border-white/[0.06] bg-white/[0.02] hover:bg-white/[0.04] hover:border-white/[0.12]"
-      }`}
-    >
-      <div
-        className="absolute -top-12 -right-12 w-32 h-32 rounded-full opacity-20 group-hover:opacity-30 transition-opacity"
-        style={{ background: `radial-gradient(circle, ${subject.accentColor}, transparent 70%)` }}
-      />
-      <div className="relative">
+    <motion.div whileHover={!disabled ? { y: -2 } : {}}>
+      <Wrapper
+        {...wrapperProps}
+        className={`group relative overflow-hidden block rounded-2xl border p-5 transition-all ${
+          disabled
+            ? "border-white/[0.04] bg-white/[0.01] opacity-70 cursor-default"
+            : isPicked
+            ? "border-white/[0.16] bg-white/[0.04] hover:bg-white/[0.06] hover:border-white/[0.24]"
+            : "border-white/[0.06] bg-white/[0.02] hover:bg-white/[0.04] hover:border-white/[0.12]"
+        }`}
+      >
         <div
-          className={`w-12 h-12 rounded-2xl bg-gradient-to-br ${subject.gradient} flex items-center justify-center text-2xl mb-4 shadow-lg`}
-          style={{ boxShadow: `0 8px 24px ${subject.accentColor}30` }}
-        >
-          {subject.emoji}
-        </div>
-        <div className="flex items-center gap-2 mb-1 flex-wrap">
-          <h3 className="text-base font-semibold tracking-tight">{subject.title}</h3>
-          {isPicked && (
-            <span className="text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-md bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">
-              Picked
-            </span>
-          )}
-          {disabled && (
-            <span className="inline-flex items-center gap-1 text-[10px] font-medium text-slate-500">
-              <Lock size={9} />
-              Soon
-            </span>
-          )}
-        </div>
-        <p className="text-xs text-slate-400 leading-relaxed mb-3">
-          {subject.description}
-        </p>
-        {!disabled && (
-          <div className="inline-flex items-center gap-1 text-xs font-medium text-slate-300 group-hover:text-white transition-colors">
-            Open
-            <ArrowRight size={11} className="group-hover:translate-x-0.5 transition-transform" />
+          className="absolute -top-12 -right-12 w-32 h-32 rounded-full opacity-20 group-hover:opacity-40 transition-opacity"
+          style={{ background: `radial-gradient(circle, ${subject.accentColor}, transparent 70%)` }}
+        />
+        <div className="relative">
+          <motion.div
+            whileHover={!disabled ? { rotate: [0, -6, 6, 0] } : {}}
+            transition={{ duration: 0.5 }}
+            className={`w-12 h-12 rounded-2xl bg-gradient-to-br ${subject.gradient} flex items-center justify-center text-2xl mb-4 shadow-lg`}
+            style={{ boxShadow: `0 8px 24px ${subject.accentColor}30` }}
+          >
+            {subject.emoji}
+          </motion.div>
+          <div className="flex items-center gap-2 mb-1 flex-wrap">
+            <h3 className="text-base font-semibold tracking-tight">{subject.title}</h3>
+            {isPicked && (
+              <span className="text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-md bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">
+                Picked
+              </span>
+            )}
+            {disabled && (
+              <span className="inline-flex items-center gap-1 text-[10px] font-medium text-slate-500">
+                <Lock size={9} />
+                Soon
+              </span>
+            )}
           </div>
-        )}
-      </div>
-    </Wrapper>
+          <p className="text-xs text-slate-400 leading-relaxed mb-3 line-clamp-2">
+            {subject.description}
+          </p>
+          {!disabled && progress && progress.total > 0 && (
+            <div className="mb-3">
+              <div className="flex items-center justify-between text-[10px] mb-1">
+                <span className="text-slate-500 font-medium">Progress</span>
+                <span className="text-slate-400 tabular-nums">
+                  {progress.done}/{progress.total}
+                </span>
+              </div>
+              <div className="h-1 rounded-full bg-white/[0.05] overflow-hidden">
+                <div
+                  className={`h-full bg-gradient-to-r ${subject.gradient} transition-all`}
+                  style={{ width: `${pct}%` }}
+                />
+              </div>
+            </div>
+          )}
+          {!disabled && (
+            <div className="inline-flex items-center gap-1 text-xs font-medium text-slate-300 group-hover:text-white transition-colors">
+              Open
+              <ArrowRight size={11} className="group-hover:translate-x-0.5 transition-transform" />
+            </div>
+          )}
+        </div>
+      </Wrapper>
+    </motion.div>
   );
 }

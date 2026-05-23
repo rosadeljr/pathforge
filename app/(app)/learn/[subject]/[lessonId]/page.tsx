@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useEffect, useMemo, useState } from "react";
+import { useParams } from "next/navigation";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -11,19 +11,45 @@ import {
   X,
   Sparkles,
   Trophy,
-  Zap,
   RotateCcw,
+  Lightbulb,
+  Flame,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
-import { getSubject } from "@/lib/data/learner";
+import { getSubject, ageTierForGrade, type AgeTier } from "@/lib/data/learner";
 import { getLesson } from "@/lib/data/learner-lessons";
 import { PageShimmer } from "@/components/ui/Shimmer";
 
 type Phase = "loading" | "playing" | "done";
 
+// ───────────────────────────────────────────────────────────────────
+// Encouragement variety — picked randomly so it doesn't feel canned.
+// Tone scales by age tier.
+// ───────────────────────────────────────────────────────────────────
+const CHEERS: Record<AgeTier, string[]> = {
+  little: ["Yes! 🌟", "Woohoo!", "Nice one!", "You got it!", "Awesome!", "Way to go!", "Sulit!"],
+  junior: ["Nailed it.", "Nice work.", "Correct!", "Sharp thinking.", "You got it.", "Yes — solid."],
+  teen: ["Correct.", "Right.", "Good.", "Nice.", "Solid.", "On point."],
+};
+
+const ENCOURAGE: Record<AgeTier, string[]> = {
+  little: ["Almost! Try the next one. 💪", "It's okay! Let's keep going.", "Good try! You're learning."],
+  junior: ["Close — let's keep going.", "No worries, next one.", "Not quite — onward."],
+  teen: ["Not this time.", "Moving on.", "Got it — next."],
+};
+
+const STREAK_HYPE: Record<AgeTier, Record<number, string>> = {
+  little: { 3: "🔥 3 in a row!", 5: "🌟 5 streak! WOW!", 7: "💯 7 streak!" },
+  junior: { 3: "🔥 3 in a row", 5: "🔥 5 streak", 7: "🔥 7 streak — unreal" },
+  teen: { 3: "3 streak", 5: "5 streak", 7: "7 streak" },
+};
+
+function pickRandom<T>(arr: T[]): T {
+  return arr[Math.floor(Math.random() * arr.length)];
+}
+
 export default function LessonPlayerPage() {
   const params = useParams();
-  const router = useRouter();
   const supabase = createClient();
   const subjectId = (params?.subject as string) || "";
   const lessonId = (params?.lessonId as string) || "";
@@ -32,24 +58,52 @@ export default function LessonPlayerPage() {
   const lesson = getLesson(lessonId);
 
   const [phase, setPhase] = useState<Phase>("loading");
+  const [tier, setTier] = useState<AgeTier>("junior");
   const [currentIdx, setCurrentIdx] = useState(0);
   const [pickedIdx, setPickedIdx] = useState<number | null>(null);
   const [wrongCount, setWrongCount] = useState(0);
-  const [revealed, setRevealed] = useState(false); // true once the correct answer is shown
-  // Per-question: did the user get it right on first try?
+  const [revealed, setRevealed] = useState(false);
   const [firstTryCorrect, setFirstTryCorrect] = useState<boolean[]>([]);
   const [persisting, setPersisting] = useState(false);
+  const [streak, setStreak] = useState(0); // in-lesson consecutive correct
+  const [bestStreak, setBestStreak] = useState(0);
+  const [hintOpen, setHintOpen] = useState(false);
+  const [usedHintOn, setUsedHintOn] = useState<Set<number>>(new Set());
+  const [burst, setBurst] = useState<{ x: number; y: number; key: number } | null>(null);
+  const [xpFloat, setXpFloat] = useState<{ key: number; amount: number } | null>(null);
+  const [feedbackMsg, setFeedbackMsg] = useState("");
+
+  // Load tier on mount
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session?.user) return;
+        const { data } = await supabase
+          .from("profiles")
+          .select("learner_grade")
+          .eq("id", session.user.id)
+          .maybeSingle();
+        if (mounted) setTier(ageTierForGrade(data?.learner_grade ?? null));
+      } catch {
+        /* keep junior default */
+      }
+    })();
+    return () => {
+      mounted = false;
+    };
+  }, [supabase]);
 
   useEffect(() => {
     if (!lesson || !subject || subject.id !== lesson.subject) {
-      setPhase("loading"); // Stay loading to show error fallback below.
+      setPhase("loading");
     } else {
       setFirstTryCorrect(new Array(lesson.questions.length).fill(false));
       setPhase("playing");
     }
   }, [lesson, subject]);
 
-  // Bad URL or missing lesson — render an error after a brief loading window.
   if (!lesson || !subject || subject.id !== lesson.subject) {
     return (
       <div className="max-w-md mx-auto px-4 py-16 text-center">
@@ -74,25 +128,52 @@ export default function LessonPlayerPage() {
   const isLast = currentIdx === total - 1;
   const q = lesson.questions[currentIdx];
 
-  function pick(i: number) {
-    if (revealed) return; // already answered
+  // Mascot mood reflects the moment
+  const mascotMood = (() => {
+    if (!revealed) return pickedIdx == null ? "neutral" : wrongCount > 0 ? "thinking" : "neutral";
+    if (pickedIdx === q.correctIndex) return streak >= 3 ? "fire" : "happy";
+    return "encouraging";
+  })();
+
+  function triggerBurst(target: HTMLElement) {
+    const rect = target.getBoundingClientRect();
+    setBurst({
+      x: rect.left + rect.width / 2,
+      y: rect.top + rect.height / 2,
+      key: Date.now(),
+    });
+    // Clear after animation
+    setTimeout(() => setBurst(null), 1200);
+  }
+
+  function pick(i: number, e?: React.MouseEvent<HTMLButtonElement>) {
+    if (revealed) return;
     setPickedIdx(i);
     if (i === q.correctIndex) {
-      // First-try correctness tracked only if wrongCount is still 0.
       const fresh = [...firstTryCorrect];
       fresh[currentIdx] = wrongCount === 0;
       setFirstTryCorrect(fresh);
       setRevealed(true);
+      // Streak only counts first-try perfection
+      if (wrongCount === 0) {
+        const next = streak + 1;
+        setStreak(next);
+        setBestStreak(Math.max(bestStreak, next));
+        if (e?.currentTarget) triggerBurst(e.currentTarget);
+        setXpFloat({ key: Date.now(), amount: Math.round(lesson!.xpReward / total) });
+        setTimeout(() => setXpFloat(null), 1100);
+      } else {
+        setStreak(0);
+      }
+      setFeedbackMsg(pickRandom(CHEERS[tier]));
     } else {
-      // First wrong → allow one retry. Second wrong → reveal the answer.
       if (wrongCount === 0) {
         setWrongCount(1);
-        // Pulse and clear after a beat so they can try again.
-        setTimeout(() => {
-          setPickedIdx(null);
-        }, 700);
+        setStreak(0);
+        setTimeout(() => setPickedIdx(null), 700);
       } else {
         setRevealed(true);
+        setFeedbackMsg(pickRandom(ENCOURAGE[tier]));
       }
     }
   }
@@ -105,6 +186,7 @@ export default function LessonPlayerPage() {
       setPickedIdx(null);
       setWrongCount(0);
       setRevealed(false);
+      setHintOpen(false);
     }
   }
 
@@ -120,7 +202,6 @@ export default function LessonPlayerPage() {
       if (!session?.user) return;
       const uid = session.user.id;
 
-      // Idempotency check — don't double-award XP for a re-attempt.
       const { data: existing } = await supabase
         .from("analytics_events")
         .select("id")
@@ -130,9 +211,12 @@ export default function LessonPlayerPage() {
         .limit(1);
 
       const alreadyDone = (existing?.length || 0) > 0;
-      const awardXp = alreadyDone ? 0 : lesson!.xpReward;
+      // First-time + perfect (no hints, no wrongs) earns a 25% bonus
+      const isFlawless = correctCount === total && usedHintOn.size === 0;
+      const baseXp = alreadyDone ? 0 : lesson!.xpReward;
+      const bonusXp = !alreadyDone && isFlawless ? Math.round(lesson!.xpReward * 0.25) : 0;
+      const awardXp = baseXp + bonusXp;
 
-      // Log the completion event (always, so we have replay history).
       await supabase.from("analytics_events").insert({
         user_id: uid,
         event_type: "lesson_completed",
@@ -141,6 +225,8 @@ export default function LessonPlayerPage() {
           subject: lesson!.subject,
           score: correctCount,
           total,
+          best_streak: bestStreak,
+          flawless: isFlawless,
           replay: alreadyDone,
         },
         xp_delta: awardXp,
@@ -176,13 +262,25 @@ export default function LessonPlayerPage() {
     setWrongCount(0);
     setRevealed(false);
     setFirstTryCorrect(new Array(total).fill(false));
+    setStreak(0);
+    setBestStreak(0);
+    setUsedHintOn(new Set());
+    setHintOpen(false);
     setPhase("playing");
+  }
+
+  function openHint() {
+    setHintOpen(true);
+    const next = new Set(usedHintOn);
+    next.add(currentIdx);
+    setUsedHintOn(next);
   }
 
   // ============ Done screen ============
   if (phase === "done") {
     const score = correctCount;
     const pct = Math.round((score / total) * 100);
+    const isFlawless = score === total && usedHintOn.size === 0;
     const tone = pct >= 80 ? "emerald" : pct >= 50 ? "amber" : "rose";
     const toneText: Record<string, string> = {
       emerald: "text-emerald-300",
@@ -194,62 +292,88 @@ export default function LessonPlayerPage() {
       amber: "from-amber-500 to-orange-600",
       rose: "from-rose-500 to-pink-600",
     };
+    const headline =
+      pct === 100 && tier === "little"
+        ? "PERFECT! 🌟🎉"
+        : pct === 100
+        ? "Perfect run!"
+        : pct >= 80
+        ? "Great work!"
+        : pct >= 50
+        ? "Good job!"
+        : "Lesson done!";
+    const bonusXp = isFlawless ? Math.round(lesson.xpReward * 0.25) : 0;
     return (
-      <div className="min-h-screen pb-12">
-        <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-12 lg:py-16">
+      <div className="min-h-screen pb-12 relative overflow-hidden">
+        {/* Confetti burst — only for great runs */}
+        {pct >= 80 && <ConfettiCelebration tier={tier} />}
+
+        <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-12 lg:py-16 relative z-10">
           <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
+            initial={{ opacity: 0, scale: 0.85, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            transition={{ type: "spring", stiffness: 200, damping: 18 }}
             className="text-center mb-8"
           >
-            <div
-              className={`inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br ${toneBg[tone]} shadow-2xl mb-5`}
+            <motion.div
+              animate={{ rotate: [0, -8, 8, -8, 0] }}
+              transition={{ duration: 0.8, delay: 0.2 }}
+              className={`inline-flex items-center justify-center w-20 h-20 rounded-3xl bg-gradient-to-br ${toneBg[tone]} shadow-2xl mb-5`}
               style={{
-                boxShadow: `0 12px 40px rgba(16,185,129,0.4)`,
+                boxShadow: `0 16px 48px rgba(16,185,129,0.4)`,
               }}
             >
-              <Trophy size={26} className="text-white" />
-            </div>
-            <h1 className="text-3xl sm:text-4xl font-semibold tracking-tight mb-2">
-              {pct === 100 ? "Perfect!" : pct >= 80 ? "Great work!" : pct >= 50 ? "Good job!" : "Lesson done!"}
+              <Trophy size={32} className="text-white" />
+            </motion.div>
+            <h1 className="text-3xl sm:text-4xl font-bold tracking-tight mb-2">
+              {headline}
             </h1>
             <p className="text-sm text-slate-400">
               You finished <span className="text-white font-semibold">{lesson.title}</span>.
             </p>
           </motion.div>
 
+          {/* Stats card */}
           <motion.div
-            initial={{ opacity: 0, y: 12 }}
+            initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
+            transition={{ delay: 0.15 }}
             className="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-6 mb-6"
           >
             <div className="grid grid-cols-3 gap-3 mb-5">
-              <div className="text-center">
-                <div className="text-[10px] uppercase tracking-wider text-slate-500 mb-1">Score</div>
-                <div className={`text-3xl font-bold tabular-nums ${toneText[tone]}`}>
-                  {score}/{total}
-                </div>
-              </div>
-              <div className="text-center">
-                <div className="text-[10px] uppercase tracking-wider text-slate-500 mb-1">First try</div>
-                <div className="text-3xl font-bold tabular-nums text-white">{pct}%</div>
-              </div>
-              <div className="text-center">
-                <div className="text-[10px] uppercase tracking-wider text-slate-500 mb-1">XP earned</div>
-                <div className="text-3xl font-bold tabular-nums text-indigo-300">
-                  +{lesson.xpReward}
-                </div>
-              </div>
+              <StatBox label="Score" value={`${score}/${total}`} tone={toneText[tone]} />
+              <StatBox label="First try" value={`${pct}%`} tone="text-white" />
+              <StatBox label="XP earned" value={`+${lesson.xpReward + bonusXp}`} tone="text-indigo-300" />
             </div>
-            <div className="h-2 rounded-full bg-white/[0.06] overflow-hidden">
+            <div className="h-2 rounded-full bg-white/[0.06] overflow-hidden mb-2">
               <motion.div
                 initial={{ width: 0 }}
                 animate={{ width: `${pct}%` }}
-                transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+                transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1], delay: 0.3 }}
                 className={`h-full bg-gradient-to-r ${toneBg[tone]}`}
               />
             </div>
+            {bestStreak >= 3 && (
+              <div className="flex items-center justify-center gap-1.5 text-xs text-amber-300 font-semibold pt-1">
+                <Flame size={12} />
+                Best in-lesson streak: {bestStreak}
+              </div>
+            )}
+            {isFlawless && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.5 }}
+                className="mt-3 p-3 rounded-xl bg-gradient-to-r from-amber-500/[0.12] to-orange-500/[0.12] border border-amber-500/30 text-center"
+              >
+                <div className="text-xs font-bold uppercase tracking-wider text-amber-300 mb-0.5">
+                  ✨ Flawless bonus
+                </div>
+                <div className="text-sm text-amber-100">
+                  +{bonusXp} XP for a perfect, no-hint run
+                </div>
+              </motion.div>
+            )}
           </motion.div>
 
           <div className="flex items-center justify-center gap-3 flex-wrap">
@@ -278,9 +402,14 @@ export default function LessonPlayerPage() {
 
   // ============ Playing ============
   return (
-    <div className="min-h-screen pb-12">
-      <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-10 space-y-6">
-        {/* Header */}
+    <div className="min-h-screen pb-12 relative">
+      {/* Floating confetti burst on correct */}
+      {burst && <EmojiBurst x={burst.x} y={burst.y} key={burst.key} tier={tier} />}
+      {/* Floating XP popup */}
+      {xpFloat && <XpFloat amount={xpFloat.amount} key={xpFloat.key} />}
+
+      <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-10 space-y-5">
+        {/* Top bar */}
         <div>
           <Link
             href={`/learn/${subjectId}`}
@@ -289,7 +418,50 @@ export default function LessonPlayerPage() {
             <ArrowLeft size={12} />
             Back to {subject.title}
           </Link>
-          <div className="flex items-center justify-between mb-2 text-xs">
+
+          {/* Question dots — shows lesson shape at a glance */}
+          <div className="flex items-center justify-between mb-3 gap-3 flex-wrap">
+            <div className="flex items-center gap-1.5">
+              {lesson.questions.map((_, i) => {
+                const done = i < currentIdx;
+                const isNow = i === currentIdx;
+                const wasFirstTry = firstTryCorrect[i];
+                return (
+                  <div
+                    key={i}
+                    className={`h-2 rounded-full transition-all ${
+                      isNow
+                        ? "w-6 bg-gradient-to-r " + subject.gradient
+                        : done
+                        ? wasFirstTry
+                          ? "w-2 bg-emerald-400"
+                          : "w-2 bg-amber-400"
+                        : "w-2 bg-white/15"
+                    }`}
+                  />
+                );
+              })}
+            </div>
+            <AnimatePresence>
+              {streak >= 3 && STREAK_HYPE[tier][Math.min(streak, 7)] && (
+                <motion.div
+                  initial={{ scale: 0.6, opacity: 0, y: -6 }}
+                  animate={{ scale: 1, opacity: 1, y: 0 }}
+                  exit={{ scale: 0.6, opacity: 0 }}
+                  transition={{ type: "spring", stiffness: 300, damping: 16 }}
+                  className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-gradient-to-r from-amber-500/20 to-orange-500/20 border border-amber-500/40 text-amber-300 text-xs font-bold"
+                >
+                  <Flame size={11} />
+                  {STREAK_HYPE[tier][
+                    streak >= 7 ? 7 : streak >= 5 ? 5 : 3
+                  ]}
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+
+          {/* Title + counter */}
+          <div className="flex items-center justify-between text-xs mb-2">
             <span className="text-slate-400 font-medium">
               {lesson.emoji} {lesson.title}
             </span>
@@ -297,6 +469,8 @@ export default function LessonPlayerPage() {
               {currentIdx + 1} / {total}
             </span>
           </div>
+
+          {/* Smooth gradient progress bar */}
           <div className="h-1.5 rounded-full bg-white/[0.06] overflow-hidden">
             <motion.div
               className={`h-full bg-gradient-to-r ${subject.gradient}`}
@@ -307,17 +481,20 @@ export default function LessonPlayerPage() {
           </div>
         </div>
 
-        {/* Question card */}
+        {/* Mascot + question card */}
         <AnimatePresence mode="wait">
           <motion.div
             key={q.id}
-            initial={{ opacity: 0, y: 16 }}
+            initial={{ opacity: 0, y: 18 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -16 }}
+            exit={{ opacity: 0, y: -18 }}
             transition={{ duration: 0.3 }}
-            className="rounded-2xl border border-white/[0.08] bg-gradient-to-br from-white/[0.04] to-transparent p-6 sm:p-8"
+            className="rounded-3xl border border-white/[0.08] bg-gradient-to-br from-white/[0.04] to-transparent p-6 sm:p-8 relative overflow-hidden"
           >
-            <p className="text-2xl sm:text-3xl font-semibold tracking-tight text-center mb-6 leading-tight">
+            {/* Mascot — sits in the corner, reacts to events */}
+            <Mascot mood={mascotMood} tier={tier} />
+
+            <p className="text-2xl sm:text-3xl font-semibold tracking-tight text-center mb-6 leading-tight pr-10">
               {q.prompt}
             </p>
 
@@ -326,75 +503,117 @@ export default function LessonPlayerPage() {
                 const isPicked = pickedIdx === i;
                 const isCorrect = i === q.correctIndex;
                 let cls =
-                  "p-4 rounded-xl border text-base font-semibold transition-all text-left";
+                  "p-4 rounded-2xl border text-base font-semibold transition-all text-left";
                 if (revealed) {
                   if (isCorrect) {
                     cls +=
-                      " border-emerald-500/50 bg-emerald-500/15 text-emerald-200";
+                      " border-emerald-500/60 bg-emerald-500/15 text-emerald-200 shadow-lg shadow-emerald-500/10";
                   } else if (isPicked) {
-                    cls += " border-rose-500/50 bg-rose-500/15 text-rose-200";
+                    cls += " border-rose-500/60 bg-rose-500/15 text-rose-200";
                   } else {
                     cls += " border-white/[0.06] bg-white/[0.02] text-slate-400";
                   }
                 } else if (isPicked && pickedIdx !== q.correctIndex) {
                   cls +=
-                    " border-rose-500/50 bg-rose-500/15 text-rose-200 animate-pulse";
+                    " border-rose-500/60 bg-rose-500/15 text-rose-200 animate-pulse";
                 } else {
                   cls +=
-                    " border-white/[0.08] bg-white/[0.03] hover:bg-white/[0.06] hover:border-white/[0.16] cursor-pointer";
+                    " border-white/[0.08] bg-white/[0.03] hover:bg-white/[0.06] hover:border-white/[0.20] hover:scale-[1.015] cursor-pointer";
                 }
                 return (
-                  <button
+                  <motion.button
                     key={i}
-                    onClick={() => pick(i)}
+                    onClick={(e) => pick(i, e)}
                     disabled={revealed}
                     className={cls}
+                    whileTap={!revealed ? { scale: 0.97 } : {}}
                   >
-                    <span className="inline-flex items-center gap-2">
-                      <span className="inline-flex items-center justify-center w-6 h-6 rounded-md bg-white/[0.06] border border-white/[0.1] text-xs font-bold text-slate-300">
+                    <span className="inline-flex items-center gap-2.5">
+                      <span className="inline-flex items-center justify-center w-7 h-7 rounded-lg bg-white/[0.08] border border-white/[0.12] text-xs font-bold text-slate-200">
                         {String.fromCharCode(65 + i)}
                       </span>
-                      {opt}
+                      <span className="flex-1">{opt}</span>
+                      {revealed && isCorrect && (
+                        <motion.span
+                          initial={{ scale: 0 }}
+                          animate={{ scale: 1 }}
+                          transition={{ type: "spring", stiffness: 400, damping: 18 }}
+                        >
+                          <Check size={16} strokeWidth={3} className="text-emerald-300" />
+                        </motion.span>
+                      )}
                     </span>
-                  </button>
+                  </motion.button>
                 );
               })}
             </div>
 
+            {/* Hint inline */}
+            {!revealed && q.explanation && (
+              <div className="mt-4 flex items-center justify-end">
+                {hintOpen ? (
+                  <motion.div
+                    initial={{ opacity: 0, y: -4 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="inline-flex items-start gap-2 px-3 py-2 rounded-xl bg-amber-500/[0.08] border border-amber-500/30 text-xs text-amber-100"
+                  >
+                    <Lightbulb size={12} className="text-amber-300 mt-0.5 flex-shrink-0" />
+                    <span className="leading-relaxed">{q.explanation}</span>
+                  </motion.div>
+                ) : (
+                  <button
+                    onClick={openHint}
+                    className="inline-flex items-center gap-1.5 text-xs text-amber-300 font-medium hover:text-amber-200 transition-colors"
+                  >
+                    <Lightbulb size={12} />
+                    Show hint
+                  </button>
+                )}
+              </div>
+            )}
+
             {/* Feedback strip */}
-            {revealed && (
-              <motion.div
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                className={`mt-5 p-4 rounded-xl border ${
-                  pickedIdx === q.correctIndex
-                    ? "bg-emerald-500/[0.08] border-emerald-500/30"
-                    : "bg-amber-500/[0.08] border-amber-500/30"
-                }`}
-              >
-                <div className="flex items-start gap-2.5">
-                  {pickedIdx === q.correctIndex ? (
-                    <Check size={16} className="text-emerald-300 flex-shrink-0 mt-0.5" strokeWidth={3} />
-                  ) : (
-                    <X size={16} className="text-amber-300 flex-shrink-0 mt-0.5" strokeWidth={3} />
-                  )}
-                  <div className="flex-1 text-sm">
-                    <div className="font-semibold mb-0.5">
-                      {pickedIdx === q.correctIndex
-                        ? wrongCount === 0
-                          ? "Correct! Nice work."
-                          : "Got it — onwards."
-                        : `The answer is ${q.options[q.correctIndex]}.`}
-                    </div>
-                    {q.explanation && (
-                      <div className="text-xs text-slate-300 leading-relaxed">
-                        {q.explanation}
+            <AnimatePresence>
+              {revealed && (
+                <motion.div
+                  initial={{ opacity: 0, y: 10, scale: 0.97 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: -6 }}
+                  transition={{ type: "spring", stiffness: 220, damping: 20 }}
+                  className={`mt-5 p-4 rounded-2xl border ${
+                    pickedIdx === q.correctIndex
+                      ? "bg-emerald-500/[0.10] border-emerald-500/40"
+                      : "bg-amber-500/[0.10] border-amber-500/40"
+                  }`}
+                >
+                  <div className="flex items-start gap-2.5">
+                    {pickedIdx === q.correctIndex ? (
+                      <div className="w-7 h-7 rounded-full bg-emerald-500/25 flex items-center justify-center flex-shrink-0">
+                        <Check size={14} className="text-emerald-300" strokeWidth={3} />
+                      </div>
+                    ) : (
+                      <div className="w-7 h-7 rounded-full bg-amber-500/25 flex items-center justify-center flex-shrink-0">
+                        <X size={14} className="text-amber-300" strokeWidth={3} />
                       </div>
                     )}
+                    <div className="flex-1 text-sm">
+                      <div className="font-semibold mb-0.5">
+                        {pickedIdx === q.correctIndex
+                          ? wrongCount === 0
+                            ? feedbackMsg
+                            : "Got it — onwards."
+                          : `The answer is ${q.options[q.correctIndex]}.`}
+                      </div>
+                      {q.explanation && !hintOpen && (
+                        <div className="text-xs text-slate-300 leading-relaxed">
+                          {q.explanation}
+                        </div>
+                      )}
+                    </div>
                   </div>
-                </div>
-              </motion.div>
-            )}
+                </motion.div>
+              )}
+            </AnimatePresence>
           </motion.div>
         </AnimatePresence>
 
@@ -407,7 +626,7 @@ export default function LessonPlayerPage() {
           <button
             onClick={nextQuestion}
             disabled={!revealed}
-            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-white text-slate-900 text-sm font-semibold hover:bg-slate-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-white text-slate-900 text-sm font-semibold hover:bg-slate-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors shadow-lg"
           >
             {isLast ? (
               <>
@@ -423,6 +642,160 @@ export default function LessonPlayerPage() {
           </button>
         </div>
       </div>
+    </div>
+  );
+}
+
+// ───────────────────────────────────────────────────────────────────
+// Mascot — a friendly reactive emoji in the corner of the question card.
+// Tier-aware: bigger and more expressive for little kids, subtler for teens.
+// ───────────────────────────────────────────────────────────────────
+function Mascot({
+  mood,
+  tier,
+}: {
+  mood: "neutral" | "happy" | "fire" | "thinking" | "encouraging";
+  tier: AgeTier;
+}) {
+  const face: Record<typeof mood, string> = {
+    neutral: tier === "little" ? "🤖" : tier === "junior" ? "🦊" : "✨",
+    happy: tier === "little" ? "🎉" : tier === "junior" ? "🌟" : "✓",
+    fire: "🔥",
+    thinking: "🤔",
+    encouraging: "💪",
+  } as any;
+
+  // Teens get a quieter mascot (no bouncing, smaller)
+  const sizeCls =
+    tier === "teen" ? "w-7 h-7 text-base" : tier === "junior" ? "w-9 h-9 text-xl" : "w-11 h-11 text-2xl";
+
+  const animate: any =
+    tier === "teen"
+      ? { scale: mood === "happy" || mood === "fire" ? [1, 1.1, 1] : 1 }
+      : mood === "happy" || mood === "fire"
+      ? { rotate: [0, -12, 12, -8, 0], scale: [1, 1.25, 1] }
+      : mood === "thinking"
+      ? { y: [0, -2, 0] }
+      : { scale: 1 };
+
+  return (
+    <motion.div
+      key={mood}
+      animate={animate}
+      transition={{ duration: 0.5 }}
+      className={`absolute top-3 right-3 ${sizeCls} flex items-center justify-center rounded-2xl bg-white/[0.06] border border-white/[0.08] backdrop-blur-sm`}
+    >
+      {face[mood]}
+    </motion.div>
+  );
+}
+
+// ───────────────────────────────────────────────────────────────────
+// Emoji burst — fixed-position particle effect on correct answer
+// ───────────────────────────────────────────────────────────────────
+function EmojiBurst({ x, y, tier }: { x: number; y: number; tier: AgeTier }) {
+  const emojis = tier === "teen" ? ["✨"] : tier === "junior" ? ["⭐", "✨", "🎉"] : ["🌟", "🎉", "⭐", "💫", "🎊"];
+  const particles = useMemo(
+    () =>
+      Array.from({ length: tier === "teen" ? 4 : tier === "junior" ? 8 : 12 }).map(() => ({
+        emoji: emojis[Math.floor(Math.random() * emojis.length)],
+        dx: (Math.random() - 0.5) * 200,
+        dy: -Math.random() * 180 - 40,
+        rot: (Math.random() - 0.5) * 360,
+        delay: Math.random() * 0.1,
+      })),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    []
+  );
+  return (
+    <div
+      className="fixed pointer-events-none z-50"
+      style={{ left: x, top: y }}
+    >
+      {particles.map((p, i) => (
+        <motion.span
+          key={i}
+          initial={{ x: 0, y: 0, opacity: 1, scale: 0.5, rotate: 0 }}
+          animate={{
+            x: p.dx,
+            y: p.dy,
+            opacity: 0,
+            scale: 1,
+            rotate: p.rot,
+          }}
+          transition={{ duration: 1, delay: p.delay, ease: "easeOut" }}
+          className="absolute text-xl"
+          style={{ left: -10, top: -10 }}
+        >
+          {p.emoji}
+        </motion.span>
+      ))}
+    </div>
+  );
+}
+
+// ───────────────────────────────────────────────────────────────────
+// Floating "+X XP" popup — bottom-right, drifts up and fades
+// ───────────────────────────────────────────────────────────────────
+function XpFloat({ amount }: { amount: number }) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 0, scale: 0.8 }}
+      animate={{ opacity: 1, y: -80, scale: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 1, ease: "easeOut" }}
+      className="fixed bottom-24 right-6 sm:bottom-12 z-40 pointer-events-none"
+    >
+      <div className="px-3 py-1.5 rounded-full bg-gradient-to-r from-indigo-500 to-purple-600 text-white text-sm font-bold shadow-xl shadow-indigo-500/30">
+        +{amount} XP
+      </div>
+    </motion.div>
+  );
+}
+
+// ───────────────────────────────────────────────────────────────────
+// Big confetti for the done screen
+// ───────────────────────────────────────────────────────────────────
+function ConfettiCelebration({ tier }: { tier: AgeTier }) {
+  const emojis = tier === "teen" ? ["✨", "⭐"] : tier === "junior" ? ["🎉", "✨", "⭐", "🌟"] : ["🎉", "🎊", "🌟", "⭐", "💫", "🎈"];
+  const count = tier === "teen" ? 16 : tier === "junior" ? 28 : 40;
+  const particles = useMemo(
+    () =>
+      Array.from({ length: count }).map(() => ({
+        emoji: emojis[Math.floor(Math.random() * emojis.length)],
+        left: Math.random() * 100,
+        delay: Math.random() * 0.8,
+        duration: 2 + Math.random() * 1.5,
+        rot: (Math.random() - 0.5) * 720,
+      })),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    []
+  );
+  return (
+    <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
+      {particles.map((p, i) => (
+        <motion.span
+          key={i}
+          initial={{ y: -40, opacity: 0, rotate: 0 }}
+          animate={{ y: "110vh", opacity: [0, 1, 1, 0], rotate: p.rot }}
+          transition={{ duration: p.duration, delay: p.delay, ease: "linear" }}
+          className="absolute text-2xl"
+          style={{ left: `${p.left}%` }}
+        >
+          {p.emoji}
+        </motion.span>
+      ))}
+    </div>
+  );
+}
+
+function StatBox({ label, value, tone }: { label: string; value: string; tone: string }) {
+  return (
+    <div className="text-center">
+      <div className="text-[10px] uppercase tracking-wider text-slate-500 mb-1">
+        {label}
+      </div>
+      <div className={`text-2xl sm:text-3xl font-bold tabular-nums ${tone}`}>{value}</div>
     </div>
   );
 }
