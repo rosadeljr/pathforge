@@ -267,6 +267,13 @@ export default function Dashboard() {
   const xpProgress = Math.min((profile.current_xp / xpForNextLevel) * 100, 100);
   const careerPath = CAREER_PATHS.find((p) => p.id === profile.selected_career_path_id);
 
+  // Levels remaining until the next rank up — fuels the "almost there" tease.
+  const RANK_THRESHOLDS: Array<[string, number]> = [
+    ["D", 5], ["C", 10], ["B", 20], ["A", 35], ["S", 55], ["SS", 75], ["SSS", 95],
+  ];
+  const nextRank = RANK_THRESHOLDS.find(([, threshold]) => level < threshold);
+  const levelsToNextRank = nextRank ? nextRank[1] - level : 0;
+
   const stats = [
     {
       label: "XP Total",
@@ -314,11 +321,26 @@ export default function Dashboard() {
           transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
           className="space-y-1"
         >
-          <p className="text-sm text-slate-400">
-            {greeting}, <span className="text-white font-medium">{username}</span>
-          </p>
+          <div className="flex items-center gap-2 text-sm text-slate-400 mb-1 flex-wrap">
+            <span>
+              {greeting}, <span className="text-white font-medium">{username}</span>
+            </span>
+            {profile.streak_count > 0 && (
+              <>
+                <span className="text-slate-600">·</span>
+                <span className="inline-flex items-center gap-1 text-amber-300 font-medium">
+                  <Flame size={12} />
+                  Day {profile.streak_count} streak
+                </span>
+              </>
+            )}
+          </div>
           <h1 className="text-3xl sm:text-4xl font-semibold tracking-tight">
-            Let's forge today.
+            {profile.total_xp === 0
+              ? "Time to forge your first quest."
+              : profile.streak_count >= 7
+              ? "Keep the streak alive."
+              : "Let's forge today."}
           </h1>
         </motion.div>
 
@@ -386,6 +408,19 @@ export default function Dashboard() {
                   </motion.div>
                 </div>
               </div>
+              {nextRank && (
+                <p className="text-xs text-slate-400 mt-3 inline-flex items-center gap-2 flex-wrap">
+                  <span
+                    className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md border text-[10px] font-bold tracking-wider ${RANK_COLORS[nextRank[0]].bg} ${RANK_COLORS[nextRank[0]].text}`}
+                  >
+                    {nextRank[0]}-RANK
+                  </span>
+                  <span>
+                    <span className="text-white font-semibold tabular-nums">{levelsToNextRank}</span>{" "}
+                    {levelsToNextRank === 1 ? "level" : "levels"} to unlock
+                  </span>
+                </p>
+              )}
             </div>
 
             {/* Right: Career path detail card */}
@@ -548,7 +583,7 @@ export default function Dashboard() {
           >
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-sm font-semibold text-slate-300 uppercase tracking-wider">
-                {profile.total_xp === 0 ? "Start here — your first quest" : "Your next quest"}
+                {profile.total_xp === 0 ? "Start here — your first quest" : "Today's focus"}
               </h3>
               <Link
                 href="/quests"
