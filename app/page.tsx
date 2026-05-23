@@ -14,6 +14,8 @@ import {
   Check,
   GraduationCap,
   ShieldCheck,
+  FileText,
+  Briefcase,
 } from "lucide-react";
 import { Logo } from "@/components/brand/Logo";
 import { PrimaryLinkButton } from "@/components/ui/PrimaryButton";
@@ -335,15 +337,15 @@ export default function Landing() {
                 accent: "#10b981",
               },
               {
-                icon: Globe2,
-                title: "Remote-First Roles",
-                description: "16 paths including VA, Copywriter, Customer Success — built for global remote work and freelance income.",
+                icon: FileText,
+                title: "Resume Builder",
+                description: "Auto-filled from your PathForge journey. ForgeBot polishes the summary and bullets. Export to PDF, share to LinkedIn.",
                 accent: "#06b6d4",
               },
               {
-                icon: Zap,
-                title: "Streak Engine",
-                description: "Daily streaks keep you consistent. Miss a day and lose momentum — keep it and compound.",
+                icon: Briefcase,
+                title: "Mock Interview · Elite",
+                description: "ForgeBot role-plays real interviews and grades your answers — the fastest way to feel interview-ready.",
                 accent: "#f59e0b",
               },
             ].map((feature, i) => (
