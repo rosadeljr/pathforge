@@ -1,20 +1,13 @@
 import { createClient } from "@/lib/supabase/server";
 import { createClient as createServiceClient } from "@supabase/supabase-js";
 import { NextResponse } from "next/server";
-import { generateMentorReply } from "@/lib/ai/smart-mentor";
 import { getEntitlements } from "@/lib/entitlements";
-import { CAREER_PATHS } from "@/lib/data/career-paths";
 
 /**
- * AI Mentor endpoint.
+ * AI Tutor endpoint — kids-only learning platform.
  *
- * Strategy:
- * - Always works, even without OPENAI_API_KEY.
- * - If OPENAI_API_KEY is set, uses GPT for free-form responses.
- * - If not (or OpenAI errors), falls back to smart pattern-matching
- *   that uses the user's actual context (career path, quests, level, streak).
- *
- * Never throws to the client. Always returns a usable reply.
+ * Routes by age tier (little / junior / teen) from the user's learner_grade.
+ * Falls back gracefully when OPENAI_API_KEY is missing.
  */
 export async function POST(request: Request) {
   try {
@@ -37,50 +30,18 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Message is required" }, { status: 400 });
     }
 
-    // Load context — use maybeSingle so missing profile doesn't crash
-    const [{ data: profile }, { data: activeQuests }, { count: completedCount }] = await Promise.all([
-      supabase
-        .from("profiles")
-        .select(
-          "current_level, total_xp, streak_count, readiness_score, selected_career_path_id, subscription_tier, user_mode, learner_grade, learner_subjects"
-        )
-        .eq("id", user.id)
-        .maybeSingle(),
-      supabase
-        .from("quests")
-        .select("title, difficulty, skill_tag")
-        .eq("user_id", user.id)
-        .eq("status", "active")
-        .order("difficulty", { ascending: true })
-        .limit(5),
-      supabase
-        .from("quests")
-        .select("id", { count: "exact", head: true })
-        .eq("user_id", user.id)
-        .eq("status", "completed"),
-    ]);
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select(
+        "current_level, total_xp, streak_count, subscription_tier, learner_grade, learner_subjects"
+      )
+      .eq("id", user.id)
+      .maybeSingle();
 
-    const ctx = {
-      level: profile?.current_level || 1,
-      totalXp: profile?.total_xp || 0,
-      streak: profile?.streak_count || 0,
-      readinessScore: profile?.readiness_score || 0,
-      selectedCareerPathId: profile?.selected_career_path_id || null,
-      activeQuests: (activeQuests || []).map((q: any) => ({
-        title: q.title,
-        difficulty: q.difficulty,
-        skill_tag: q.skill_tag,
-      })),
-      completedCount: completedCount || 0,
-    };
-
-    // Learner mode → student-safe tutor. Career mode → existing career coach.
-    const isLearner = profile?.user_mode === "learner";
     const learnerGrade: number | null = profile?.learner_grade ?? null;
     const learnerSubjects: string[] = Array.isArray(profile?.learner_subjects)
       ? profile.learner_subjects
       : [];
-    // Age tier shapes the tutor's voice and what they can discuss.
     const ageTier: "little" | "junior" | "teen" =
       !learnerGrade || learnerGrade <= 3
         ? "little"
@@ -88,7 +49,7 @@ export async function POST(request: Request) {
         ? "junior"
         : "teen";
 
-    // Free-tier daily message cap — Pro/Elite are unlimited.
+    // Free-tier daily message cap.
     const entitlements = getEntitlements(profile?.subscription_tier);
     if (entitlements.forgeBotDailyMessages !== -1) {
       const startOfDay = new Date();
@@ -103,22 +64,19 @@ export async function POST(request: Request) {
         return NextResponse.json(
           {
             error: "daily_limit",
-            message: `You've used today's ${entitlements.forgeBotDailyMessages} free ForgeBot messages. Upgrade to Pro for unlimited coaching.`,
+            message: `You've used today's ${entitlements.forgeBotDailyMessages} free tutor messages. Upgrade for unlimited learning.`,
           },
           { status: 429 }
         );
       }
     }
 
-    // Try OpenAI first if configured
     let aiReply: string | null = null;
     if (process.env.OPENAI_API_KEY) {
       try {
         const { OpenAI } = await import("openai");
         const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
-        // Conversation memory — pull the last ~14 turns so ForgeBot can follow
-        // up, reference what was said before, and feel like a real conversation.
         const { data: history } = await supabase
           .from("ai_messages")
           .select("role, content")
@@ -133,30 +91,14 @@ export async function POST(request: Request) {
             content: String(m.content).slice(0, 4000),
           }));
 
-        // Resolve UUID → human title so the model knows what path the user is on.
-        const careerPathTitle = ctx.selectedCareerPathId
-          ? CAREER_PATHS.find((p) => p.id === ctx.selectedCareerPathId)?.title ||
-            "not yet chosen"
-          : "not yet chosen";
-
-        const activeQuestList =
-          ctx.activeQuests
-            .map((q) =>
-              q.difficulty ? `${q.title} (${q.difficulty})` : q.title
-            )
-            .join(", ") || "none";
-
-        // ────────────────────────────────────────────────────────────────
-        // LEARNER PROMPTS — three age tiers (little / junior / teen)
-        // ────────────────────────────────────────────────────────────────
-        const littlePrompt = `You are a fun, warm tutor for a young child in PathForge — a learning app for Filipino students in Grades 1–3.
+        const littlePrompt = `You are ForgeBot — a fun, warm tutor for a young child in PathForge, a learning app for Filipino students in Grades 1–3.
 
 THE LEARNER:
 - Grade: ${learnerGrade ?? "not set yet"} (around age 6–9)
 - Subjects: ${learnerSubjects.length ? learnerSubjects.join(", ") : "all subjects"}
 
 YOUR STYLE:
-- VERY warm, gentle, and excited — like a kind ate or kuya playing with a younger sibling.
+- VERY warm, gentle, excited — like a kind ate or kuya playing with a younger sibling.
 - Use SHORT, simple words. 1–2 sentences per idea. Never long paragraphs.
 - Use emojis sparingly (1 per reply) and only when they help.
 - Celebrate every try: "Great try!" "You're learning!" Never make them feel bad.
@@ -175,7 +117,7 @@ SAFETY (very strict for this age):
 
 End with a small question or a happy "You got this! 🌟"`;
 
-        const juniorPrompt = `You are a friendly tutor in PathForge — a learning app for Filipino students in Grades 4–7. The student is roughly 10–13 years old.
+        const juniorPrompt = `You are ForgeBot — a friendly tutor in PathForge, a learning app for Filipino students in Grades 4–7. The student is roughly 10–13 years old.
 
 THE LEARNER:
 - Grade: ${learnerGrade ?? "not set yet"} (around age 10–13)
@@ -199,7 +141,7 @@ SAFETY:
 
 Keep replies focused — about 2–5 sentences unless they ask for a deeper explanation.`;
 
-        const teenPrompt = `You are a sharp, supportive academic tutor in PathForge for a Filipino senior high student (Grades 8–12, ages 14–18). You can dive deep on subjects, help with college prep, and discuss careers when it comes up.
+        const teenPrompt = `You are ForgeBot — a sharp, supportive academic tutor in PathForge for a Filipino senior high student (Grades 8–12, ages 14–18). You can dive deep on subjects, help with college prep, and discuss what different careers actually look like when it comes up.
 
 THE STUDENT:
 - Grade: ${learnerGrade ?? "not set yet"} (around age 14–18)
@@ -214,47 +156,22 @@ YOUR STYLE:
 HELP WITH:
 - Subject mastery: algebra → trigonometry → pre-calculus → calculus basics; literature, essay writing, rhetoric; physics, chemistry, biology basics; economics, civics, PH and world history.
 - College prep: essay writing, study strategies, dealing with academic stress.
-- Career exploration: it's okay to discuss tracks (STEM, ABM, HUMSS, etc.), college options, and what different careers actually look like day-to-day.
+- Career exploration: discuss tracks (STEM, ABM, HUMSS, etc.), college options, what different careers actually look like day-to-day.
 - For technical / academic questions, be precise and detailed. Code blocks, formulas, step-by-step proofs — bring it.
 
-SAFETY GUARDRAILS (still apply, just calibrated for older teens):
+SAFETY GUARDRAILS (still apply, calibrated for older teens):
 - No graphic violence, no sexual content, no instructions for self-harm or harming others, no drugs/alcohol promotion.
-- For sensitive personal topics (mental health, family stress, identity questions), respond with care, validate them, and gently point to trusted adults or professionals (school counselor, parents, mental-health resources in PH like NCMH 1553).
+- For sensitive personal topics (mental health, family stress, identity questions), respond with care, validate them, and gently point to trusted adults or professionals (school counselor, parents, PH mental-health resources like NCMH 1553).
 - Never share personal info about real people. Never pretend to be a real human.
 
-Match length to the question — short for quick clarifications, deep when they need it. End with a thoughtful follow-up only when it fits.`;
+Match length to the question — short for quick clarifications, deep when they need it.`;
 
-        const learnerPrompt =
+        const systemPrompt =
           ageTier === "little"
             ? littlePrompt
             : ageTier === "junior"
             ? juniorPrompt
             : teenPrompt;
-
-        const careerPrompt = `You are ForgeBot — PathForge's AI career coach AND a knowledgeable mentor on anything that helps the user grow. You can help across career strategy, learning, technical concepts, life advice, and motivation. You know this user's journey from PathForge.
-
-THE USER:
-- Level ${ctx.level} · ${ctx.totalXp.toLocaleString()} XP · ${ctx.streak}-day streak · Readiness ${ctx.readinessScore}%
-- Career path: ${careerPathTitle}
-- Active quests: ${activeQuestList}
-- Completed quests: ${ctx.completedCount}
-
-YOUR STYLE:
-- Warm, direct, specific — like the friend who's actually been there.
-- Refer to yourself as "ForgeBot" if needed. Never say "as an AI" or "I'm just an AI."
-- No corporate-speak, no generic motivational fluff, no excessive hedging.
-
-HOW TO ANSWER:
-- Match length to the question. Quick questions → short replies (1–3 sentences). Deep questions (technical, learning, career decisions, life advice) → as detailed as needed. Include examples, step-by-step instructions, or code in markdown code blocks when useful.
-- For technical/learning questions, explain accurately and substantively — don't dumb it down. Use the user's level and path to calibrate how much foundation they need.
-- For career questions, be specific and actionable. When it fits, suggest one concrete next action.
-- For "stuck" or motivation moments, be real and warm. No empty cheerleading.
-- For off-topic questions, still help if you reasonably can. Gentle redirects only if it's completely unrelated.
-- Reference the conversation history naturally — follow up, build on prior turns, don't repeat yourself.
-
-You're a coach, a mentor, AND a tutor. Don't hide knowledge behind brevity.`;
-
-        const systemPrompt = isLearner ? learnerPrompt : careerPrompt;
 
         const completion = await openai.chat.completions.create({
           model: "gpt-4o",
@@ -263,15 +180,8 @@ You're a coach, a mentor, AND a tutor. Don't hide knowledge behind brevity.`;
             ...priorTurns,
             { role: "user", content: message },
           ],
-          temperature: isLearner ? (ageTier === "little" ? 0.5 : 0.65) : 0.7,
-          // Little kids: short. Tweens: moderate. Teens: full depth.
-          max_tokens: !isLearner
-            ? 900
-            : ageTier === "little"
-            ? 280
-            : ageTier === "junior"
-            ? 500
-            : 900,
+          temperature: ageTier === "little" ? 0.5 : 0.65,
+          max_tokens: ageTier === "little" ? 280 : ageTier === "junior" ? 500 : 900,
         });
 
         aiReply = completion.choices[0]?.message?.content?.trim() || null;
@@ -280,12 +190,16 @@ You're a coach, a mentor, AND a tutor. Don't hide knowledge behind brevity.`;
       }
     }
 
-    // Fallback to smart mentor if OpenAI not available or failed
-    const smart = generateMentorReply(message, ctx);
-    const reply = aiReply || smart.reply;
-    const suggestedActions = smart.suggestedActions;
+    // Simple fallback when OpenAI isn't available.
+    const reply =
+      aiReply ||
+      (ageTier === "little"
+        ? "Hi friend! I'm having a tiny glitch. Let's try again in a moment! 🌟"
+        : ageTier === "junior"
+        ? "I'm having trouble connecting right now. Try refreshing, or jump back to your lessons — I'll be here when you return."
+        : "I'm having trouble connecting right now. Try refreshing, or jump back to your lessons and come back in a minute.");
 
-    // Save messages (non-fatal — never block the response)
+    // Save messages (non-fatal)
     try {
       await supabase.from("ai_messages").insert([
         { user_id: user.id, role: "user", content: message },
@@ -295,14 +209,13 @@ You're a coach, a mentor, AND a tutor. Don't hide knowledge behind brevity.`;
       console.warn("[ai-mentor] Save failed (non-fatal):", saveErr);
     }
 
-    return NextResponse.json({ reply, suggestedActions });
+    return NextResponse.json({ reply, suggestedActions: [] });
   } catch (error: any) {
     console.error("[ai-mentor] Unexpected error:", error);
-    // Last-resort fallback — even an unexpected error returns something useful
     return NextResponse.json({
       reply:
-        "I'm having trouble right now. Try refreshing, or check your Quests page for what to work on next — that's usually the right move.",
-      suggestedActions: ["Refresh and try again", "Go to quests"],
+        "I'm having a little trouble right now. Try refreshing the page or come back in a minute!",
+      suggestedActions: [],
     });
   }
 }
@@ -335,7 +248,7 @@ export async function GET(_request: Request) {
   }
 }
 
-/** Clear the signed-in user's entire ForgeBot conversation history. */
+/** Clear the signed-in user's entire tutor conversation history. */
 export async function DELETE() {
   try {
     const supabase = await createClient();
@@ -353,8 +266,6 @@ export async function DELETE() {
       );
     }
 
-    // Service-role client — ai_messages has no DELETE RLS policy by design;
-    // the delete is scoped to the verified user's own rows.
     const admin = createServiceClient(url, serviceKey);
     const { error } = await admin
       .from("ai_messages")

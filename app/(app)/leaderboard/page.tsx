@@ -166,13 +166,13 @@ export default function Leaderboard() {
             <Sparkles size={15} className="text-amber-300 flex-shrink-0 mt-0.5" />
             <div className="flex-1 text-sm">
               <p className="text-amber-100/90 mb-2">
-                Pick a career path to join its leaderboard and be ranked.
+                Set your grade to join the leaderboard and be ranked.
               </p>
               <Link
-                href="/onboarding"
+                href="/learn/setup"
                 className="inline-flex items-center gap-1.5 text-xs font-semibold text-amber-200 hover:text-white transition-colors"
               >
-                Choose your path
+                Set up
                 <ArrowRight size={12} />
               </Link>
             </div>
@@ -343,13 +343,13 @@ export default function Leaderboard() {
             <Sparkles size={18} className="text-amber-300 mx-auto mb-2" />
             <h3 className="text-base font-semibold mb-1">Want to climb?</h3>
             <p className="text-sm text-slate-400 max-w-md mx-auto mb-4">
-              Complete quests, build streaks, unlock achievements. The leaderboard updates as you forge.
+              Complete lessons, build streaks, unlock achievements. The leaderboard updates as you learn.
             </p>
             <Link
-              href="/quests"
+              href="/learn"
               className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-white text-slate-900 text-sm font-semibold hover:bg-slate-100 transition-colors"
             >
-              Start questing
+              Open lessons
               <ArrowRight size={14} />
             </Link>
           </div>

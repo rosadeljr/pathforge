@@ -143,7 +143,7 @@ export default function PricingPage() {
   const handleSelect = async (planName: string) => {
     // Free always goes to signup (if not auth'd) or dashboard (if auth'd)
     if (planName === "Free") {
-      router.push(authenticated ? "/dashboard" : "/signup");
+      router.push(authenticated ? "/learn" : "/signup");
       return;
     }
 
@@ -160,7 +160,7 @@ export default function PricingPage() {
 
   // CTA label changes based on auth state
   const ctaLabel = (plan: { name: string; cta: string }): string => {
-    if (plan.name === "Free") return authenticated ? "Open dashboard" : plan.cta;
+    if (plan.name === "Free") return authenticated ? "Open lessons" : plan.cta;
     if (authenticated === null) return plan.cta;
     return authenticated ? plan.cta : "Sign up to upgrade";
   };
@@ -195,11 +195,11 @@ export default function PricingPage() {
           <div className="flex items-center gap-2 flex-shrink-0">
             {authenticated ? (
               <Link
-                href="/dashboard"
+                href="/learn"
                 className="inline-flex items-center gap-1.5 text-xs sm:text-sm text-slate-300 hover:text-white px-2 sm:px-3 py-1.5 transition-colors"
               >
                 <ArrowLeft size={12} />
-                Dashboard
+                My lessons
               </Link>
             ) : (
               <>
@@ -424,7 +424,7 @@ export default function PricingPage() {
               <p className="text-base text-slate-400 mb-8 max-w-md mx-auto">
                 Start free. Upgrade only when PathForge becomes your secret weapon.
               </p>
-              <PrimaryLinkButton href={authenticated ? "/dashboard" : "/signup"} size="lg">
+              <PrimaryLinkButton href={authenticated ? "/learn" : "/signup"} size="lg">
                 {authenticated ? "Open dashboard" : "Create your account"}
                 <ArrowRight size={14} />
               </PrimaryLinkButton>

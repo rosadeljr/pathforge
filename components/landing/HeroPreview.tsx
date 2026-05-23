@@ -67,7 +67,7 @@ export function HeroPreview() {
           </div>
           <div className="mx-auto inline-flex items-center gap-1.5 px-3 py-0.5 rounded-md bg-white/[0.04] border border-white/[0.06]">
             <div className="w-2 h-2 rounded-sm bg-emerald-400/60" />
-            <span className="text-[10px] text-slate-400 font-mono">pathforger.app/dashboard</span>
+            <span className="text-[10px] text-slate-400 font-mono">pathforger.app/learn</span>
           </div>
         </div>
 

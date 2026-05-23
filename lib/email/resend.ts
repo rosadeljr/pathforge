@@ -137,9 +137,9 @@ export async function sendPaymentApprovedEmail(
         <strong style="color:#e2e8f0;">${tier.toUpperCase()}</strong> plan is now active.
         Every premium feature is unlocked.
       </p>
-      <a href="${appUrl}/dashboard"
+      <a href="${appUrl}/learn"
          style="display:inline-block;background:#fff;color:#0a0a0f;font-size:13px;font-weight:600;text-decoration:none;padding:10px 18px;border-radius:8px;">
-        Open your dashboard →
+        Open your lessons →
       </a>`;
 
     const { error } = await resend.emails.send({
@@ -223,20 +223,19 @@ export async function sendReengagementEmail(
     const inner = `
       <h1 style="margin:0 0 4px;font-size:18px;font-weight:600;color:#fff;">ForgeBot misses you 👋</h1>
       <p style="margin:0 0 14px;font-size:13px;color:#94a3b8;line-height:1.6;">
-        Hi ${userName} — it's been ${daysAway} days. You were building real momentum
-        on your career path, and the forgers who get hired are the ones who keep
-        showing up.
+        Hi ${userName} — it's been ${daysAway} days. You were building real
+        momentum, and the learners who level up are the ones who keep showing up.
       </p>
       <p style="margin:0 0 18px;font-size:13px;color:#94a3b8;line-height:1.6;">
-        You don't need a big session. One quest. Fifteen minutes. That's how the
+        You don't need a big session. One lesson. Ten minutes. That's how the
         climb compounds.
       </p>
-      <a href="${appUrl}/dashboard"
+      <a href="${appUrl}/learn"
          style="display:inline-block;background:#fff;color:#0a0a0f;font-size:13px;font-weight:600;text-decoration:none;padding:10px 18px;border-radius:8px;">
         Pick up where you left off →
       </a>
       <p style="margin:18px 0 0;font-size:11px;color:#64748b;">
-        — ForgeBot, your PathForge career coach
+        — ForgeBot, your PathForge tutor
       </p>`;
 
     const { error } = await resend.emails.send({

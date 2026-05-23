@@ -7,10 +7,6 @@ import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { Logo } from "@/components/brand/Logo";
 import {
-  LayoutDashboard,
-  Swords,
-  Compass,
-  Trophy,
   Bot,
   Crown,
   Settings as SettingsIcon,
@@ -18,9 +14,6 @@ import {
   Sparkles,
   Sun,
   Moon,
-  GraduationCap,
-  FileText,
-  Briefcase,
   Home,
   Users,
 } from "lucide-react";
@@ -34,39 +27,11 @@ interface Profile {
   total_xp: number;
   streak_count: number;
   is_admin?: boolean;
-  user_mode?: "career" | "learner" | null;
   learner_grade?: number | null;
 }
 
+// One nav for everyone — this is a kids' learning app.
 const navLinks = [
-  { icon: LayoutDashboard, label: "Dashboard", href: "/dashboard", description: "Your command center" },
-  { icon: Swords, label: "Quests", href: "/quests", description: "Daily missions" },
-  { icon: Compass, label: "Roadmap", href: "/roadmap", description: "Your career path" },
-  { icon: GraduationCap, label: "Academy", href: "/academy", description: "Your certifications" },
-  { icon: Bot, label: "ForgeBot", href: "/mentor", description: "Talk to your mentor" },
-  { icon: Trophy, label: "Portfolio", href: "/portfolio", description: "Show your work" },
-  { icon: FileText, label: "Resume", href: "/resume", description: "Build your resume" },
-  { icon: Briefcase, label: "Mock Interview", href: "/mock-interview", description: "Practice with ForgeBot" },
-  { icon: Users, label: "Friends", href: "/friends", description: "Your forger crew" },
-  { icon: Sparkles, label: "Achievements", href: "/achievements", description: "Your trophies" },
-  { icon: Crown, label: "Leaderboard", href: "/leaderboard", description: "Top forgers" },
-  { icon: SettingsIcon, label: "Settings", href: "/settings", description: "Preferences" },
-];
-
-// Mobile bottom nav shows the 5 most-used routes
-const mobileNavLinks = [
-  { icon: LayoutDashboard, label: "Home", href: "/dashboard" },
-  { icon: Swords, label: "Quests", href: "/quests" },
-  { icon: Bot, label: "ForgeBot", href: "/mentor" },
-  { icon: GraduationCap, label: "Academy", href: "/academy" },
-  { icon: Trophy, label: "Portfolio", href: "/portfolio" },
-  { icon: FileText, label: "Resume", href: "/resume" },
-  { icon: SettingsIcon, label: "Settings", href: "/settings" },
-];
-
-// Learner-mode navigation — student-friendly, no career stuff.
-// Same shape for ages 6–18, but labels adapt to age tier (see below).
-const learnerNavLinks = [
   { icon: Home, label: "Home", href: "/learn", description: "Today's learning" },
   { icon: Bot, label: "Tutor", href: "/mentor", description: "Ask the tutor anything" },
   { icon: Users, label: "Friends", href: "/friends", description: "Your study crew" },
@@ -75,7 +40,7 @@ const learnerNavLinks = [
   { icon: SettingsIcon, label: "Settings", href: "/settings", description: "Preferences" },
 ];
 
-const learnerMobileNavLinks = [
+const mobileNavLinks = [
   { icon: Home, label: "Home", href: "/learn" },
   { icon: Bot, label: "Tutor", href: "/mentor" },
   { icon: Users, label: "Friends", href: "/friends" },
@@ -83,8 +48,8 @@ const learnerMobileNavLinks = [
   { icon: Crown, label: "Ranks", href: "/leaderboard" },
 ];
 
-// Onboarding + welcome don't show the sidebar
-const FULLSCREEN_ROUTES = ["/onboarding", "/welcome", "/learn/setup"];
+// Setup flow is the only fullscreen route now (no sidebar).
+const FULLSCREEN_ROUTES = ["/learn/setup"];
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -92,7 +57,6 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const [authState, setAuthState] = useState<"loading" | "authenticated" | "unauthenticated">("loading");
   const [profile, setProfile] = useState<Profile | null>(null);
 
-  // createClient() is now a singleton — same instance across renders
   const supabase = createClient();
   const { theme, toggle: toggleTheme } = useTheme();
 
@@ -101,7 +65,6 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     let mounted = true;
 
-    // Initial session check
     supabase.auth.getSession().then(async ({ data: { session } }) => {
       if (!mounted) return;
       if (!session?.user) {
@@ -116,17 +79,24 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       const { data: existing } = await supabase
         .from("profiles")
         .select(
-          "username, current_level, current_xp, total_xp, streak_count, is_admin, user_mode, learner_grade"
+          "username, current_level, current_xp, total_xp, streak_count, is_admin, learner_grade, user_mode"
         )
         .eq("id", userId)
         .maybeSingle();
 
       if (existing) {
+        // Migrate any leftover non-learner accounts on the fly — single-track app now.
+        if ((existing as any).user_mode !== "learner") {
+          await supabase
+            .from("profiles")
+            .update({ user_mode: "learner" })
+            .eq("id", userId);
+        }
         if (mounted) setProfile(existing as Profile);
         return;
       }
 
-      // Self-heal: create profile if missing
+      // Self-heal: create profile if missing — defaults to learner mode.
       const meta = session.user.user_metadata as any;
       const fallbackUsername =
         meta?.username ||
@@ -139,15 +109,15 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           email: session.user.email,
           username: fallbackUsername,
           full_name: meta?.full_name || null,
+          user_mode: "learner",
         })
         .select(
-          "username, current_level, current_xp, total_xp, streak_count, is_admin, user_mode, learner_grade"
+          "username, current_level, current_xp, total_xp, streak_count, is_admin, learner_grade"
         )
         .single();
       if (mounted && created) setProfile(created as Profile);
     });
 
-    // Subscribe to auth changes (handles login/logout/token refresh reliably)
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (!mounted) return;
       if (session?.user) {
@@ -164,60 +134,34 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     };
   }, [supabase]);
 
-  // Redirect to login only AFTER we know the user is unauthenticated
-  // (not during the initial loading state)
+  // Redirect unauthenticated users to login
   useEffect(() => {
     if (authState === "unauthenticated") {
       router.replace("/login");
     }
   }, [authState, router]);
 
-  // Learner mode → apply student-friendly visual layer by setting
-  // [data-mode="learner"] on <html>. The age tier (little/junior/teen)
-  // drives sub-variants for tone:
-  //   - little (G1–3): brightest, biggest, most playful (force light)
-  //   - junior (G4–7): balanced, friendly (force light)
-  //   - teen (G8–12):  mature study UI, respects user's theme choice
+  // Apply kid-friendly visual theme via [data-mode="learner"] + [data-age-tier].
   useEffect(() => {
     if (typeof document === "undefined") return;
-    if (profile?.user_mode === "learner") {
-      const tier = ageTierForGrade(profile?.learner_grade);
-      document.documentElement.setAttribute("data-mode", "learner");
-      document.documentElement.setAttribute("data-age-tier", tier);
-      // Teen learners can keep their dark/light pick; younger get forced light.
-      if (tier !== "teen") {
-        document.documentElement.setAttribute("data-theme", "light");
-      }
-    } else {
-      document.documentElement.removeAttribute("data-mode");
-      document.documentElement.removeAttribute("data-age-tier");
+    const tier = ageTierForGrade(profile?.learner_grade);
+    document.documentElement.setAttribute("data-mode", "learner");
+    document.documentElement.setAttribute("data-age-tier", tier);
+    // Little/Junior get forced light theme; teens can keep their pick.
+    if (tier !== "teen") {
+      document.documentElement.setAttribute("data-theme", "light");
     }
     return () => {
       document.documentElement.removeAttribute("data-mode");
       document.documentElement.removeAttribute("data-age-tier");
     };
-  }, [profile?.user_mode, profile?.learner_grade]);
+  }, [profile?.learner_grade]);
 
-  // Route users to the right experience based on their picked mode.
+  // Route new learners (or any leftover users without a grade) to setup.
   useEffect(() => {
     if (authState !== "authenticated" || !profile || !pathname) return;
     const onFullscreen = FULLSCREEN_ROUTES.some((r) => pathname.startsWith(r));
-    // Hasn't picked yet → mode-selector welcome screen.
-    if (profile.user_mode == null && !onFullscreen) {
-      router.replace("/welcome");
-      return;
-    }
-    // Learners landing on the career dashboard get bounced to /learn.
-    if (profile.user_mode === "learner" && pathname === "/dashboard") {
-      router.replace("/learn");
-      return;
-    }
-    // Learner without grade picked → setup flow.
-    if (
-      profile.user_mode === "learner" &&
-      profile.learner_grade == null &&
-      !onFullscreen
-    ) {
+    if (profile.learner_grade == null && !onFullscreen) {
       router.replace("/learn/setup");
     }
   }, [authState, profile, pathname, router]);
@@ -229,7 +173,6 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
   const authenticated = authState === "authenticated";
 
-  // Show shimmer during initial auth check
   if (authState === "loading") {
     return (
       <div className="min-h-screen bg-[#0a0a0f] flex items-center justify-center">
@@ -238,7 +181,6 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     );
   }
 
-  // Show redirect-in-progress state instead of flashing unauthenticated content
   if (authState === "unauthenticated") {
     return (
       <div className="min-h-screen bg-[#0a0a0f] flex items-center justify-center">
@@ -250,20 +192,19 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     );
   }
 
-  // Fullscreen routes (like onboarding) skip the sidebar
   if (isFullscreen) {
     return <>{children}</>;
   }
 
   const level = profile?.current_level ?? 1;
   const xp = profile?.current_xp ?? 0;
-  const xpForNextLevel = level * 1000; // simple formula
+  const xpForNextLevel = level * 1000;
   const xpProgress = Math.min((xp / xpForNextLevel) * 100, 100);
-  const username = profile?.username ?? "Hunter";
+  const username = profile?.username ?? "Friend";
   const initials = username.slice(0, 2).toUpperCase();
-  const isLearner = profile?.user_mode === "learner";
-  const activeNavLinks = isLearner ? learnerNavLinks : navLinks;
-  const activeMobileNavLinks = isLearner ? learnerMobileNavLinks : mobileNavLinks;
+  const tier = ageTierForGrade(profile?.learner_grade);
+  const isLittle = tier === "little";
+  const isTeen = tier === "teen";
 
   return (
     <div className="min-h-screen bg-[#0a0a0f] text-white">
@@ -283,13 +224,12 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       {authenticated && (
         <div className="md:hidden sticky top-0 z-40 bg-[#0a0a0f]/80 backdrop-blur-xl border-b border-white/[0.06]">
           <div className="px-4 h-14 flex items-center justify-between">
-            <Link href="/dashboard" className="flex items-center gap-2">
+            <Link href="/learn" className="flex items-center gap-2">
               <Logo size={28} />
               <span className="font-semibold tracking-tight">PathForge</span>
             </Link>
-            {/* Compact level pill */}
             <Link
-              href="/dashboard"
+              href="/learn"
               className="flex items-center gap-2 px-2.5 py-1 rounded-lg bg-white/[0.04] border border-white/[0.06]"
             >
               <div className="w-5 h-5 rounded-md bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-[10px] font-bold">
@@ -300,7 +240,6 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
               </span>
             </Link>
           </div>
-          {/* Mobile XP progress bar */}
           <div className="h-0.5 bg-white/[0.04]">
             <div
               className="h-full bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 transition-all"
@@ -314,15 +253,13 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         {/* Desktop Sidebar */}
         {authenticated && (
           <aside className="hidden md:flex md:w-64 lg:w-72 flex-col fixed inset-y-0 left-0 z-30 border-r border-white/[0.06] bg-[#0a0a0f]/80 backdrop-blur-xl">
-            {/* Logo */}
             <div className="px-6 py-6 border-b border-white/[0.06]">
-              <Link href="/dashboard" className="flex items-center gap-2.5 group">
+              <Link href="/learn" className="flex items-center gap-2.5 group">
                 <Logo size={32} />
                 <span className="text-base font-semibold tracking-tight">PathForge</span>
               </Link>
             </div>
 
-            {/* User Level Card */}
             <div className="px-4 pt-4">
               <div className="p-3 rounded-xl bg-gradient-to-br from-white/[0.04] to-transparent border border-white/[0.06]">
                 <div className="flex items-center gap-3 mb-3">
@@ -337,12 +274,11 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                   <div className="flex-1 min-w-0">
                     <div className="text-sm font-semibold truncate">{username}</div>
                     <div className="text-[10px] text-slate-500 uppercase tracking-wider">
-                      Level {level}
+                      {isLittle ? "Little Forger" : isTeen ? "Teen Forger" : "Junior Forger"} · Lv {level}
                     </div>
                   </div>
                 </div>
 
-                {/* XP bar */}
                 <div className="space-y-1.5">
                   <div className="flex items-center justify-between text-[10px]">
                     <span className="text-slate-400">XP</span>
@@ -368,12 +304,11 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
               </div>
             </div>
 
-            {/* Navigation */}
             <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
               <div className="px-3 mb-2 text-[10px] uppercase tracking-wider text-slate-500 font-semibold">
                 Menu
               </div>
-              {activeNavLinks.map(({ icon: Icon, label, href }) => {
+              {navLinks.map(({ icon: Icon, label, href }) => {
                 const isActive = pathname === href;
                 return (
                   <Link
@@ -398,7 +333,6 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
               })}
             </nav>
 
-            {/* Footer */}
             <div className="px-3 py-4 border-t border-white/[0.06] space-y-0.5">
               {profile?.is_admin && (
                 <Link
@@ -412,8 +346,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                   </span>
                 </Link>
               )}
-              {/* Theme toggle — hidden in learner mode (force light + kid theme). */}
-              {!isLearner && (
+              {/* Theme toggle — only for teens; little/junior tiers stay light. */}
+              {isTeen && (
                 <button
                   onClick={toggleTheme}
                   className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-slate-400 hover:bg-white/[0.03] hover:text-white transition-all"
@@ -440,7 +374,6 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           </aside>
         )}
 
-        {/* Main content */}
         <main className={`flex-1 ${authenticated ? "md:ml-64 lg:ml-72" : ""} min-w-0 pb-20 md:pb-0`}>
           {children}
         </main>
@@ -453,13 +386,12 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
         >
           <div className="flex items-stretch justify-around h-16 px-1">
-            {activeMobileNavLinks.map(({ icon: Icon, label, href }) => {
+            {mobileNavLinks.map(({ icon: Icon, label, href }) => {
               const isActive = pathname === href;
               return (
                 <Link
                   key={href}
                   href={href}
-                  // 44px minimum touch target via py-2.5 + flex content height
                   className="relative flex-1 flex flex-col items-center justify-center gap-0.5 py-2 min-h-[44px] group active:bg-white/[0.04] transition-colors rounded-lg"
                 >
                   {isActive && (

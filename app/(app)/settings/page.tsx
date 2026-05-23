@@ -24,7 +24,7 @@ import {
   Moon,
 } from "lucide-react";
 import Link from "next/link";
-import { CAREER_PATHS, formatPhp } from "@/lib/data/career-paths";
+import { SUBJECTS, gradeLabel } from "@/lib/data/learner";
 import { PageShimmer } from "@/components/ui/Shimmer";
 import { isSoundEnabled, setSoundEnabled } from "@/lib/effects/celebration";
 import { useTheme } from "@/components/theme/ThemeProvider";
@@ -36,17 +36,10 @@ interface Profile {
   username: string | null;
   email: string | null;
   full_name: string | null;
-  selected_career_path_id: string | null;
-  target_salary_min: number | null;
-  target_salary_max: number | null;
-  target_timeline_months: number | null;
-  weekly_availability_hours: number | null;
-  primary_goal: string | null;
+  learner_grade: number | null;
+  learner_subjects: string[] | null;
   subscription_tier: string | null;
-  career_path_changes_count: number | null;
 }
-
-const MAX_CAREER_CHANGES = 3;
 
 export default function Settings() {
   const [profile, setProfile] = useState<Profile | null>(null);
@@ -130,9 +123,11 @@ export default function Settings() {
 
   if (!profile) return null;
 
-  const careerPath = CAREER_PATHS.find((p) => p.id === profile.selected_career_path_id);
   const tier = profile.subscription_tier || "free";
   const isPro = tier === "pro";
+  const pickedSubjects = (profile.learner_subjects || [])
+    .map((id) => SUBJECTS.find((s) => s.id === id))
+    .filter(Boolean) as typeof SUBJECTS;
 
   return (
     <div className="min-h-screen pb-12">
@@ -224,7 +219,7 @@ export default function Settings() {
           </div>
         </motion.section>
 
-        {/* Career Goals */}
+        {/* Learning Setup */}
         <motion.section
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
@@ -233,83 +228,54 @@ export default function Settings() {
         >
           <div className="px-6 py-4 border-b border-white/[0.06] flex items-center gap-2">
             <Target size={14} className="text-slate-400" />
-            <h2 className="text-sm font-semibold uppercase tracking-wider text-slate-300">Career Goals</h2>
+            <h2 className="text-sm font-semibold uppercase tracking-wider text-slate-300">Learning</h2>
           </div>
           <div className="p-6 space-y-4">
-            {careerPath ? (
-              <div className="flex items-center gap-3 p-3 rounded-xl bg-white/[0.02] border border-white/[0.06]">
-                <div
-                  className={`w-11 h-11 rounded-xl bg-gradient-to-br ${careerPath.gradient} flex items-center justify-center text-xl`}
-                  style={{ boxShadow: `0 8px 24px ${careerPath.accentColor}30` }}
-                >
-                  {careerPath.emoji}
-                </div>
-                <div className="flex-1">
-                  <div className="text-sm font-semibold">{careerPath.title}</div>
-                  <div className="text-xs text-slate-400">{careerPath.tagline}</div>
-                </div>
+            {/* Grade */}
+            <div className="flex items-center gap-3 p-3 rounded-xl bg-white/[0.02] border border-white/[0.06]">
+              <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-base font-bold text-white">
+                {profile.learner_grade ?? "—"}
               </div>
-            ) : (
-              <div className="text-sm text-slate-400">No career path selected.</div>
-            )}
-
-            <div className="grid grid-cols-2 gap-3">
-              <div className="p-3 rounded-xl bg-white/[0.02] border border-white/[0.06]">
-                <div className="text-[10px] uppercase tracking-wider text-slate-500 mb-1">
-                  Target salary
-                </div>
-                <div className="text-sm font-semibold tabular-nums">
-                  {profile.target_salary_min && profile.target_salary_max
-                    ? `${formatPhp(profile.target_salary_min)} – ${formatPhp(profile.target_salary_max)} /yr`
-                    : "Not set"}
-                </div>
-              </div>
-              <div className="p-3 rounded-xl bg-white/[0.02] border border-white/[0.06]">
-                <div className="text-[10px] uppercase tracking-wider text-slate-500 mb-1">
-                  Timeline
-                </div>
+              <div className="flex-1">
                 <div className="text-sm font-semibold">
-                  {profile.target_timeline_months ? `${profile.target_timeline_months} months` : "Not set"}
+                  {profile.learner_grade ? gradeLabel(profile.learner_grade) : "Grade not set"}
                 </div>
-              </div>
-              <div className="p-3 rounded-xl bg-white/[0.02] border border-white/[0.06]">
-                <div className="text-[10px] uppercase tracking-wider text-slate-500 mb-1">
-                  Weekly hours
-                </div>
-                <div className="text-sm font-semibold">
-                  {profile.weekly_availability_hours ? `${profile.weekly_availability_hours}h` : "Not set"}
-                </div>
-              </div>
-              <div className="p-3 rounded-xl bg-white/[0.02] border border-white/[0.06]">
-                <div className="text-[10px] uppercase tracking-wider text-slate-500 mb-1">
-                  Primary goal
-                </div>
-                <div className="text-sm font-semibold capitalize">
-                  {profile.primary_goal?.replace(/_/g, " ") || "Not set"}
+                <div className="text-xs text-slate-400">
+                  Lessons are matched to this grade
                 </div>
               </div>
             </div>
 
-            <div className="flex items-center justify-between gap-3 pt-2 border-t border-white/[0.06] flex-wrap">
-              <div className="text-xs text-slate-500">
-                {(() => {
-                  const used = profile.career_path_changes_count || 0;
-                  const remaining = MAX_CAREER_CHANGES - used;
-                  if (remaining > 0) {
-                    return `${remaining} of ${MAX_CAREER_CHANGES} path changes remaining`;
-                  }
-                  return "You've used all your path changes";
-                })()}
+            {/* Subjects */}
+            <div>
+              <div className="text-[10px] uppercase tracking-wider text-slate-500 mb-2 font-semibold">
+                Picked subjects
               </div>
+              {pickedSubjects.length > 0 ? (
+                <div className="flex flex-wrap gap-2">
+                  {pickedSubjects.map((s) => (
+                    <div
+                      key={s.id}
+                      className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white/[0.03] border border-white/[0.08] text-sm"
+                    >
+                      <span>{s.emoji}</span>
+                      <span className="font-medium">{s.title}</span>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-sm text-slate-400">
+                  You'll see all subjects until you pick favorites.
+                </div>
+              )}
+            </div>
+
+            <div className="flex items-center justify-end pt-2 border-t border-white/[0.06]">
               <Link
-                href="/onboarding"
-                className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
-                  (profile.career_path_changes_count || 0) < MAX_CAREER_CHANGES
-                    ? "bg-white/[0.04] border border-white/[0.08] text-slate-300 hover:bg-white/[0.06] hover:text-white"
-                    : "border border-white/[0.04] text-slate-600 cursor-not-allowed pointer-events-none"
-                }`}
+                href="/learn/setup"
+                className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors bg-white/[0.04] border border-white/[0.08] text-slate-300 hover:bg-white/[0.06] hover:text-white"
               >
-                Change career path
+                Change grade or subjects
                 <ArrowRight size={11} />
               </Link>
             </div>
@@ -343,7 +309,7 @@ export default function Settings() {
                     : `/u/${profile.username}`
                 }
                 title={`${profile.full_name || profile.username} on PathForge`}
-                text={`Check out my career path on PathForge — Level ${profile.target_timeline_months ? "in progress" : "1"} forger`}
+                text={`Check out my learning journey on PathForge — Grade ${profile.learner_grade ?? "—"} forger`}
               />
               <Link
                 href={`/u/${profile.username}`}

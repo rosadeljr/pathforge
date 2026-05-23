@@ -201,7 +201,7 @@ export default function SignUp() {
         track(supabase, data.user.id, "signup", { payload: { username, email } });
         toast.success("Welcome to PathForge");
         // Hard navigation ensures cookies are fully established
-        window.location.href = "/onboarding";
+        window.location.href = "/learn/setup";
       } else {
         toast.success("Check your email to verify your account", { duration: 6000 });
         router.push("/login?error=email_verification_sent");

@@ -6,11 +6,11 @@ import type { MetadataRoute } from "next";
  */
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "PathForge — Career growth, gamified",
+    name: "PathForge — K-12 learning, gamified",
     short_name: "PathForge",
     description:
-      "Personalized roadmaps, daily quests, and ForgeBot — your career coach. Forge the career you actually want.",
-    start_url: "/dashboard",
+      "Fun, interactive K-12 lessons for Filipino kids ages 6–18. Quests, streaks, mascots, and a kid-safe AI tutor.",
+    start_url: "/learn",
     scope: "/",
     display: "standalone",
     orientation: "portrait",

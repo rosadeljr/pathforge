@@ -101,10 +101,10 @@ export function ErrorPage({
               </Button>
             </Link>
 
-            <Link href="/dashboard" className="block">
+            <Link href="/learn" className="block">
               <Button variant="secondary" className="w-full">
                 <Zap size={18} />
-                Dashboard
+                Go to lessons
               </Button>
             </Link>
           </div>

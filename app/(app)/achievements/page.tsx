@@ -270,15 +270,15 @@ export default function AchievementsPage() {
           />
           <div className="relative">
             <Sparkles size={20} className="text-amber-300 mx-auto mb-3" />
-            <h3 className="text-base font-semibold mb-1">More badges, more XP, more rank</h3>
+            <h3 className="text-base font-semibold mb-1">More badges, more XP, more levels</h3>
             <p className="text-sm text-slate-400 max-w-md mx-auto mb-4">
-              Every quest completed gets you closer to the next achievement. Keep going.
+              Every lesson completed gets you closer to the next achievement. Keep going.
             </p>
             <Link
-              href="/quests"
+              href="/learn"
               className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-white text-slate-900 font-semibold text-sm hover:bg-slate-100 transition-colors"
             >
-              View quests
+              Open lessons
               <ArrowRight size={14} />
             </Link>
           </div>

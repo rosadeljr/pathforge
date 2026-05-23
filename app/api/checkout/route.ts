@@ -91,7 +91,7 @@ async function handleCheckout(request: NextRequest, tier: string) {
     line_items: [{ price: priceId, quantity: 1 }],
     allow_promotion_codes: true,
     billing_address_collection: "auto",
-    success_url: `${appUrl}/dashboard?upgrade=success&tier=${tier}`,
+    success_url: `${appUrl}/learn?upgrade=success&tier=${tier}`,
     cancel_url: `${appUrl}/pricing?upgrade=cancelled`,
     metadata: {
       user_id: user.id,

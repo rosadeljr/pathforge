@@ -17,7 +17,7 @@ import {
 
 /**
  * Learner setup — pick your grade + which subjects you want to focus on.
- * Shown once after a user picks "I'm a student" at /welcome. Saved to
+ * Shown once after a new learner signs up. Saved to
  * profiles.learner_grade and profiles.learner_subjects.
  */
 export default function LearnerSetupPage() {
@@ -42,9 +42,12 @@ export default function LearnerSetupPage() {
         .select("user_mode, learner_grade")
         .eq("id", session.user.id)
         .maybeSingle();
-      if (profile?.user_mode !== "learner") {
-        router.replace("/welcome");
-        return;
+      // Make sure user_mode is learner — single-track app.
+      if (profile && (profile as any).user_mode !== "learner") {
+        await supabase
+          .from("profiles")
+          .update({ user_mode: "learner" })
+          .eq("id", session.user.id);
       }
       if (profile?.learner_grade != null) {
         router.replace("/learn");

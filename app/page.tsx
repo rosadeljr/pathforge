@@ -6,20 +6,17 @@ import {
   ArrowRight,
   Sparkles,
   Bot,
-  Swords,
-  Trophy,
-  TrendingUp,
-  Zap,
-  Globe2,
   Check,
   GraduationCap,
   ShieldCheck,
-  FileText,
-  Briefcase,
+  Heart,
+  Star,
+  Trophy,
+  Flame,
+  PlayCircle,
 } from "lucide-react";
 import { Logo } from "@/components/brand/Logo";
 import { PrimaryLinkButton } from "@/components/ui/PrimaryButton";
-import { HeroPreview } from "@/components/landing/HeroPreview";
 import { StickyCTA } from "@/components/landing/StickyCTA";
 import { FloatingParticles } from "@/components/landing/FloatingParticles";
 import { ForgeBotMascot } from "@/components/landing/ForgeBotMascot";
@@ -27,24 +24,20 @@ import { ForgeBotMascot } from "@/components/landing/ForgeBotMascot";
 export default function Landing() {
   return (
     <div className="min-h-screen bg-[#0a0a0f] text-white relative overflow-hidden">
-      {/* Ambient background — refined for premium feel */}
+      {/* Ambient background */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        {/* Top center spotlight */}
         <div
           className="absolute top-0 left-1/2 -translate-x-1/2 w-[1200px] h-[700px] rounded-full opacity-40"
           style={{ background: "radial-gradient(ellipse at top, rgba(99,102,241,0.4), rgba(168,85,247,0.15), transparent 70%)" }}
         />
-        {/* Left edge violet */}
         <div
           className="absolute top-1/4 -left-32 w-[500px] h-[500px] rounded-full opacity-25"
-          style={{ background: "radial-gradient(circle, rgba(168,85,247,0.5), transparent 70%)" }}
+          style={{ background: "radial-gradient(circle, rgba(245,158,11,0.5), transparent 70%)" }}
         />
-        {/* Right edge pink */}
         <div
           className="absolute top-1/4 -right-32 w-[500px] h-[500px] rounded-full opacity-25"
           style={{ background: "radial-gradient(circle, rgba(236,72,153,0.5), transparent 70%)" }}
         />
-        {/* Conic gradient accent (subtle prism effect) */}
         <div
           className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] opacity-[0.04]"
           style={{
@@ -53,7 +46,6 @@ export default function Landing() {
             filter: "blur(60px)",
           }}
         />
-        {/* Subtle grid */}
         <div
           className="absolute inset-0 opacity-[0.015]"
           style={{
@@ -62,7 +54,6 @@ export default function Landing() {
             backgroundSize: "64px 64px",
           }}
         />
-        {/* Vignette to focus attention center */}
         <div
           className="absolute inset-0"
           style={{
@@ -70,8 +61,6 @@ export default function Landing() {
               "radial-gradient(ellipse at center, transparent 0%, rgba(0,0,0,0.5) 100%)",
           }}
         />
-
-        {/* Floating light particles */}
         <FloatingParticles />
       </div>
 
@@ -86,11 +75,14 @@ export default function Landing() {
           </Link>
 
           <div className="hidden md:flex items-center gap-8">
-            <Link href="#features" className="text-sm text-slate-400 hover:text-white transition-colors">
-              Features
+            <Link href="#subjects" className="text-sm text-slate-400 hover:text-white transition-colors">
+              Subjects
             </Link>
             <Link href="#how-it-works" className="text-sm text-slate-400 hover:text-white transition-colors">
               How it works
+            </Link>
+            <Link href="#parents" className="text-sm text-slate-400 hover:text-white transition-colors">
+              For parents
             </Link>
             <Link href="/pricing" className="text-sm text-slate-400 hover:text-white transition-colors">
               Pricing
@@ -105,7 +97,7 @@ export default function Landing() {
               Sign in
             </Link>
             <PrimaryLinkButton href="/signup" size="sm">
-              <span className="hidden sm:inline">Get started</span>
+              <span className="hidden sm:inline">Get started — free</span>
               <span className="sm:hidden">Start</span>
               <ArrowRight size={12} />
             </PrimaryLinkButton>
@@ -113,10 +105,10 @@ export default function Landing() {
         </div>
       </nav>
 
-      {/* Hero */}
-      <section className="relative z-10 pt-14 lg:pt-20 pb-16 lg:pb-24">
+      {/* HERO */}
+      <section className="relative z-10 pt-12 lg:pt-16 pb-20 lg:pb-28">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          {/* ForgeBot Mascot — the friendly face of PathForge */}
+          {/* Mascot — first thing kids and parents see */}
           <motion.div
             initial={{ opacity: 0, scale: 0.85, y: 30 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -139,11 +131,11 @@ export default function Landing() {
               <div className="absolute inset-0 w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping opacity-50" />
             </div>
             <span className="text-[13px] font-semibold text-white tracking-[0.04em]">
-              Built for kids{" "}
-              <span className="bg-gradient-to-r from-amber-300 to-orange-300 bg-clip-text text-transparent">
-                & grown-ups
-              </span>
-              <span className="hidden sm:inline"> — ages 6 to infinity</span>
+              K-12 learning,{" "}
+              <span className="bg-gradient-to-r from-amber-300 via-orange-300 to-rose-300 bg-clip-text text-transparent">
+                gamified
+              </span>{" "}
+              · ages 6–18
             </span>
           </motion.div>
 
@@ -151,21 +143,20 @@ export default function Landing() {
           <motion.h1
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.05, ease: [0.16, 1, 0.3, 1] }}
+            transition={{ duration: 0.8, delay: 0.4, ease: [0.16, 1, 0.3, 1] }}
             className="font-display text-balance text-5xl sm:text-6xl lg:text-7xl xl:text-[5.5rem] font-semibold tracking-tighter leading-[1.02] max-w-5xl mx-auto mb-7"
           >
-            <span className="text-white">Forge the career</span>
+            <span className="text-white">Where kids</span>
             <br />
             <span className="relative inline-block">
-              <span className="bg-gradient-to-r from-indigo-300 via-purple-300 to-pink-300 bg-clip-text text-transparent">
-                you actually want.
+              <span className="bg-gradient-to-r from-amber-300 via-orange-300 to-pink-300 bg-clip-text text-transparent">
+                forge their future.
               </span>
-              {/* Subtle glow under the gradient text */}
               <span
                 aria-hidden
-                className="absolute inset-0 blur-2xl opacity-40 bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 bg-clip-text text-transparent"
+                className="absolute inset-0 blur-2xl opacity-40 bg-gradient-to-r from-amber-400 via-orange-400 to-pink-400 bg-clip-text text-transparent"
               >
-                you actually want.
+                forge their future.
               </span>
             </span>
           </motion.h1>
@@ -174,31 +165,31 @@ export default function Landing() {
           <motion.p
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, delay: 0.15 }}
+            transition={{ duration: 0.7, delay: 0.5 }}
             className="text-balance text-lg sm:text-xl text-slate-400 max-w-2xl mx-auto mb-10 leading-relaxed"
           >
-            Personalized career roadmaps for adults.{" "}
-            <span className="text-amber-200">Fun, interactive lessons for kids ages 6–18.</span>{" "}
-            All powered by ForgeBot — your AI coach and tutor in one.
+            Fun, interactive K-12 lessons across Math, English, Filipino,
+            Science, and Araling Panlipunan. Quests, streaks, mascots, and a
+            kid-safe AI tutor that adapts to your child's age and grade.
           </motion.p>
 
           {/* CTAs */}
           <motion.div
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, delay: 0.2 }}
+            transition={{ duration: 0.7, delay: 0.6 }}
             className="flex flex-col sm:flex-row items-center justify-center gap-3 mb-6"
           >
             <PrimaryLinkButton href="/signup" size="lg">
-              Start free — pick your path
+              Start learning — free
               <ArrowRight size={14} className="group-hover:translate-x-0.5 transition-transform" />
             </PrimaryLinkButton>
             <Link
-              href="#for-kids"
-              className="inline-flex items-center gap-2 px-5 py-3 rounded-xl text-sm font-medium text-amber-200 hover:text-amber-100 border border-amber-400/30 hover:border-amber-400/50 bg-amber-500/[0.04] hover:bg-amber-500/[0.08] transition-all"
+              href="#how-it-works"
+              className="inline-flex items-center gap-2 px-5 py-3 rounded-xl text-sm font-medium text-slate-300 hover:text-white border border-white/[0.08] hover:border-white/[0.16] hover:bg-white/[0.03] transition-all"
             >
-              <span className="text-base">🎒</span>
-              For my kid (6–18)
+              <PlayCircle size={16} />
+              See how it works
             </Link>
           </motion.div>
 
@@ -206,7 +197,7 @@ export default function Landing() {
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ duration: 0.7, delay: 0.4 }}
+            transition={{ duration: 0.7, delay: 0.7 }}
             className="flex items-center justify-center gap-x-5 gap-y-2 text-xs text-slate-500 flex-wrap"
           >
             <span className="inline-flex items-center gap-1.5">
@@ -215,33 +206,19 @@ export default function Landing() {
             </span>
             <span className="text-slate-700" aria-hidden>·</span>
             <span className="inline-flex items-center gap-1.5">
-              <Check size={11} className="text-emerald-400" />
-              16 career paths + K-12
+              <ShieldCheck size={11} className="text-emerald-400" />
+              Kid-safe AI
             </span>
             <span className="text-slate-700" aria-hidden>·</span>
             <span className="inline-flex items-center gap-1.5">
-              🇵🇭 Built in the Philippines
+              🇵🇭 Built for Filipino students
             </span>
           </motion.div>
-
         </div>
-
-        {/* Live Product Preview Card (Hero visual) */}
-        <motion.div
-          initial={{ opacity: 0, y: 40 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 1, delay: 0.4, ease: [0.16, 1, 0.3, 1] }}
-          className="relative max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 mt-16 lg:mt-20"
-        >
-          {/* Reserve space for the preview so layout doesn't shift if it loads slow */}
-          <div className="min-h-[420px]">
-            <HeroPreview />
-          </div>
-        </motion.div>
       </section>
 
-      {/* ============ TWO PATHS — adults + kids side by side ============ */}
-      <section id="for-kids" className="relative z-10 py-20 lg:py-24">
+      {/* ============ AGE TIERS ============ */}
+      <section className="relative z-10 py-20 lg:py-24">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div
             initial={{ opacity: 0, y: 16 }}
@@ -253,360 +230,159 @@ export default function Landing() {
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/[0.04] border border-white/[0.08] mb-4">
               <Sparkles size={11} className="text-amber-400" />
               <span className="text-xs font-medium text-slate-300 tracking-wide">
-                One app, two paths
+                Built for every age
               </span>
             </div>
             <h2 className="text-3xl sm:text-4xl lg:text-5xl font-semibold tracking-tight mb-3 text-balance">
-              Whether you're 6 or{" "}
-              <span className="bg-gradient-to-r from-amber-300 via-orange-300 to-rose-300 bg-clip-text text-transparent">
-                staring down a promotion
+              From{" "}
+              <span className="bg-gradient-to-r from-amber-300 to-orange-300 bg-clip-text text-transparent">
+                counting
+              </span>{" "}
+              to{" "}
+              <span className="bg-gradient-to-r from-indigo-300 to-purple-300 bg-clip-text text-transparent">
+                calculus.
               </span>
-              .
             </h2>
             <p className="text-base text-slate-400 max-w-2xl mx-auto">
-              PathForge meets you where you are. ForgeBot adapts to your age,
-              grade, or career — every step calibrated to you.
+              ForgeBot adapts to your kid's age and grade. The lessons, the
+              tutor voice, even the UI — everything calibrates to where they
+              are right now.
             </p>
           </motion.div>
 
-          <div className="grid lg:grid-cols-2 gap-5">
-            {/* CAREER CARD */}
-            <motion.div
-              initial={{ opacity: 0, x: -20 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true, margin: "-50px" }}
-              transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
-              whileHover={{ y: -4 }}
-              className="group relative overflow-hidden rounded-3xl border border-indigo-400/20 bg-gradient-to-br from-indigo-500/[0.10] via-purple-500/[0.04] to-transparent p-6 sm:p-8 hover:border-indigo-400/40 transition-all"
-            >
-              <div
-                className="absolute -top-24 -right-24 w-72 h-72 rounded-full opacity-30 pointer-events-none group-hover:opacity-50 transition-opacity"
-                style={{
-                  background: "radial-gradient(circle, rgba(99,102,241,0.5), transparent 70%)",
-                }}
-              />
-              <div className="relative">
-                <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 shadow-xl shadow-indigo-500/30 mb-5">
-                  <Briefcase size={22} className="text-white" />
-                </div>
-                <div className="text-[10px] uppercase tracking-wider font-bold text-indigo-300 mb-1">
-                  For ambitious adults
-                </div>
-                <h3 className="text-2xl font-semibold tracking-tight mb-3">
-                  Forge your career
-                </h3>
-                <p className="text-sm text-slate-400 leading-relaxed mb-5">
-                  Personalized roadmaps across 16 careers. Daily quests, mock
-                  interviews, ForgeBot coaching, portfolio + resume builder.
-                  Earn a verifiable certificate when you finish.
-                </p>
-                <div className="space-y-2 mb-6">
-                  {[
-                    "16 career paths — Software, AI, VA, Content & more",
-                    "AI mock interviews + resume builder",
-                    "Verifiable certificate of completion",
-                  ].map((item, i) => (
-                    <div key={i} className="flex items-start gap-2.5 text-sm text-slate-300">
-                      <Check size={14} className="text-indigo-300 mt-0.5 flex-shrink-0" strokeWidth={3} />
-                      <span>{item}</span>
-                    </div>
-                  ))}
-                </div>
-                <Link
-                  href="/signup"
-                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-indigo-500 to-purple-600 text-white text-sm font-semibold hover:shadow-lg hover:shadow-indigo-500/30 transition-all"
-                >
-                  Start your career path
-                  <ArrowRight size={14} className="group-hover:translate-x-0.5 transition-transform" />
-                </Link>
-              </div>
-            </motion.div>
-
-            {/* KIDS CARD */}
-            <motion.div
-              initial={{ opacity: 0, x: 20 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true, margin: "-50px" }}
-              transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1], delay: 0.05 }}
-              whileHover={{ y: -4 }}
-              className="group relative overflow-hidden rounded-3xl border border-amber-400/30 bg-gradient-to-br from-amber-500/[0.10] via-orange-500/[0.04] to-transparent p-6 sm:p-8 hover:border-amber-400/50 transition-all"
-            >
-              <div
-                className="absolute -top-24 -right-24 w-72 h-72 rounded-full opacity-30 pointer-events-none group-hover:opacity-50 transition-opacity"
-                style={{
-                  background: "radial-gradient(circle, rgba(245,158,11,0.5), transparent 70%)",
-                }}
-              />
-              {/* Floating fun emojis */}
-              <motion.div
-                animate={{ y: [0, -6, 0], rotate: [0, -8, 8, 0] }}
-                transition={{ duration: 3, repeat: Infinity }}
-                className="absolute top-6 right-8 text-2xl opacity-80"
-              >
-                🌟
-              </motion.div>
-              <motion.div
-                animate={{ y: [0, -8, 0] }}
-                transition={{ duration: 2.5, repeat: Infinity, delay: 0.5 }}
-                className="absolute top-16 right-20 text-xl opacity-60"
-              >
-                🎉
-              </motion.div>
-              <div className="relative">
-                <motion.div
-                  animate={{ rotate: [0, -6, 6, 0] }}
-                  transition={{ duration: 4, repeat: Infinity }}
-                  className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-br from-amber-400 to-orange-500 shadow-xl shadow-amber-500/30 mb-5"
-                >
-                  <GraduationCap size={22} className="text-white" />
-                </motion.div>
-                <div className="text-[10px] uppercase tracking-wider font-bold text-amber-300 mb-1">
-                  For curious kids · ages 6–18
-                </div>
-                <h3 className="text-2xl font-semibold tracking-tight mb-3">
-                  Learn through play
-                </h3>
-                <p className="text-sm text-slate-400 leading-relaxed mb-5">
-                  Interactive K-12 lessons across Math, English, Filipino,
-                  Science, and Araling Panlipunan. Confetti, mascots, streaks,
-                  daily missions, and a kid-safe AI tutor that adapts to age.
-                </p>
-                <div className="space-y-2 mb-6">
-                  {[
-                    "Grades 1–12 — counting through calculus prep",
-                    "All 5 PH core subjects, with Filipino & PH context",
-                    "Kid-safe AI tutor calibrated by age tier",
-                  ].map((item, i) => (
-                    <div key={i} className="flex items-start gap-2.5 text-sm text-slate-300">
-                      <Check size={14} className="text-amber-300 mt-0.5 flex-shrink-0" strokeWidth={3} />
-                      <span>{item}</span>
-                    </div>
-                  ))}
-                </div>
-                <Link
-                  href="/signup"
-                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-amber-400 to-orange-500 text-slate-900 text-sm font-bold hover:shadow-lg hover:shadow-amber-500/30 transition-all"
-                >
-                  Sign up your kid
-                  <ArrowRight size={14} className="group-hover:translate-x-0.5 transition-transform" />
-                </Link>
-              </div>
-            </motion.div>
-          </div>
-
-          {/* Tiny age-tier preview row */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.7, delay: 0.2 }}
-            className="mt-6 grid grid-cols-3 gap-2 sm:gap-3"
-          >
+          <div className="grid sm:grid-cols-3 gap-4">
             {[
-              { tier: "Little Forgers", age: "Ages 6–9", emoji: "🌟", grades: "Grades 1–3" },
-              { tier: "Junior Forgers", age: "Ages 10–13", emoji: "🚀", grades: "Grades 4–7" },
-              { tier: "Teen Forgers", age: "Ages 14–18", emoji: "🎯", grades: "Grades 8–12" },
-            ].map((t) => (
-              <div
+              {
+                tier: "Little Forgers",
+                age: "Ages 6–9",
+                grades: "Grades 1–3",
+                emoji: "🌟",
+                color: "from-amber-400 to-orange-500",
+                glow: "rgba(245,158,11,0.5)",
+                desc: "Bright, playful lessons. Counting, ABCs, sight words, basic Filipino, and our country. Big buttons, big celebrations.",
+              },
+              {
+                tier: "Junior Forgers",
+                age: "Ages 10–13",
+                grades: "Grades 4–7",
+                emoji: "🚀",
+                color: "from-indigo-400 to-purple-600",
+                glow: "rgba(99,102,241,0.5)",
+                desc: "Balanced, focused learning. Ratios, essay structure, photosynthesis, panitikan, ASEAN — all the core skills.",
+              },
+              {
+                tier: "Teen Forgers",
+                age: "Ages 14–18",
+                grades: "Grades 8–12",
+                emoji: "🎯",
+                color: "from-rose-400 to-pink-600",
+                glow: "rgba(244,63,94,0.5)",
+                desc: "Mature, study-focused UI. Algebra → calculus prep, rhetoric, college essays, science fundamentals, career exploration.",
+              },
+            ].map((t, i) => (
+              <motion.div
                 key={t.tier}
-                className="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-3 sm:p-4 text-center"
+                initial={{ opacity: 0, y: 16 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.6, delay: i * 0.08 }}
+                whileHover={{ y: -4 }}
+                className="group relative overflow-hidden rounded-3xl border border-white/[0.08] bg-gradient-to-br from-white/[0.04] to-transparent p-6 hover:border-white/[0.18] transition-all"
               >
-                <div className="text-2xl sm:text-3xl mb-1">{t.emoji}</div>
-                <div className="text-xs sm:text-sm font-semibold mb-0.5">{t.tier}</div>
-                <div className="text-[10px] sm:text-xs text-slate-500">
-                  {t.age} · {t.grades}
-                </div>
-              </div>
-            ))}
-          </motion.div>
-        </div>
-      </section>
-
-      {/* Product Preview - Rank Ladder */}
-      <section className="relative z-10 pb-24">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: "-100px" }}
-            transition={{ duration: 0.8 }}
-            className="relative rounded-3xl overflow-hidden border border-white/[0.08] bg-gradient-to-br from-white/[0.04] to-transparent p-6 lg:p-12"
-          >
-            <div className="absolute -top-20 left-1/2 -translate-x-1/2 w-[600px] h-[300px] opacity-30 pointer-events-none"
-              style={{ background: "radial-gradient(ellipse, rgba(168,85,247,0.4), transparent 70%)" }}
-            />
-            <div className="relative grid lg:grid-cols-2 gap-12 items-center">
-              <div>
-                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/[0.04] border border-white/[0.08] mb-4">
-                  <Sparkles size={11} className="text-indigo-400" />
-                  <span className="text-xs font-medium text-slate-300 tracking-wide">8-tier rank system</span>
-                </div>
-                <h2 className="text-3xl sm:text-4xl font-semibold tracking-tight mb-4">
-                  Your career, ranked.
-                </h2>
-                <p className="text-base text-slate-400 leading-relaxed mb-6">
-                  Every level you gain bumps your rank. Start at E and climb to SSS.
-                  Show off your forge journey with a profile recruiters actually want to read.
-                </p>
-                <div className="space-y-2.5">
-                  {[
-                    "E → D → C → B → A → S → SS → SSS rank progression",
-                    "Daily XP quests tuned to your goals",
-                    "Streak system that compounds your momentum",
-                    "Public portfolio with verified projects",
-                  ].map((item, i) => (
-                    <div key={i} className="flex items-start gap-3 text-sm text-slate-300">
-                      <div className="mt-0.5 w-5 h-5 rounded-full bg-white/[0.05] border border-white/[0.1] flex items-center justify-center flex-shrink-0">
-                        <Check size={12} className="text-indigo-300" strokeWidth={3} />
-                      </div>
-                      <span>{item}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Rank ladder visual */}
-              <div className="space-y-2">
-                {[
-                  { rank: "SSS", color: "from-cyan-400 to-violet-500", glow: "rgba(6,182,212,0.5)", current: false },
-                  { rank: "SS", color: "from-amber-400 to-orange-500", glow: "rgba(245,158,11,0.5)", current: false },
-                  { rank: "S", color: "from-rose-500 to-pink-600", glow: "rgba(244,63,94,0.5)", current: false },
-                  { rank: "A", color: "from-orange-500 to-red-600", glow: "rgba(249,115,22,0.5)", current: false },
-                  { rank: "B", color: "from-violet-500 to-purple-600", glow: "rgba(139,92,246,0.5)", current: true },
-                  { rank: "C", color: "from-cyan-500 to-blue-600", glow: "rgba(6,182,212,0.5)", current: false },
-                  { rank: "D", color: "from-emerald-500 to-green-600", glow: "rgba(16,185,129,0.5)", current: false },
-                  { rank: "E", color: "from-slate-500 to-slate-700", glow: "rgba(148,163,184,0.5)", current: false },
-                ].map((r, i) => (
+                <div
+                  className="absolute -top-20 -right-20 w-56 h-56 rounded-full opacity-25 pointer-events-none group-hover:opacity-50 transition-opacity"
+                  style={{
+                    background: `radial-gradient(circle, ${t.glow}, transparent 70%)`,
+                  }}
+                />
+                <div className="relative">
                   <motion.div
-                    key={r.rank}
-                    initial={{ opacity: 0, x: 20 }}
-                    whileInView={{ opacity: 1, x: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ duration: 0.4, delay: i * 0.04 }}
-                    className={`flex items-center gap-3 p-2.5 rounded-xl border transition-all ${
-                      r.current
-                        ? "bg-white/[0.06] border-white/20"
-                        : "bg-white/[0.02] border-white/[0.06]"
-                    }`}
+                    animate={{ rotate: [0, -6, 6, 0] }}
+                    transition={{ duration: 4 + i, repeat: Infinity, delay: i * 0.5 }}
+                    className={`inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-br ${t.color} shadow-xl mb-4 text-2xl`}
+                    style={{ boxShadow: `0 10px 30px ${t.glow}` }}
                   >
-                    <div
-                      className={`w-9 h-9 rounded-lg bg-gradient-to-br ${r.color} flex items-center justify-center text-xs font-bold text-white`}
-                      style={r.current ? { boxShadow: `0 8px 24px ${r.glow}` } : undefined}
-                    >
-                      {r.rank}
-                    </div>
-                    <div className="flex-1">
-                      <div className="text-sm font-medium">{r.rank}-Rank</div>
-                    </div>
-                    {r.current && (
-                      <span className="text-xs font-medium text-emerald-300">You</span>
-                    )}
+                    {t.emoji}
                   </motion.div>
-                ))}
-              </div>
-            </div>
-          </motion.div>
+                  <h3 className="text-xl font-semibold tracking-tight mb-0.5">
+                    {t.tier}
+                  </h3>
+                  <div className="text-xs text-slate-400 mb-3">
+                    {t.age} · {t.grades}
+                  </div>
+                  <p className="text-sm text-slate-400 leading-relaxed">
+                    {t.desc}
+                  </p>
+                </div>
+              </motion.div>
+            ))}
+          </div>
         </div>
       </section>
 
-      {/* Features Grid */}
-      <section id="features" className="relative z-10 py-24">
+      {/* ============ SUBJECTS ============ */}
+      <section id="subjects" className="relative z-10 py-20 lg:py-24">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div
             initial={{ opacity: 0, y: 12 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.6 }}
-            className="text-center mb-16"
+            className="text-center mb-12"
           >
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/[0.04] border border-white/[0.08] mb-4">
-              <Sparkles size={11} className="text-pink-400" />
-              <span className="text-xs font-medium text-slate-300 tracking-wide">Everything you need</span>
+              <GraduationCap size={11} className="text-emerald-400" />
+              <span className="text-xs font-medium text-slate-300 tracking-wide">
+                Five core subjects
+              </span>
             </div>
             <h2 className="text-3xl sm:text-4xl font-semibold tracking-tight mb-3">
-              An operating system for your career.
+              The five PH core subjects, all in one app.
             </h2>
             <p className="text-base text-slate-400 max-w-xl mx-auto">
-              Stop guessing what to learn next. PathForge gives you the structure, motivation,
-              and proof — all in one workspace.
+              Aligned with the Philippine K-12 curriculum. Lessons in English
+              and Filipino where it matters.
             </p>
           </motion.div>
 
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
             {[
-              {
-                icon: Bot,
-                title: "ForgeBot · your mentor",
-                description: "ForgeBot is your AI career coach. Knows your goals, gaps, and progress. Direct answers in minutes.",
-                accent: "#a855f7",
-              },
-              {
-                icon: Swords,
-                title: "Daily Quests",
-                description: "Bite-sized missions tuned to your career. Build skills through doing, not just watching.",
-                accent: "#6366f1",
-              },
-              {
-                icon: TrendingUp,
-                title: "Rank Up System",
-                description: "From E-rank to SSS. Watch your XP, level, and readiness compound with every quest.",
-                accent: "#ec4899",
-              },
-              {
-                icon: Trophy,
-                title: "Portfolio Builder",
-                description: "Every completed project becomes part of a shareable profile recruiters love.",
-                accent: "#10b981",
-              },
-              {
-                icon: FileText,
-                title: "Resume Builder",
-                description: "Auto-filled from your PathForge journey. ForgeBot polishes the summary and bullets. Export to PDF, share to LinkedIn.",
-                accent: "#06b6d4",
-              },
-              {
-                icon: Briefcase,
-                title: "Mock Interview · Elite",
-                description: "ForgeBot role-plays real interviews and grades your answers — the fastest way to feel interview-ready.",
-                accent: "#f59e0b",
-              },
-            ].map((feature, i) => (
+              { id: "math", title: "Math", filipino: "Matematika", emoji: "🔢", gradient: "from-sky-400 to-blue-600", accent: "#0ea5e9", desc: "Counting through calculus prep — every grade." },
+              { id: "english", title: "English", filipino: "Ingles", emoji: "📖", gradient: "from-violet-400 to-purple-600", accent: "#a855f7", desc: "Reading, writing, grammar, essay craft, rhetoric." },
+              { id: "filipino", title: "Filipino", filipino: "Filipino", emoji: "🇵🇭", gradient: "from-amber-400 to-orange-600", accent: "#f59e0b", desc: "Bokabularyo, gramatika, panitikan — mahalin ang sariling wika." },
+              { id: "science", title: "Science", filipino: "Agham", emoji: "🔬", gradient: "from-emerald-400 to-teal-600", accent: "#10b981", desc: "From plants to photosynthesis to Newton's laws." },
+              { id: "ap", title: "Araling Panlipunan", filipino: "AP", emoji: "🌏", gradient: "from-rose-400 to-pink-600", accent: "#f43f5e", desc: "PH history, geography, ASEAN, economy basics." },
+              { id: "more", title: "More coming", filipino: "Soon", emoji: "✨", gradient: "from-slate-500 to-slate-700", accent: "#94a3b8", desc: "Coding, financial literacy, study skills — on the roadmap.", soon: true },
+            ].map((s, i) => (
               <motion.div
-                key={i}
-                initial={{ opacity: 0, y: 16 }}
+                key={s.id}
+                initial={{ opacity: 0, y: 12 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, margin: "-50px" }}
-                transition={{ duration: 0.6, delay: i * 0.06, ease: [0.16, 1, 0.3, 1] }}
-                whileHover={{ y: -4, scale: 1.01 }}
-                className="group relative overflow-hidden p-5 rounded-2xl border border-white/[0.06] bg-white/[0.02] hover:bg-white/[0.04] hover:border-white/[0.16] transition-all cursor-default"
-                style={{
-                  transition: "border-color 0.3s, background-color 0.3s",
-                }}
+                transition={{ duration: 0.5, delay: i * 0.05 }}
+                whileHover={{ y: -3 }}
+                className={`group relative overflow-hidden rounded-2xl border p-5 transition-all ${
+                  s.soon
+                    ? "border-white/[0.04] bg-white/[0.01] opacity-70"
+                    : "border-white/[0.06] bg-white/[0.02] hover:bg-white/[0.04] hover:border-white/[0.16]"
+                }`}
               >
                 <div
-                  className="absolute -top-12 -right-12 w-32 h-32 rounded-full opacity-10 group-hover:opacity-30 transition-opacity duration-500"
-                  style={{ background: `radial-gradient(circle, ${feature.accent}, transparent 70%)` }}
-                />
-                {/* Animated border glow on hover */}
-                <div
-                  className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
-                  style={{
-                    background: `radial-gradient(400px circle at var(--mx, 50%) var(--my, 50%), ${feature.accent}10, transparent 40%)`,
-                  }}
+                  className="absolute -top-12 -right-12 w-32 h-32 rounded-full opacity-20 group-hover:opacity-30 transition-opacity"
+                  style={{ background: `radial-gradient(circle, ${s.accent}, transparent 70%)` }}
                 />
                 <div className="relative">
                   <motion.div
-                    whileHover={{ rotate: -6, scale: 1.08 }}
-                    transition={{ type: "spring", stiffness: 300, damping: 15 }}
-                    className="w-10 h-10 rounded-xl flex items-center justify-center mb-4"
-                    style={{ background: `${feature.accent}15`, color: feature.accent, boxShadow: `0 0 24px ${feature.accent}10` }}
+                    whileHover={!s.soon ? { rotate: [0, -8, 8, 0] } : {}}
+                    transition={{ duration: 0.5 }}
+                    className={`w-12 h-12 rounded-2xl bg-gradient-to-br ${s.gradient} flex items-center justify-center text-2xl mb-4 shadow-lg`}
+                    style={{ boxShadow: `0 8px 24px ${s.accent}30` }}
                   >
-                    <feature.icon size={18} />
+                    {s.emoji}
                   </motion.div>
-                  <h3 className="text-base font-semibold mb-2 group-hover:text-white transition-colors">
-                    {feature.title}
-                  </h3>
-                  <p className="text-sm text-slate-400 leading-relaxed">{feature.description}</p>
+                  <h3 className="text-base font-semibold tracking-tight">{s.title}</h3>
+                  <div className="text-[11px] text-slate-500 mb-2">{s.filipino}</div>
+                  <p className="text-sm text-slate-400 leading-relaxed">{s.desc}</p>
                 </div>
               </motion.div>
             ))}
@@ -614,52 +390,65 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* How it works */}
-      <section id="how-it-works" className="relative z-10 py-24">
+      {/* ============ HOW IT WORKS ============ */}
+      <section id="how-it-works" className="relative z-10 py-20 lg:py-24">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div
             initial={{ opacity: 0, y: 12 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.6 }}
-            className="text-center mb-16"
+            className="text-center mb-14"
           >
             <h2 className="text-3xl sm:text-4xl font-semibold tracking-tight mb-3">
-              Three steps to start forging.
+              Three steps to your first lesson.
             </h2>
             <p className="text-base text-slate-400 max-w-xl mx-auto">
-              You can be questing in under five minutes.
+              Set up takes under a minute. Kids can start playing right after.
             </p>
           </motion.div>
 
-          <div className="grid md:grid-cols-3 gap-6">
+          <div className="grid md:grid-cols-3 gap-5">
             {[
               {
                 step: "01",
-                title: "Pick your path",
-                description: "Choose from 16 careers — Software, AI, VA, Content Creator, and more.",
+                emoji: "🎒",
+                title: "Pick your grade",
+                description: "Choose Grade 1 through 12. We'll match lessons to the right level — no overwhelming a 6-year-old with algebra.",
               },
               {
                 step: "02",
-                title: "Get your quests",
-                description: "Your AI mentor builds a custom plan. Daily quests appear in your dashboard.",
+                emoji: "🔬",
+                title: "Pick your subjects",
+                description: "Math, English, Filipino, Science, AP — pick what you want to focus on. You can always change later.",
               },
               {
                 step: "03",
-                title: "Level up & get certified",
-                description: "Complete quests, climb ranks, and earn a verifiable PathForge certificate that proves it.",
+                emoji: "🎮",
+                title: "Start playing",
+                description: "Interactive lessons with quests, streaks, confetti, and a friendly mascot. ForgeBot is one tap away if you get stuck.",
               },
             ].map((step, i) => (
               <motion.div
                 key={i}
-                initial={{ opacity: 0, y: 12 }}
+                initial={{ opacity: 0, y: 16 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.5, delay: i * 0.1 }}
-                className="relative p-6 rounded-2xl border border-white/[0.06] bg-white/[0.02]"
+                whileHover={{ y: -3 }}
+                className="relative p-6 rounded-2xl border border-white/[0.06] bg-white/[0.02] hover:border-white/[0.14] transition-all"
               >
-                <div className="text-4xl font-semibold tracking-tighter text-transparent bg-clip-text bg-gradient-to-br from-indigo-300 to-purple-400 mb-4">
-                  {step.step}
+                <div className="flex items-start justify-between mb-4">
+                  <div className="text-4xl font-semibold tracking-tighter text-transparent bg-clip-text bg-gradient-to-br from-indigo-300 to-purple-400">
+                    {step.step}
+                  </div>
+                  <motion.div
+                    animate={{ y: [0, -6, 0], rotate: [0, -5, 5, 0] }}
+                    transition={{ duration: 3 + i, repeat: Infinity, delay: i * 0.3 }}
+                    className="text-3xl"
+                  >
+                    {step.emoji}
+                  </motion.div>
                 </div>
                 <h3 className="text-base font-semibold mb-2">{step.title}</h3>
                 <p className="text-sm text-slate-400 leading-relaxed">{step.description}</p>
@@ -669,92 +458,150 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* Certification */}
-      <section className="relative z-10 py-24">
+      {/* ============ WHAT MAKES IT FUN ============ */}
+      <section className="relative z-10 py-20 lg:py-24">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 12 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+            className="text-center mb-12"
+          >
+            <h2 className="text-3xl sm:text-4xl font-semibold tracking-tight mb-3">
+              Why kids actually finish lessons here.
+            </h2>
+            <p className="text-base text-slate-400 max-w-xl mx-auto">
+              Built like the games kids already love — but the reward is real
+              learning.
+            </p>
+          </motion.div>
+
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
+            {[
+              { icon: Trophy, title: "Confetti & celebrations", desc: "Right answer? Cue the confetti, mascot cheers, and a streak count.", accent: "#f59e0b" },
+              { icon: Flame, title: "Streaks that compound", desc: "Day-streaks and in-lesson streaks. The longer the chain, the bigger the dopamine.", accent: "#ef4444" },
+              { icon: Star, title: "XP, levels & ranks", desc: "Every lesson earns XP. Bonus XP for flawless runs. Watch the level bar fill.", accent: "#a855f7" },
+              { icon: Bot, title: "ForgeBot — your tutor", desc: "Stuck? Tap the tutor. Voice adapts to your age — gentle for kids, peer-like for teens.", accent: "#6366f1" },
+            ].map((f, i) => (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, y: 12 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: "-50px" }}
+                transition={{ duration: 0.5, delay: i * 0.06 }}
+                whileHover={{ y: -3 }}
+                className="group relative overflow-hidden p-5 rounded-2xl border border-white/[0.06] bg-white/[0.02] hover:border-white/[0.16] hover:bg-white/[0.04] transition-all"
+              >
+                <div
+                  className="absolute -top-12 -right-12 w-32 h-32 rounded-full opacity-10 group-hover:opacity-30 transition-opacity"
+                  style={{ background: `radial-gradient(circle, ${f.accent}, transparent 70%)` }}
+                />
+                <div className="relative">
+                  <motion.div
+                    whileHover={{ rotate: -8, scale: 1.1 }}
+                    transition={{ type: "spring", stiffness: 300, damping: 15 }}
+                    className="w-11 h-11 rounded-xl flex items-center justify-center mb-3"
+                    style={{ background: `${f.accent}15`, color: f.accent }}
+                  >
+                    <f.icon size={20} />
+                  </motion.div>
+                  <h3 className="text-sm font-semibold mb-1.5">{f.title}</h3>
+                  <p className="text-xs text-slate-400 leading-relaxed">{f.desc}</p>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ============ FOR PARENTS ============ */}
+      <section id="parents" className="relative z-10 py-20 lg:py-24">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: "-100px" }}
-            transition={{ duration: 0.8 }}
-            className="relative rounded-3xl overflow-hidden border border-white/[0.08] bg-gradient-to-br from-white/[0.04] to-transparent p-6 lg:p-12"
+            transition={{ duration: 0.7 }}
+            className="relative rounded-3xl overflow-hidden border border-white/[0.08] bg-gradient-to-br from-emerald-500/[0.06] via-teal-500/[0.03] to-transparent p-6 sm:p-10 lg:p-14"
           >
             <div
               className="absolute -top-20 right-1/4 w-[500px] h-[300px] opacity-30 pointer-events-none"
-              style={{ background: "radial-gradient(ellipse, rgba(99,102,241,0.4), transparent 70%)" }}
+              style={{ background: "radial-gradient(ellipse, rgba(16,185,129,0.4), transparent 70%)" }}
             />
             <div className="relative grid lg:grid-cols-2 gap-12 items-center">
-              {/* Copy */}
               <div>
-                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/[0.04] border border-white/[0.08] mb-4">
-                  <GraduationCap size={11} className="text-indigo-400" />
-                  <span className="text-xs font-medium text-slate-300 tracking-wide">
-                    PathForge AI Academy
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/[0.08] border border-emerald-500/30 mb-4">
+                  <Heart size={11} className="text-emerald-400" />
+                  <span className="text-xs font-medium text-emerald-200 tracking-wide">
+                    For parents
                   </span>
                 </div>
                 <h2 className="text-3xl sm:text-4xl font-semibold tracking-tight mb-4">
-                  Finish a program.
+                  Safe. Filipino-built.
                   <br />
-                  Earn a real credential.
+                  Worth your kid's screen time.
                 </h2>
                 <p className="text-base text-slate-400 leading-relaxed mb-6">
-                  Complete your career program and PathForge issues a verifiable
-                  Certificate of Completion — the kind of proof recruiters can actually
-                  check, not just another badge.
+                  We built PathForge for our own kids first. Every lesson is
+                  curated. The AI tutor has strict age-appropriate guardrails.
+                  No ads, no scary content, no random links into the internet.
                 </p>
                 <div className="space-y-2.5 mb-7">
                   {[
-                    "Unique credential ID + public verification page",
-                    "One-click Add to LinkedIn",
-                    "Skills, rank, and quests cleared — all on the certificate",
+                    "Kid-safe AI tutor with strict content guardrails by age",
+                    "Filipino-built — PH curriculum, peso, jeepney, Rizal examples",
+                    "No ads, no in-app purchases, no random external links",
+                    "Free tier with daily lesson limits — Pro unlocks unlimited",
                   ].map((item, i) => (
                     <div key={i} className="flex items-start gap-3 text-sm text-slate-300">
-                      <div className="mt-0.5 w-5 h-5 rounded-full bg-white/[0.05] border border-white/[0.1] flex items-center justify-center flex-shrink-0">
-                        <Check size={12} className="text-indigo-300" strokeWidth={3} />
+                      <div className="mt-0.5 w-5 h-5 rounded-full bg-emerald-500/[0.15] border border-emerald-500/30 flex items-center justify-center flex-shrink-0">
+                        <Check size={12} className="text-emerald-300" strokeWidth={3} />
                       </div>
                       <span>{item}</span>
                     </div>
                   ))}
                 </div>
                 <PrimaryLinkButton href="/signup" size="lg">
-                  Start earning yours
+                  Sign up your kid — free
                   <ArrowRight size={14} className="group-hover:translate-x-0.5 transition-transform" />
                 </PrimaryLinkButton>
               </div>
 
-              {/* Sample certificate */}
+              {/* Safety badge visual */}
               <div className="relative">
-                <div className="rounded-2xl border border-white/[0.12] bg-gradient-to-br from-white/[0.06] to-transparent p-6 sm:p-8 text-center">
-                  <div className="inline-flex items-center gap-2 mb-5">
-                    <Logo size={22} />
-                    <span className="text-xs font-semibold tracking-tight">
-                      PathForge AI Academy
-                    </span>
+                <div className="rounded-3xl border border-emerald-500/30 bg-gradient-to-br from-emerald-500/[0.06] to-transparent p-6 sm:p-8">
+                  <div className="flex items-center gap-3 mb-5">
+                    <motion.div
+                      animate={{ rotate: [0, -8, 8, 0], scale: [1, 1.05, 1] }}
+                      transition={{ duration: 4, repeat: Infinity }}
+                      className="w-14 h-14 rounded-2xl bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center shadow-xl shadow-emerald-500/30"
+                    >
+                      <ShieldCheck size={26} className="text-white" />
+                    </motion.div>
+                    <div>
+                      <div className="text-base font-semibold">Kid-safe by design</div>
+                      <div className="text-xs text-slate-400">
+                        Reviewed by parents like you
+                      </div>
+                    </div>
                   </div>
-                  <div className="text-[9px] uppercase tracking-[0.2em] text-slate-500 font-semibold mb-2">
-                    Certificate of Completion
-                  </div>
-                  <div className="text-xs text-slate-500 mb-1">This certifies that</div>
-                  <div className="text-xl font-semibold tracking-tight mb-1">Maria Santos</div>
-                  <div className="text-xs text-slate-400 mb-4">
-                    completed the{" "}
-                    <span className="text-white">Software Engineer</span> program
-                  </div>
-                  <div className="flex flex-wrap justify-center gap-1.5 mb-5">
-                    {["React", "TypeScript", "Node.js", "APIs"].map((s) => (
-                      <span
-                        key={s}
-                        className="text-[10px] px-2 py-0.5 rounded-md bg-white/[0.04] border border-white/[0.08] text-slate-300"
+                  <div className="space-y-3">
+                    {[
+                      { label: "AI tutor guardrails", value: "Age-tiered" },
+                      { label: "External links", value: "None" },
+                      { label: "Ads", value: "Zero" },
+                      { label: "In-app purchases", value: "None for kids" },
+                      { label: "PH curriculum", value: "K-12 aligned" },
+                    ].map((row) => (
+                      <div
+                        key={row.label}
+                        className="flex items-center justify-between text-sm border-b border-white/[0.04] pb-2 last:border-0 last:pb-0"
                       >
-                        {s}
-                      </span>
+                        <span className="text-slate-400">{row.label}</span>
+                        <span className="font-semibold text-emerald-300">{row.value}</span>
+                      </div>
                     ))}
-                  </div>
-                  <div className="flex items-center justify-center gap-2 pt-4 border-t border-white/[0.06]">
-                    <ShieldCheck size={12} className="text-emerald-300" />
-                    <span className="text-[10px] text-emerald-200 font-medium">
-                      Verified · PF-7K2MX9QA
-                    </span>
                   </div>
                 </div>
               </div>
@@ -763,140 +610,71 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* CTA */}
-      <section className="relative z-10 py-24">
-        <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+      {/* ============ FINAL CTA ============ */}
+      <section className="relative z-10 py-20 lg:py-28">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <motion.div
-            initial={{ opacity: 0, y: 12 }}
+            initial={{ opacity: 0, y: 16 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.6 }}
-            className="relative overflow-hidden rounded-3xl border border-white/[0.08] bg-gradient-to-br from-white/[0.06] to-transparent p-10 lg:p-14"
+            transition={{ duration: 0.7 }}
           >
-            <div className="absolute inset-0 opacity-30"
-              style={{ background: "radial-gradient(ellipse at top, rgba(168,85,247,0.4), transparent 70%)" }}
-            />
-            <div className="relative">
-              <h2 className="text-3xl sm:text-4xl font-semibold tracking-tight mb-3">
-                Start forging today.
-              </h2>
-              <p className="text-base text-slate-400 mb-8 max-w-md mx-auto">
-                Free to start. No credit card. Your first quest is waiting.
-              </p>
+            <motion.div
+              animate={{ y: [0, -8, 0] }}
+              transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+              className="text-5xl mb-6"
+            >
+              🌟
+            </motion.div>
+            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-semibold tracking-tight mb-4 text-balance">
+              Your kid's next lesson is one tap away.
+            </h2>
+            <p className="text-base sm:text-lg text-slate-400 max-w-xl mx-auto mb-8">
+              Free to start. Cancel anytime. No credit card.
+            </p>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
               <PrimaryLinkButton href="/signup" size="lg">
-                Create your account
+                Start learning — free
                 <ArrowRight size={14} className="group-hover:translate-x-0.5 transition-transform" />
               </PrimaryLinkButton>
+              <Link
+                href="/pricing"
+                className="inline-flex items-center gap-2 px-5 py-3 rounded-xl text-sm font-medium text-slate-300 hover:text-white border border-white/[0.08] hover:border-white/[0.16] hover:bg-white/[0.03] transition-all"
+              >
+                See pricing
+              </Link>
             </div>
           </motion.div>
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="relative z-10 border-t border-white/[0.06] bg-[#070710]">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-14">
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-8 lg:gap-12 mb-12">
-            {/* Brand — full width on mobile, 1/3 on larger */}
-            <div className="col-span-2 sm:col-span-1">
-              <Link href="/" className="inline-flex items-center gap-2.5 mb-4">
-                <Logo size={28} />
-                <span className="text-base font-semibold tracking-tight">PathForge</span>
+      {/* ============ FOOTER ============ */}
+      <footer className="relative z-10 border-t border-white/[0.06] py-10">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div className="flex items-center gap-2.5">
+              <Logo size={24} />
+              <span className="text-sm font-semibold tracking-tight">PathForge</span>
+              <span className="text-xs text-slate-500">· built in 🇵🇭</span>
+            </div>
+            <div className="flex items-center gap-5 text-xs text-slate-500">
+              <Link href="/privacy" className="hover:text-slate-300 transition-colors">
+                Privacy
               </Link>
-              <p className="text-xs text-slate-500 leading-relaxed mb-4 max-w-xs">
-                The career operating system for the ambitious — built in the Philippines,
-                made for the world.
-              </p>
-              <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-md bg-white/[0.04] border border-white/[0.08]">
-                <div className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-                <span className="text-[10px] text-slate-400 font-medium tracking-wide">
-                  A ZenForge Technologies product
-                </span>
-              </div>
-            </div>
-
-            {/* Product */}
-            <div>
-              <h4 className="text-xs font-semibold text-slate-300 uppercase tracking-wider mb-4">
-                Product
-              </h4>
-              <ul className="space-y-2.5 text-sm">
-                <li>
-                  <Link href="#features" className="text-slate-400 hover:text-white transition-colors">
-                    Features
-                  </Link>
-                </li>
-                <li>
-                  <Link href="#how-it-works" className="text-slate-400 hover:text-white transition-colors">
-                    How it works
-                  </Link>
-                </li>
-                <li>
-                  <Link href="/pricing" className="text-slate-400 hover:text-white transition-colors">
-                    Pricing
-                  </Link>
-                </li>
-                <li>
-                  <Link href="/signup" className="text-slate-400 hover:text-white transition-colors">
-                    Get started
-                  </Link>
-                </li>
-              </ul>
-            </div>
-
-            {/* Legal */}
-            <div>
-              <h4 className="text-xs font-semibold text-slate-300 uppercase tracking-wider mb-4">
-                Legal
-              </h4>
-              <ul className="space-y-2.5 text-sm">
-                <li>
-                  <Link href="/terms" className="text-slate-400 hover:text-white transition-colors">
-                    Terms of Service
-                  </Link>
-                </li>
-                <li>
-                  <Link href="/privacy" className="text-slate-400 hover:text-white transition-colors">
-                    Privacy Policy
-                  </Link>
-                </li>
-                <li>
-                  <Link href="/cookies" className="text-slate-400 hover:text-white transition-colors">
-                    Cookie Policy
-                  </Link>
-                </li>
-                <li>
-                  <a
-                    href="mailto:privacy@pathforger.app"
-                    className="text-slate-400 hover:text-white transition-colors"
-                  >
-                    Data requests
-                  </a>
-                </li>
-              </ul>
-            </div>
-          </div>
-
-          {/* Bottom bar */}
-          <div className="pt-8 border-t border-white/[0.06] flex flex-col sm:flex-row items-center justify-between gap-3">
-            <div className="text-xs text-slate-500">
-              © 2026 ZenForge Technologies. All rights reserved.
-            </div>
-            <div className="flex items-center gap-2 text-[11px] text-slate-500">
-              <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded bg-white/[0.04] border border-white/[0.08]">
-                <svg className="w-3 h-3 text-emerald-400" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M12 2L1 7v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V7l-11-5z" opacity="0.3"/>
-                  <path d="M9 12l2 2 4-4" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
-                DTI Registered · Philippines
-              </span>
-              <span>·</span>
-              <span>NPC-compliant</span>
+              <Link href="/terms" className="hover:text-slate-300 transition-colors">
+                Terms
+              </Link>
+              <Link href="/cookies" className="hover:text-slate-300 transition-colors">
+                Cookies
+              </Link>
+              <Link href="/pricing" className="hover:text-slate-300 transition-colors">
+                Pricing
+              </Link>
             </div>
           </div>
         </div>
       </footer>
 
-      {/* Sticky CTA appears after scroll */}
       <StickyCTA />
     </div>
   );

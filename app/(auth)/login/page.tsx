@@ -118,7 +118,7 @@ export default function Login() {
       toast.success("Welcome back");
       // Hard navigation ensures cookies are fully established before
       // the next page's auth check runs. router.push can race.
-      window.location.href = "/dashboard";
+      window.location.href = "/learn";
     } catch (error: any) {
       console.error("Login error:", error);
       toast.error(error?.message || "Sign in failed");

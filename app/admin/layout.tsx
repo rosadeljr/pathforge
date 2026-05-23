@@ -69,10 +69,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             error.
           </p>
           <Link
-            href="/dashboard"
+            href="/learn"
             className="inline-flex items-center gap-2 bg-white text-slate-900 hover:bg-slate-100 px-4 py-2 rounded-lg text-sm font-semibold transition-colors"
           >
-            Back to dashboard
+            Back to learning
           </Link>
         </div>
       </div>
@@ -123,7 +123,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           </div>
 
           <Link
-            href="/dashboard"
+            href="/learn"
             className="inline-flex items-center gap-1.5 text-xs text-slate-400 hover:text-white transition-colors"
           >
             <ArrowLeft size={12} />
