@@ -3,6 +3,7 @@ import { createClient as createServiceClient } from "@supabase/supabase-js";
 import { NextResponse } from "next/server";
 import { generateMentorReply } from "@/lib/ai/smart-mentor";
 import { getEntitlements } from "@/lib/entitlements";
+import { CAREER_PATHS } from "@/lib/data/career-paths";
 
 /**
  * AI Mentor endpoint.
@@ -100,32 +101,67 @@ export async function POST(request: Request) {
         const { OpenAI } = await import("openai");
         const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
-        const systemPrompt = `You are ForgeBot — PathForge's career coach. Your name is ForgeBot. You are direct, warm, and specific. You're the friend who's been there and tells the user the real thing.
+        // Conversation memory — pull the last ~14 turns so ForgeBot can follow
+        // up, reference what was said before, and feel like a real conversation.
+        const { data: history } = await supabase
+          .from("ai_messages")
+          .select("role, content")
+          .eq("user_id", user.id)
+          .order("created_at", { ascending: false })
+          .limit(14);
+        const priorTurns = (history || [])
+          .reverse()
+          .map((m: any) => ({
+            role:
+              m.role === "assistant" ? ("assistant" as const) : ("user" as const),
+            content: String(m.content).slice(0, 4000),
+          }));
 
-User context:
-- Level ${ctx.level}, ${ctx.totalXp} total XP
-- ${ctx.streak}-day streak
-- Readiness: ${ctx.readinessScore}%
-- Career path: ${ctx.selectedCareerPathId || "not yet chosen"}
-- Active quests: ${ctx.activeQuests.map((q) => q.title).join(", ") || "none"}
+        // Resolve UUID → human title so the model knows what path the user is on.
+        const careerPathTitle = ctx.selectedCareerPathId
+          ? CAREER_PATHS.find((p) => p.id === ctx.selectedCareerPathId)?.title ||
+            "not yet chosen"
+          : "not yet chosen";
+
+        const activeQuestList =
+          ctx.activeQuests
+            .map((q) =>
+              q.difficulty ? `${q.title} (${q.difficulty})` : q.title
+            )
+            .join(", ") || "none";
+
+        const systemPrompt = `You are ForgeBot — PathForge's AI career coach AND a knowledgeable mentor on anything that helps the user grow. You can help across career strategy, learning, technical concepts, life advice, and motivation. You know this user's journey from PathForge.
+
+THE USER:
+- Level ${ctx.level} · ${ctx.totalXp.toLocaleString()} XP · ${ctx.streak}-day streak · Readiness ${ctx.readinessScore}%
+- Career path: ${careerPathTitle}
+- Active quests: ${activeQuestList}
 - Completed quests: ${ctx.completedCount}
 
-Rules:
-- Refer to yourself as "ForgeBot" if you mention yourself. Never say "as an AI" or "I'm just an AI".
-- 2-4 sentences max. Plain language. No corporate-speak.
-- Reference their actual context (level, quests, streak)
-- Give ONE specific next action they can do today
-- Tone: warm but direct, slightly playful. Friend-of-a-friend who's been there.
-- Avoid: generic motivational fluff, hedging, "it depends" answers.`;
+YOUR STYLE:
+- Warm, direct, specific — like the friend who's actually been there.
+- Refer to yourself as "ForgeBot" if needed. Never say "as an AI" or "I'm just an AI."
+- No corporate-speak, no generic motivational fluff, no excessive hedging.
+
+HOW TO ANSWER:
+- Match length to the question. Quick questions → short replies (1–3 sentences). Deep questions (technical, learning, career decisions, life advice) → as detailed as needed. Include examples, step-by-step instructions, or code in markdown code blocks when useful.
+- For technical/learning questions, explain accurately and substantively — don't dumb it down. Use the user's level and path to calibrate how much foundation they need.
+- For career questions, be specific and actionable. When it fits, suggest one concrete next action.
+- For "stuck" or motivation moments, be real and warm. No empty cheerleading.
+- For off-topic questions, still help if you reasonably can. Gentle redirects only if it's completely unrelated.
+- Reference the conversation history naturally — follow up, build on prior turns, don't repeat yourself.
+
+You're a coach, a mentor, AND a tutor. Don't hide knowledge behind brevity.`;
 
         const completion = await openai.chat.completions.create({
-          model: "gpt-4o-mini",
+          model: "gpt-4o",
           messages: [
             { role: "system", content: systemPrompt },
+            ...priorTurns,
             { role: "user", content: message },
           ],
           temperature: 0.7,
-          max_tokens: 250,
+          max_tokens: 900,
         });
 
         aiReply = completion.choices[0]?.message?.content?.trim() || null;
