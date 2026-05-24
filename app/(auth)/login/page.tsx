@@ -176,7 +176,7 @@ export default function Login() {
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/[0.04] border border-white/[0.06] mb-6">
               <div className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
               <span className="text-xs font-medium text-slate-300 tracking-wide">
-                K-12 learning, gamified · ages 6–18
+                K-10 learning, gamified · ages 6–15
               </span>
             </div>
 
@@ -189,7 +189,7 @@ export default function Login() {
             </h1>
 
             <p className="text-lg text-slate-400 leading-relaxed max-w-md">
-              Fun, interactive K-12 lessons across Math, English, Filipino, Science,
+              Fun, interactive K-10 lessons across Math, English, Filipino, Science,
               and Araling Panlipunan — with a kid-safe AI tutor.
             </p>
 
@@ -198,7 +198,7 @@ export default function Login() {
               {[
                 { value: "5", label: "Core subjects" },
                 { value: "32", label: "Careers to unlock" },
-                { value: "1–12", label: "Grades (K-12)" },
+                { value: "1–10", label: "Grades (K-10)" },
               ].map((stat, i) => (
                 <motion.div
                   key={i}

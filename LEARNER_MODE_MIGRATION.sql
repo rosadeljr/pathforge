@@ -16,9 +16,15 @@ UPDATE public.profiles
   WHERE user_mode IS NULL
     AND (selected_career_path_id IS NOT NULL OR total_xp > 0);
 
--- Grade level for learner mode (1-10 covers PH K-10).
+-- Grade level for learner mode (1-10 covers PH Elementary + Junior High).
 ALTER TABLE public.profiles
-  ADD COLUMN IF NOT EXISTS learner_grade INTEGER
+  ADD COLUMN IF NOT EXISTS learner_grade INTEGER;
+
+ALTER TABLE public.profiles
+  DROP CONSTRAINT IF EXISTS profiles_learner_grade_check;
+
+ALTER TABLE public.profiles
+  ADD CONSTRAINT profiles_learner_grade_check
     CHECK (learner_grade IS NULL OR (learner_grade BETWEEN 1 AND 10));
 
 -- Selected subjects (e.g. ['math', 'english', 'filipino']).

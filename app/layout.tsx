@@ -21,7 +21,7 @@ export const metadata: Metadata = {
     template: "%s · PathForge",
   },
   description:
-    "Fun, interactive K-12 lessons for Filipino kids ages 6–18. Quests, streaks, careers to unlock, and a kid-safe AI tutor. Built for Filipino families.",
+    "Fun, interactive K-10 lessons for Filipino kids ages 6–15. Quests, streaks, careers to unlock, and a kid-safe AI tutor. Built for Filipino families.",
   applicationName: "PathForge",
   manifest: "/manifest.webmanifest",
   appleWebApp: {
@@ -38,7 +38,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "PathForge — Where kids forge their future",
     description:
-      "K-12 learning, gamified · Ages 6–18 · Built for Filipino students.",
+      "K-10 learning, gamified · Ages 6–15 · Built for Filipino students.",
     siteName: "PathForge",
     type: "website",
     locale: "en_PH",
@@ -46,12 +46,12 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "PathForge — Where kids forge their future",
-    description: "K-12 learning, gamified. Filipino-built. Ages 6–18.",
+    description: "K-10 learning, gamified. Filipino-built. Ages 6–15.",
   },
   keywords: [
     "PathForge",
     "Filipino kids learning",
-    "K-12 Philippines",
+    "K-10 Philippines",
     "kids education app",
     "AI tutor for kids",
     "gamified learning",

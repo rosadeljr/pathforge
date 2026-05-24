@@ -62,7 +62,7 @@ export default function TermsPage() {
 
           <Section title="2. Eligibility">
             <p>
-              PathForge is designed for Filipino students <strong>ages 6 to 18</strong>.
+              PathForge is designed for Filipino students <strong>ages 6 to 15</strong>.
             </p>
             <ul className="list-disc ml-5 mt-2 space-y-1.5">
               <li>

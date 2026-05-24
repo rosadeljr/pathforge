@@ -121,7 +121,7 @@ export default function Image() {
             letterSpacing: "-0.01em",
           }}
         >
-          K-12 learning, gamified · Ages 6–18 · 🇵🇭 Filipino-built
+          K-10 learning, gamified · Ages 6–15 · 🇵🇭 Filipino-built
         </div>
       </div>
     ),

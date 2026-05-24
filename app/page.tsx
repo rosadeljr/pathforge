@@ -132,11 +132,11 @@ export default function Landing() {
               <div className="absolute inset-0 w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping opacity-50" />
             </div>
             <span className="text-[13px] font-semibold text-white tracking-[0.04em]">
-              K-12 learning,{" "}
+              K-10 learning,{" "}
               <span className="bg-gradient-to-r from-amber-300 via-orange-300 to-rose-300 bg-clip-text text-transparent">
                 gamified
               </span>{" "}
-              · ages 6–18
+              · ages 6–15
             </span>
           </motion.div>
 
@@ -169,7 +169,7 @@ export default function Landing() {
             transition={{ duration: 0.7, delay: 0.5 }}
             className="text-balance text-lg sm:text-xl text-slate-400 max-w-2xl mx-auto mb-10 leading-relaxed"
           >
-            Fun, interactive K-12 lessons across Math, English, Filipino,
+            Fun, interactive K-10 lessons across Math, English, Filipino,
             Science, and Araling Panlipunan. Quests, streaks, mascots, and a
             kid-safe AI tutor that adapts to your child's age and grade.
           </motion.p>
@@ -253,7 +253,7 @@ export default function Landing() {
               </span>{" "}
               to{" "}
               <span className="bg-gradient-to-r from-indigo-300 to-purple-300 bg-clip-text text-transparent">
-                calculus.
+                algebra.
               </span>
             </h2>
             <p className="text-base text-slate-400 max-w-2xl mx-auto">
@@ -285,12 +285,12 @@ export default function Landing() {
               },
               {
                 tier: "Teen Forgers",
-                age: "Ages 14–18",
-                grades: "Grades 8–12",
+                age: "Ages 14–15",
+                grades: "Grades 8–10",
                 emoji: "🎯",
                 color: "from-rose-400 to-pink-600",
                 glow: "rgba(244,63,94,0.5)",
-                desc: "Mature, study-focused UI. Algebra → calculus prep, rhetoric, college essays, science fundamentals, career exploration.",
+                desc: "Mature, study-focused UI. Algebra, geometry, literature, science fundamentals, and career exploration.",
               },
             ].map((t, i) => (
               <motion.div
@@ -353,15 +353,15 @@ export default function Landing() {
               The five PH core subjects, all in one app.
             </h2>
             <p className="text-base text-slate-400 max-w-xl mx-auto">
-              Aligned with the Philippine K-12 curriculum. Lessons in English
+              Aligned with the Philippine K-10 curriculum. Lessons in English
               and Filipino where it matters.
             </p>
           </motion.div>
 
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
             {[
-              { id: "math", title: "Math", filipino: "Matematika", emoji: "🔢", gradient: "from-sky-400 to-blue-600", accent: "#0ea5e9", desc: "Counting through calculus prep — every grade." },
-              { id: "english", title: "English", filipino: "Ingles", emoji: "📖", gradient: "from-violet-400 to-purple-600", accent: "#a855f7", desc: "Reading, writing, grammar, essay craft, rhetoric." },
+              { id: "math", title: "Math", filipino: "Matematika", emoji: "🔢", gradient: "from-sky-400 to-blue-600", accent: "#0ea5e9", desc: "Counting through algebra and geometry — every grade." },
+              { id: "english", title: "English", filipino: "Ingles", emoji: "📖", gradient: "from-violet-400 to-purple-600", accent: "#a855f7", desc: "Reading, writing, grammar, vocabulary, and essay basics." },
               { id: "filipino", title: "Filipino", filipino: "Filipino", emoji: "🇵🇭", gradient: "from-amber-400 to-orange-600", accent: "#f59e0b", desc: "Bokabularyo, gramatika, panitikan — mahalin ang sariling wika." },
               { id: "science", title: "Science", filipino: "Agham", emoji: "🔬", gradient: "from-emerald-400 to-teal-600", accent: "#10b981", desc: "From plants to photosynthesis to Newton's laws." },
               { id: "ap", title: "Araling Panlipunan", filipino: "AP", emoji: "🌏", gradient: "from-rose-400 to-pink-600", accent: "#f43f5e", desc: "PH history, geography, ASEAN, economy basics." },
@@ -728,7 +728,7 @@ export default function Landing() {
                       { label: "External links", value: "None" },
                       { label: "Ads", value: "Zero" },
                       { label: "In-app purchases", value: "None for kids" },
-                      { label: "PH curriculum", value: "K-12 aligned" },
+                      { label: "PH curriculum", value: "K-10 aligned" },
                     ].map((row) => (
                       <div
                         key={row.label}

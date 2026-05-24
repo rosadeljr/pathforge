@@ -312,7 +312,7 @@ export default function SignUp() {
                 >
                   <div className="text-lg mb-1">🎒</div>
                   <div className="text-xs font-semibold">A learner</div>
-                  <div className="text-[10px] text-slate-500">Ages 6–18</div>
+                  <div className="text-[10px] text-slate-500">Ages 6–15</div>
                 </button>
                 <button
                   type="button"
@@ -606,7 +606,7 @@ export default function SignUp() {
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/[0.04] border border-white/[0.06] mb-6">
               <div className="w-1.5 h-1.5 rounded-full bg-amber-400" />
               <span className="text-xs font-medium text-slate-300 tracking-wide">
-                For Filipino students, ages 6–18
+                For Filipino students, ages 6–15
               </span>
             </div>
 
@@ -626,7 +626,7 @@ export default function SignUp() {
             {/* Feature list */}
             <ul className="space-y-3.5">
               {[
-                "5 core PH subjects, grades 1–12",
+                "5 core PH subjects, grades 1–10",
                 "Kid-safe AI tutor that adapts to age",
                 "Career adventures with 5-stage progression",
                 "Parent dashboard with weekly progress",

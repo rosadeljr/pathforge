@@ -35,7 +35,7 @@ export default function PrivacyPage() {
         <p className="text-sm text-slate-500 mb-10">
           Compliant with the Data Privacy Act of 2012 (Republic Act No. 10173) and its
           Implementing Rules and Regulations. PathForge is designed for Filipino students
-          ages 6–18; this policy explains how we handle children's data with extra care.
+          ages 6–15; this policy explains how we handle children's data with extra care.
         </p>
 
         <div className="space-y-7 text-slate-300 leading-relaxed">
@@ -361,7 +361,7 @@ export default function PrivacyPage() {
 
           <Section title="11. Children's Privacy">
             <p>
-              PathForge is built for Filipino students <strong>ages 6 to 18</strong>. We treat
+              PathForge is built for Filipino students <strong>ages 6 to 15</strong>. We treat
               children's data with extra care under R.A. 10173, NPC Advisory Opinions on
               minors' personal data, and aligned with international best practices (UN CRC
               General Comment No. 25).
