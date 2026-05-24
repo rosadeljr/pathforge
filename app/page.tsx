@@ -528,6 +528,129 @@ export default function Landing() {
         </div>
       </section>
 
+      {/* ============ CAREER MASTERY CERTIFICATES ============ */}
+      <section className="relative z-10 py-20 lg:py-24">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-50px" }}
+            transition={{ duration: 0.7 }}
+            className="grid lg:grid-cols-2 gap-10 lg:gap-16 items-center"
+          >
+            {/* Left — copy */}
+            <div>
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/[0.08] border border-amber-500/30 mb-4">
+                <Trophy size={11} className="text-amber-400" />
+                <span className="text-xs font-medium text-amber-200 tracking-wide">
+                  Career Mastery Certificates
+                </span>
+              </div>
+              <h2 className="text-3xl sm:text-4xl lg:text-5xl font-semibold tracking-tight mb-4 text-balance">
+                Real{" "}
+                <span className="bg-gradient-to-r from-amber-300 via-orange-300 to-pink-300 bg-clip-text text-transparent">
+                  certificates
+                </span>{" "}
+                kids can show off.
+              </h2>
+              <p className="text-base text-slate-400 leading-relaxed mb-6">
+                Each of the 32 careers in PathForge is a 5-stage adventure.
+                When a kid masters the full journey — Cadet → Apprentice →
+                Trainee → Junior → Full {`{Career}`} — they earn a
+                personalized Certificate of Career Mastery with a unique
+                credential code.
+              </p>
+              <div className="space-y-2.5 mb-7">
+                {[
+                  "Personalized with the kid's name + career + date",
+                  "Unique credential ID for verification",
+                  "Shareable — proud parents love this one",
+                  "Earn one for every career a kid masters (up to 32)",
+                ].map((item, i) => (
+                  <div key={i} className="flex items-start gap-3 text-sm text-slate-300">
+                    <div className="mt-0.5 w-5 h-5 rounded-full bg-amber-500/[0.15] border border-amber-500/30 flex items-center justify-center flex-shrink-0">
+                      <Check size={12} className="text-amber-300" strokeWidth={3} />
+                    </div>
+                    <span>{item}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Right — certificate mockup */}
+            <div className="relative">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.92, rotate: -2 }}
+                whileInView={{ opacity: 1, scale: 1, rotate: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+                whileHover={{ y: -6, rotate: 0.5 }}
+                className="relative overflow-hidden rounded-3xl border-2 border-amber-400/40 bg-gradient-to-br from-amber-500/[0.12] via-orange-500/[0.06] to-transparent p-7 sm:p-10"
+                style={{
+                  boxShadow: "0 24px 60px rgba(245,158,11,0.25)",
+                }}
+              >
+                {/* Glow */}
+                <div
+                  className="absolute -top-24 left-1/2 -translate-x-1/2 w-80 h-48 opacity-50 pointer-events-none"
+                  style={{
+                    background:
+                      "radial-gradient(ellipse, rgba(245,158,11,0.5), transparent 70%)",
+                    filter: "blur(20px)",
+                  }}
+                />
+                {/* Decorative corners */}
+                <div className="absolute top-3 left-3 w-10 h-10 border-t-2 border-l-2 border-amber-400/40 rounded-tl-2xl pointer-events-none" />
+                <div className="absolute top-3 right-3 w-10 h-10 border-t-2 border-r-2 border-amber-400/40 rounded-tr-2xl pointer-events-none" />
+                <div className="absolute bottom-3 left-3 w-10 h-10 border-b-2 border-l-2 border-amber-400/40 rounded-bl-2xl pointer-events-none" />
+                <div className="absolute bottom-3 right-3 w-10 h-10 border-b-2 border-r-2 border-amber-400/40 rounded-br-2xl pointer-events-none" />
+
+                <div className="relative text-center">
+                  <div className="inline-flex items-center gap-2 mb-4">
+                    <Logo size={22} />
+                    <span className="text-xs font-semibold tracking-tight">PathForge</span>
+                  </div>
+                  <div className="text-[9px] uppercase tracking-[0.3em] text-amber-300 font-bold mb-3">
+                    ✦ Certificate of Career Mastery ✦
+                  </div>
+                  <p className="text-[10px] text-slate-400 mb-1">This certifies that</p>
+                  <div className="text-2xl sm:text-3xl font-bold mb-3 bg-gradient-to-r from-amber-200 via-orange-200 to-amber-300 bg-clip-text text-transparent">
+                    Lara Santos
+                  </div>
+                  <p className="text-xs text-slate-300 mb-3">
+                    has mastered the
+                  </p>
+                  <motion.div
+                    animate={{ y: [0, -4, 0] }}
+                    transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+                    className="inline-flex flex-col items-center gap-2 mb-4"
+                  >
+                    <div
+                      className="w-14 h-14 rounded-2xl bg-gradient-to-br from-emerald-400 to-teal-600 flex items-center justify-center text-3xl shadow-xl"
+                      style={{ boxShadow: "0 8px 24px rgba(16,185,129,0.5)" }}
+                    >
+                      🔬
+                    </div>
+                    <div className="text-xl font-bold">Scientist</div>
+                  </motion.div>
+                  <p className="text-[11px] text-slate-400 mb-3 max-w-xs mx-auto leading-relaxed">
+                    adventure on PathForge —{" "}
+                    <span className="text-amber-200">2,500 XP earned</span>
+                  </p>
+                  <div className="inline-flex items-center gap-4 text-[10px] text-slate-400 pt-3 border-t border-white/[0.06]">
+                    <span>May 2026</span>
+                    <span className="w-px h-3 bg-white/10" />
+                    <span className="font-mono text-amber-200/80">
+                      PF-SCIE-K3M2P9
+                    </span>
+                  </div>
+                </div>
+              </motion.div>
+            </div>
+          </motion.div>
+        </div>
+      </section>
+
       {/* ============ FOR PARENTS ============ */}
       <section id="parents" className="relative z-10 py-20 lg:py-24">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">

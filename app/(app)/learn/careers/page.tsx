@@ -13,6 +13,7 @@ import {
   Heart,
   Loader2,
   Check,
+  Trophy,
 } from "lucide-react";
 import toast from "react-hot-toast";
 import { createClient } from "@/lib/supabase/client";
@@ -119,11 +120,21 @@ export default function CareersPage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
         >
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/[0.04] border border-white/[0.06] mb-3">
-            <Compass size={11} className="text-amber-400" />
-            <span className="text-xs font-medium text-slate-300 tracking-wide">
-              Career explorer
-            </span>
+          <div className="flex items-center justify-between gap-3 flex-wrap mb-3">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/[0.04] border border-white/[0.06]">
+              <Compass size={11} className="text-amber-400" />
+              <span className="text-xs font-medium text-slate-300 tracking-wide">
+                Career explorer
+              </span>
+            </div>
+            <Link
+              href="/learn/certificates"
+              className="inline-flex items-center gap-1.5 text-xs font-semibold text-amber-300 hover:text-amber-200 transition-colors"
+            >
+              <Trophy size={12} />
+              My certificates
+              <ArrowRight size={10} />
+            </Link>
           </div>
           <h1 className="text-3xl sm:text-4xl font-semibold tracking-tight mb-1">
             {tier === "little"
@@ -133,7 +144,8 @@ export default function CareersPage() {
               : "Explore careers · find your path"}
           </h1>
           <p className="text-sm text-slate-400">
-            Every lesson you finish unlocks new careers to discover. Pick one as your dream — your tutor will help you get there.
+            Every lesson you finish unlocks new careers. Master the full
+            5-stage adventure to earn a Career Mastery Certificate. 🏆
           </p>
         </motion.div>
 

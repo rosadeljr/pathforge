@@ -23,6 +23,10 @@ import {
   type AgeTier,
 } from "@/lib/data/learner";
 import { getLesson } from "@/lib/data/learner-lessons";
+import {
+  newlyMasteredCareers,
+  generateCredentialCode,
+} from "@/lib/certificates";
 import { PageShimmer } from "@/components/ui/Shimmer";
 
 type Phase = "loading" | "playing" | "done";
@@ -203,6 +207,9 @@ export default function LessonPlayerPage() {
   }
 
   const [isFirstEver, setIsFirstEver] = useState(false);
+  const [newCerts, setNewCerts] = useState<
+    { career_id: string; career_title: string; credential_code: string }[]
+  >([]);
 
   async function persistCompletion() {
     setPersisting(true);
@@ -254,18 +261,59 @@ export default function LessonPlayerPage() {
       if (awardXp > 0) {
         const { data: prof } = await supabase
           .from("profiles")
-          .select("total_xp, current_xp")
+          .select("total_xp, current_xp, username, full_name")
           .eq("id", uid)
           .single();
         if (prof) {
+          const newTotalXp = (prof.total_xp || 0) + awardXp;
           await supabase
             .from("profiles")
             .update({
-              total_xp: (prof.total_xp || 0) + awardXp,
+              total_xp: newTotalXp,
               current_xp: (prof.current_xp || 0) + awardXp,
               last_quest_completed_at: new Date().toISOString(),
             })
             .eq("id", uid);
+
+          // 🏆 Career mastery — auto-award certificates for any newly
+          // mastered career (reached final stage at new total XP).
+          try {
+            const { data: existingCerts } = await supabase
+              .from("career_certificates")
+              .select("career_id")
+              .eq("user_id", uid);
+            const existingIds = (existingCerts || []).map(
+              (c: any) => c.career_id
+            );
+            const newlyMastered = newlyMasteredCareers(newTotalXp, existingIds);
+            if (newlyMastered.length > 0) {
+              const recipientName =
+                prof.full_name || prof.username || "Forger";
+              const certRows = newlyMastered.map((c) => ({
+                user_id: uid,
+                career_id: c.id,
+                credential_code: generateCredentialCode(c.id),
+                recipient_name: recipientName,
+                career_title: c.title,
+                total_xp_at_award: newTotalXp,
+              }));
+              const { data: inserted } = await supabase
+                .from("career_certificates")
+                .insert(certRows)
+                .select("career_id, credential_code, career_title");
+              if (inserted && inserted.length > 0) {
+                setNewCerts(
+                  inserted.map((c: any) => ({
+                    career_id: c.career_id,
+                    career_title: c.career_title,
+                    credential_code: c.credential_code,
+                  }))
+                );
+              }
+            }
+          } catch (certErr) {
+            console.warn("[lesson] cert award (non-fatal):", certErr);
+          }
         }
       }
     } catch (e) {
@@ -356,6 +404,63 @@ export default function LessonPlayerPage() {
                 <div className="text-base sm:text-lg font-bold text-amber-50">
                   Welcome to PathForge, Forger. Your journey starts here.
                 </div>
+              </div>
+            </motion.div>
+          )}
+
+          {/* 🏆 Career Mastery Certificate awarded */}
+          {newCerts.length > 0 && (
+            <motion.div
+              initial={{ opacity: 0, y: -20, scale: 0.9 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              transition={{
+                type: "spring",
+                stiffness: 200,
+                damping: 18,
+                delay: 0.2,
+              }}
+              className="relative overflow-hidden rounded-3xl border-2 border-amber-400/60 bg-gradient-to-br from-amber-500/[0.18] via-orange-500/[0.10] to-transparent p-5 mb-7"
+            >
+              <motion.div
+                animate={{
+                  background: [
+                    "radial-gradient(ellipse, rgba(245,158,11,0.5), transparent 70%)",
+                    "radial-gradient(ellipse, rgba(245,158,11,0.7), transparent 70%)",
+                    "radial-gradient(ellipse, rgba(245,158,11,0.5), transparent 70%)",
+                  ],
+                }}
+                transition={{ duration: 2, repeat: Infinity }}
+                className="absolute -top-16 left-1/2 -translate-x-1/2 w-96 h-40 pointer-events-none"
+              />
+              <div className="relative text-center">
+                <motion.div
+                  animate={{ rotate: [0, -10, 10, -10, 0], scale: [1, 1.2, 1] }}
+                  transition={{ duration: 1.5, repeat: Infinity, repeatDelay: 1 }}
+                  className="text-6xl mb-2 inline-block"
+                >
+                  🏆
+                </motion.div>
+                <div className="text-[10px] uppercase tracking-wider text-amber-300 font-bold mb-1">
+                  Career Mastery unlocked!
+                </div>
+                <div className="text-lg sm:text-xl font-bold text-amber-50 mb-2">
+                  {newCerts.length === 1
+                    ? `You've mastered the ${newCerts[0].career_title} career!`
+                    : `You've mastered ${newCerts.length} careers!`}
+                </div>
+                <div className="text-xs text-amber-200/80 mb-4">
+                  PathForge Certificate awarded · credential{" "}
+                  <span className="font-mono text-amber-100">
+                    {newCerts[0].credential_code}
+                  </span>
+                </div>
+                <Link
+                  href="/learn/certificates"
+                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-gradient-to-r from-amber-400 to-orange-500 text-slate-900 text-sm font-bold hover:opacity-90 transition-opacity"
+                >
+                  <Trophy size={14} />
+                  View certificate
+                </Link>
               </div>
             </motion.div>
           )}
