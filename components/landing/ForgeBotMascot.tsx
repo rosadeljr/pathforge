@@ -1,14 +1,23 @@
 "use client";
 
 /**
- * ForgeBot Mascot v4 — bold, friendly, clearly visible on dark.
+ * ForgeBot Mascot v5 — "Holographic Companion."
  *
- * Lesson learned from v3: pure-white gradients vanish against a dark
- * background. v4 uses saturated indigo/violet body + cyan accents that
- * pop clearly. Sleek, cohesive silhouette. No floating parts.
+ * Big lesson from v4: thin outlines + low-contrast gradients vanish on dark.
+ * v5 uses SOLID FILLED SHAPES with rich, saturated gradients that pop hard
+ * against #0a0a0f. Sleek, cinematic, premium — feels like a Pixar mascot
+ * rather than a wireframe sketch.
+ *
+ * Built with pure SVG + Framer Motion (no 3D libraries). The "3D" comes from:
+ *   - Multi-stop radial gradients on every shape (top-left light source)
+ *   - Layered rim-light strokes for edge definition
+ *   - Perspective + rotateY/X on the container for parallax tilt
+ *   - Cyan rim glow + ambient halo behind the figure
+ *   - Saturn ring orbiting in 3D-illusion
+ *   - Particle field + sparkles for "alive" energy
  */
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { motion, useMotionValue, useSpring, useTransform } from "framer-motion";
 
 interface ForgeBotMascotProps {
@@ -16,44 +25,60 @@ interface ForgeBotMascotProps {
   className?: string;
 }
 
-export function ForgeBotMascot({ size = 340, className = "" }: ForgeBotMascotProps) {
+export function ForgeBotMascot({ size = 360, className = "" }: ForgeBotMascotProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mouseX = useMotionValue(0);
   const mouseY = useMotionValue(0);
-  const springConfig = { stiffness: 80, damping: 14, mass: 0.6 };
-  const rotateY = useSpring(useTransform(mouseX, [-1, 1], [12, -12]), springConfig);
-  const rotateX = useSpring(useTransform(mouseY, [-1, 1], [-7, 7]), springConfig);
+  const springConfig = { stiffness: 70, damping: 14, mass: 0.7 };
+  const rotateY = useSpring(useTransform(mouseX, [-1, 1], [14, -14]), springConfig);
+  const rotateX = useSpring(useTransform(mouseY, [-1, 1], [-8, 8]), springConfig);
   const eyeOffsetX = useSpring(useTransform(mouseX, [-1, 1], [-4, 4]), springConfig);
-  const eyeOffsetY = useSpring(useTransform(mouseY, [-1, 1], [-2, 2]), springConfig);
+  const eyeOffsetY = useSpring(useTransform(mouseY, [-1, 1], [-2.5, 2.5]), springConfig);
 
   const [blink, setBlink] = useState(false);
   const [wave, setWave] = useState(false);
+  const [pulse, setPulse] = useState(false);
 
+  // Random blinks
   useEffect(() => {
-    let timer: any;
+    let t: any;
     const schedule = () => {
-      const delay = 2200 + Math.random() * 3000;
-      timer = setTimeout(() => {
+      t = setTimeout(() => {
         setBlink(true);
-        setTimeout(() => setBlink(false), 120);
+        setTimeout(() => setBlink(false), 110);
         schedule();
-      }, delay);
+      }, 2000 + Math.random() * 3500);
     };
     schedule();
-    return () => clearTimeout(timer);
+    return () => clearTimeout(t);
   }, []);
 
+  // Periodic wave
   useEffect(() => {
-    let timer: any;
+    let t: any;
     const schedule = () => {
-      timer = setTimeout(() => {
+      t = setTimeout(() => {
         setWave(true);
-        setTimeout(() => setWave(false), 1300);
+        setTimeout(() => setWave(false), 1400);
         schedule();
-      }, 7500 + Math.random() * 4000);
+      }, 7000 + Math.random() * 4000);
     };
     schedule();
-    return () => clearTimeout(timer);
+    return () => clearTimeout(t);
+  }, []);
+
+  // Periodic power burst
+  useEffect(() => {
+    let t: any;
+    const schedule = () => {
+      t = setTimeout(() => {
+        setPulse(true);
+        setTimeout(() => setPulse(false), 700);
+        schedule();
+      }, 5000 + Math.random() * 3000);
+    };
+    schedule();
+    return () => clearTimeout(t);
   }, []);
 
   function handleMove(e: React.MouseEvent<HTMLDivElement>) {
@@ -69,30 +94,50 @@ export function ForgeBotMascot({ size = 340, className = "" }: ForgeBotMascotPro
     mouseY.set(0);
   }
 
+  // Orbit particles
+  const orbitParticles = useMemo(
+    () =>
+      Array.from({ length: 12 }).map((_, i) => ({
+        angle: (i / 12) * Math.PI * 2,
+        delay: (i / 12) * 2.5,
+        size: 1.8 + Math.random() * 1.6,
+      })),
+    []
+  );
+
   return (
     <div
       ref={containerRef}
       onMouseMove={handleMove}
       onMouseLeave={handleLeave}
       className={`relative inline-block ${className}`}
-      style={{ width: size, height: size, perspective: "1200px" }}
+      style={{ width: size, height: size, perspective: "1300px" }}
     >
-      {/* Ambient halo */}
+      {/* Big breathing halo */}
       <motion.div
-        animate={{ opacity: [0.65, 0.9, 0.65], scale: [1, 1.08, 1] }}
-        transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+        animate={{ opacity: [0.55, 0.85, 0.55], scale: [1, 1.08, 1] }}
+        transition={{ duration: 4.5, repeat: Infinity, ease: "easeInOut" }}
         className="absolute inset-0 pointer-events-none"
         style={{
           background:
-            "radial-gradient(circle at 50% 45%, rgba(99,102,241,0.45), rgba(34,211,238,0.18) 35%, transparent 65%)",
-          filter: "blur(8px)",
+            "radial-gradient(circle at 50% 45%, rgba(124,58,237,0.55), rgba(34,211,238,0.20) 35%, transparent 65%)",
+          filter: "blur(10px)",
+        }}
+      />
+      {/* Cyan rim halo */}
+      <div
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          background:
+            "radial-gradient(circle at 50% 38%, rgba(34,211,238,0.35), transparent 50%)",
+          filter: "blur(16px)",
         }}
       />
 
       {/* Float */}
       <motion.div
-        animate={{ y: [0, -10, 0] }}
-        transition={{ duration: 3.8, repeat: Infinity, ease: "easeInOut" }}
+        animate={{ y: [0, -12, 0] }}
+        transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
         style={{ width: "100%", height: "100%" }}
       >
         {/* Tilt */}
@@ -106,67 +151,84 @@ export function ForgeBotMascot({ size = 340, className = "" }: ForgeBotMascotPro
           }}
         >
           <svg
-            viewBox="0 0 320 360"
+            viewBox="0 0 360 400"
             width="100%"
             height="100%"
             xmlns="http://www.w3.org/2000/svg"
-            style={{ filter: "drop-shadow(0 24px 40px rgba(99,102,241,0.4))" }}
+            style={{ filter: "drop-shadow(0 30px 50px rgba(99,102,241,0.45))" }}
           >
             <defs>
-              {/* Body indigo-violet — clearly visible on dark */}
-              <linearGradient id="body" x1="20%" y1="0%" x2="80%" y2="100%">
-                <stop offset="0%" stopColor="#a5b4fc" />
-                <stop offset="40%" stopColor="#818cf8" />
-                <stop offset="100%" stopColor="#4338ca" />
-              </linearGradient>
-              {/* Head — slightly cooler/brighter */}
-              <linearGradient id="head" x1="20%" y1="0%" x2="80%" y2="100%">
-                <stop offset="0%" stopColor="#c7d2fe" />
-                <stop offset="40%" stopColor="#a5b4fc" />
-                <stop offset="100%" stopColor="#6366f1" />
-              </linearGradient>
-              {/* Visor — deep dark with cyan tint */}
-              <linearGradient id="visor" x1="0%" y1="0%" x2="0%" y2="100%">
-                <stop offset="0%" stopColor="#1e1b4b" />
-                <stop offset="60%" stopColor="#0c0a1f" />
-                <stop offset="100%" stopColor="#000000" />
-              </linearGradient>
-              {/* Joint — darker */}
-              <linearGradient id="joint" x1="30%" y1="0%" x2="70%" y2="100%">
-                <stop offset="0%" stopColor="#3730a3" />
+              {/* HEAD — vibrant indigo→violet with top-light */}
+              <radialGradient id="headFill" cx="32%" cy="20%" r="90%">
+                <stop offset="0%" stopColor="#e0e7ff" />
+                <stop offset="20%" stopColor="#a5b4fc" />
+                <stop offset="50%" stopColor="#7c3aed" />
+                <stop offset="85%" stopColor="#4c1d95" />
                 <stop offset="100%" stopColor="#1e1b4b" />
+              </radialGradient>
+              {/* BODY — slightly cooler */}
+              <radialGradient id="bodyFill" cx="35%" cy="15%" r="100%">
+                <stop offset="0%" stopColor="#c7d2fe" />
+                <stop offset="25%" stopColor="#818cf8" />
+                <stop offset="60%" stopColor="#4338ca" />
+                <stop offset="100%" stopColor="#1e1b4b" />
+              </radialGradient>
+              {/* FACE PLATE — deep glass */}
+              <radialGradient id="faceFill" cx="30%" cy="25%" r="90%">
+                <stop offset="0%" stopColor="#1e1b4b" />
+                <stop offset="50%" stopColor="#020617" />
+                <stop offset="100%" stopColor="#000000" />
+              </radialGradient>
+              {/* JOINT — darker neutral */}
+              <linearGradient id="jointFill" x1="30%" y1="0%" x2="70%" y2="100%">
+                <stop offset="0%" stopColor="#475569" />
+                <stop offset="100%" stopColor="#1e293b" />
               </linearGradient>
-              {/* Eye glow */}
-              <radialGradient id="eyeGlow" cx="50%" cy="50%" r="55%">
+              {/* EYE — bright cyan */}
+              <radialGradient id="eyeFill" cx="40%" cy="35%" r="65%">
                 <stop offset="0%" stopColor="#ffffff" />
-                <stop offset="30%" stopColor="#a5f3fc" />
-                <stop offset="70%" stopColor="#22d3ee" />
-                <stop offset="100%" stopColor="#0e7490" stopOpacity="0" />
+                <stop offset="25%" stopColor="#cffafe" />
+                <stop offset="55%" stopColor="#22d3ee" />
+                <stop offset="100%" stopColor="#0891b2" stopOpacity="0" />
               </radialGradient>
-              {/* Power core */}
-              <radialGradient id="core" cx="50%" cy="50%" r="50%">
-                <stop offset="0%" stopColor="#fef9c3" />
-                <stop offset="30%" stopColor="#fbbf24" />
-                <stop offset="80%" stopColor="#d97706" />
-                <stop offset="100%" stopColor="#78350f" stopOpacity="0" />
-              </radialGradient>
-              {/* Antenna */}
-              <radialGradient id="ant" cx="50%" cy="50%" r="50%">
+              {/* POWER CORE — amber */}
+              <radialGradient id="coreFill" cx="50%" cy="50%" r="55%">
                 <stop offset="0%" stopColor="#ffffff" />
-                <stop offset="40%" stopColor="#facc15" />
-                <stop offset="100%" stopColor="#a16207" stopOpacity="0" />
+                <stop offset="20%" stopColor="#fde68a" />
+                <stop offset="55%" stopColor="#f59e0b" />
+                <stop offset="100%" stopColor="#92400e" stopOpacity="0" />
               </radialGradient>
-              {/* Bloom filter */}
+              {/* ANTENNA TIP — golden */}
+              <radialGradient id="antennaFill" cx="50%" cy="50%" r="50%">
+                <stop offset="0%" stopColor="#ffffff" />
+                <stop offset="30%" stopColor="#fef08a" />
+                <stop offset="70%" stopColor="#facc15" />
+                <stop offset="100%" stopColor="#854d0e" stopOpacity="0" />
+              </radialGradient>
+              {/* ORBITING RING */}
+              <linearGradient id="ringFill" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stopColor="#22d3ee" stopOpacity="0" />
+                <stop offset="25%" stopColor="#22d3ee" stopOpacity="0.9" />
+                <stop offset="50%" stopColor="#a78bfa" stopOpacity="1" />
+                <stop offset="75%" stopColor="#22d3ee" stopOpacity="0.9" />
+                <stop offset="100%" stopColor="#22d3ee" stopOpacity="0" />
+              </linearGradient>
+              {/* RIM CYAN STROKE */}
+              <linearGradient id="rimCyan" x1="100%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stopColor="#67e8f9" stopOpacity="0.9" />
+                <stop offset="50%" stopColor="#22d3ee" stopOpacity="0.4" />
+                <stop offset="100%" stopColor="transparent" />
+              </linearGradient>
+              {/* Glow filters */}
               <filter id="bloom" x="-50%" y="-50%" width="200%" height="200%">
-                <feGaussianBlur stdDeviation="3" result="b" />
+                <feGaussianBlur stdDeviation="2.5" result="b" />
                 <feMerge>
                   <feMergeNode in="b" />
                   <feMergeNode in="SourceGraphic" />
                 </feMerge>
               </filter>
-              {/* Strong bloom for core */}
               <filter id="strongBloom" x="-100%" y="-100%" width="300%" height="300%">
-                <feGaussianBlur stdDeviation="6" result="b1" />
+                <feGaussianBlur stdDeviation="5" result="b1" />
                 <feGaussianBlur stdDeviation="14" result="b2" />
                 <feMerge>
                   <feMergeNode in="b2" />
@@ -174,233 +236,622 @@ export function ForgeBotMascot({ size = 340, className = "" }: ForgeBotMascotPro
                   <feMergeNode in="SourceGraphic" />
                 </feMerge>
               </filter>
+              <filter id="hugeBloom" x="-150%" y="-150%" width="400%" height="400%">
+                <feGaussianBlur stdDeviation="22" />
+              </filter>
             </defs>
 
-            {/* GROUND SHADOW */}
-            <ellipse cx="160" cy="335" rx="75" ry="7" fill="rgba(0,0,0,0.55)" style={{ filter: "blur(6px)" }} />
-            <ellipse cx="160" cy="333" rx="55" ry="4" fill="rgba(99,102,241,0.45)" style={{ filter: "blur(10px)" }} />
+            {/* ═══════════════════════════════════════════════════════════════
+                BACKDROP — orbiting ring behind the bot (sells the 3D depth)
+                ═══════════════════════════════════════════════════════════════ */}
+            <motion.g
+              animate={{ rotate: 360 }}
+              transition={{ duration: 14, repeat: Infinity, ease: "linear" }}
+              style={{ transformOrigin: "180px 230px" }}
+            >
+              <ellipse
+                cx="180"
+                cy="230"
+                rx="155"
+                ry="42"
+                fill="none"
+                stroke="url(#ringFill)"
+                strokeWidth="2"
+                opacity="0.55"
+                style={{ filter: "drop-shadow(0 0 10px rgba(34,211,238,0.6))" }}
+              />
+              <ellipse
+                cx="180"
+                cy="236"
+                rx="138"
+                ry="36"
+                fill="none"
+                stroke="url(#ringFill)"
+                strokeWidth="1"
+                opacity="0.35"
+                strokeDasharray="3 8"
+              />
+            </motion.g>
 
-            {/* ─── ANTENNA ─── */}
-            <line x1="160" y1="62" x2="160" y2="32" stroke="#818cf8" strokeWidth="3" strokeLinecap="round" />
-            {/* Pulsing rings */}
+            {/* Floating data particles orbiting */}
+            {orbitParticles.map((p, i) => {
+              const cx = 180 + Math.cos(p.angle) * 150;
+              const cy = 232 + Math.sin(p.angle) * 40;
+              return (
+                <motion.circle
+                  key={i}
+                  cx={cx}
+                  cy={cy}
+                  r={p.size}
+                  fill="#22d3ee"
+                  animate={{
+                    opacity: [0, 1, 0],
+                    scale: [0.4, 1.6, 0.4],
+                  }}
+                  transition={{
+                    duration: 2.8,
+                    delay: p.delay,
+                    repeat: Infinity,
+                    ease: "easeInOut",
+                  }}
+                  style={{ filter: "drop-shadow(0 0 5px #22d3ee)" }}
+                />
+              );
+            })}
+
+            {/* GROUND PLATFORM — holographic disc the bot floats on */}
+            <ellipse
+              cx="180"
+              cy="378"
+              rx="90"
+              ry="11"
+              fill="rgba(0,0,0,0.5)"
+              style={{ filter: "blur(7px)" }}
+            />
+            <ellipse
+              cx="180"
+              cy="375"
+              rx="72"
+              ry="6"
+              fill="url(#coreFill)"
+              opacity="0.35"
+              style={{ filter: "blur(12px)" }}
+            />
+            <motion.ellipse
+              cx="180"
+              cy="372"
+              rx="60"
+              ry="4"
+              fill="none"
+              stroke="#22d3ee"
+              strokeWidth="1"
+              animate={{ opacity: [0.4, 0.9, 0.4], rx: [55, 65, 55] }}
+              transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+              style={{ filter: "drop-shadow(0 0 6px #22d3ee)" }}
+            />
+
+            {/* ═══════════════════════════════════════════════════════════════
+                ANTENNA
+                ═══════════════════════════════════════════════════════════════ */}
+            <line
+              x1="180"
+              y1="65"
+              x2="180"
+              y2="32"
+              stroke="#818cf8"
+              strokeWidth="3.5"
+              strokeLinecap="round"
+            />
+            {/* Pulsing rings emanating from tip */}
             <motion.circle
-              cx="160"
-              cy="28"
-              r="8"
+              cx="180"
+              cy="26"
+              r="10"
               fill="none"
               stroke="#facc15"
-              strokeWidth="1"
-              animate={{ r: [6, 18, 6], opacity: [0.8, 0, 0.8] }}
+              strokeWidth="1.5"
+              animate={{ r: [8, 24, 8], opacity: [0.9, 0, 0.9] }}
               transition={{ duration: 1.8, repeat: Infinity, ease: "easeOut" }}
             />
             <motion.circle
-              cx="160"
-              cy="28"
-              r="6"
-              fill="url(#ant)"
-              animate={{ r: [5, 7, 5] }}
-              transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
-              style={{ filter: "drop-shadow(0 0 10px #facc15)" }}
+              cx="180"
+              cy="26"
+              r="10"
+              fill="none"
+              stroke="#facc15"
+              strokeWidth="1.5"
+              animate={{ r: [8, 24, 8], opacity: [0.9, 0, 0.9] }}
+              transition={{
+                duration: 1.8,
+                repeat: Infinity,
+                ease: "easeOut",
+                delay: 0.6,
+              }}
             />
+            {/* Glow tip */}
+            <motion.circle
+              cx="180"
+              cy="26"
+              r="8"
+              fill="url(#antennaFill)"
+              animate={{ r: [7, 10, 7] }}
+              transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
+              style={{ filter: "drop-shadow(0 0 14px #facc15)" }}
+            />
+            {/* Lens-flare cross */}
+            <g style={{ filter: "drop-shadow(0 0 4px #ffffff)" }} opacity="0.85">
+              <line
+                x1="180"
+                y1="14"
+                x2="180"
+                y2="38"
+                stroke="white"
+                strokeWidth="0.8"
+                strokeLinecap="round"
+              />
+              <line
+                x1="168"
+                y1="26"
+                x2="192"
+                y2="26"
+                stroke="white"
+                strokeWidth="0.8"
+                strokeLinecap="round"
+              />
+            </g>
 
-            {/* ─── HEAD ─── solid pill shape */}
+            {/* ═══════════════════════════════════════════════════════════════
+                HEAD — solid filled, big and clearly visible
+                ═══════════════════════════════════════════════════════════════ */}
             <motion.g
-              animate={{ rotate: [-1.5, 1.5, -1.5] }}
-              transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
-              style={{ transformOrigin: "160px 110px" }}
+              animate={{ rotate: [-1.2, 1.2, -1.2] }}
+              transition={{ duration: 7, repeat: Infinity, ease: "easeInOut" }}
+              style={{ transformOrigin: "180px 130px" }}
             >
-              {/* Head body */}
-              <path
-                d="M 90 70
-                   Q 90 56 105 56
-                   L 215 56
-                   Q 230 56 230 70
-                   L 230 158
-                   Q 230 172 215 172
-                   L 105 172
-                   Q 90 172 90 158
-                   Z"
-                fill="url(#head)"
-              />
-              {/* Top-left specular highlight */}
-              <path
-                d="M 102 72 Q 130 60 175 60"
-                stroke="rgba(255,255,255,0.5)"
-                strokeWidth="3"
-                strokeLinecap="round"
-                fill="none"
-              />
-              {/* Bottom shadow line */}
-              <path
-                d="M 100 162 Q 160 175 220 162"
-                stroke="rgba(15,23,42,0.35)"
-                strokeWidth="5"
-                strokeLinecap="round"
-                fill="none"
+              {/* Soft outer glow behind head */}
+              <ellipse
+                cx="180"
+                cy="135"
+                rx="100"
+                ry="92"
+                fill="#7c3aed"
+                opacity="0.35"
+                filter="url(#hugeBloom)"
               />
 
-              {/* VISOR */}
+              {/* Main head — chamfered rounded rectangle */}
               <path
-                d="M 110 82
-                   Q 110 74 120 74
-                   L 200 74
-                   Q 210 74 210 82
-                   L 210 142
-                   Q 210 154 198 154
-                   L 122 154
-                   Q 110 154 110 142
+                d="M 100 75
+                   Q 100 58 117 58
+                   L 243 58
+                   Q 260 58 260 75
+                   L 260 178
+                   Q 260 197 243 197
+                   L 200 197
+                   L 200 206
+                   L 160 206
+                   L 160 197
+                   L 117 197
+                   Q 100 197 100 178
                    Z"
-                fill="url(#visor)"
+                fill="url(#headFill)"
               />
-              {/* Visor top reflection */}
+
+              {/* Rim light right side (cyan) */}
               <path
-                d="M 118 82 Q 160 78 202 82"
-                stroke="rgba(34,211,238,0.4)"
+                d="M 256 80 Q 260 80 260 90 L 260 175"
+                stroke="url(#rimCyan)"
+                strokeWidth="3"
+                fill="none"
+                strokeLinecap="round"
+              />
+              {/* Top specular highlight */}
+              <path
+                d="M 115 75 Q 145 62 195 62"
+                stroke="rgba(255,255,255,0.7)"
+                strokeWidth="4"
+                strokeLinecap="round"
+                fill="none"
+              />
+              <ellipse
+                cx="140"
+                cy="78"
+                rx="22"
+                ry="6"
+                fill="rgba(255,255,255,0.4)"
+                style={{ filter: "blur(3px)" }}
+              />
+              {/* Bottom inner shadow */}
+              <path
+                d="M 110 180 Q 180 200 250 180"
+                stroke="rgba(0,0,0,0.4)"
+                strokeWidth="9"
+                strokeLinecap="round"
+                fill="none"
+                opacity="0.6"
+              />
+
+              {/* SIDE EAR-PODS — round headphone-style accent */}
+              <g>
+                {/* Left pod */}
+                <ellipse cx="93" cy="135" rx="11" ry="18" fill="url(#jointFill)" />
+                <ellipse cx="93" cy="135" rx="7" ry="12" fill="#020617" />
+                <motion.circle
+                  cx="93"
+                  cy="135"
+                  r="3"
+                  fill="#22d3ee"
+                  animate={{ opacity: [0.35, 1, 0.35] }}
+                  transition={{ duration: 2, repeat: Infinity, delay: 0.4 }}
+                  style={{ filter: "drop-shadow(0 0 4px #22d3ee)" }}
+                />
+                {/* Right pod */}
+                <ellipse cx="267" cy="135" rx="11" ry="18" fill="url(#jointFill)" />
+                <ellipse cx="267" cy="135" rx="7" ry="12" fill="#020617" />
+                <motion.circle
+                  cx="267"
+                  cy="135"
+                  r="3"
+                  fill="#22d3ee"
+                  animate={{ opacity: [0.35, 1, 0.35] }}
+                  transition={{ duration: 2, repeat: Infinity }}
+                  style={{ filter: "drop-shadow(0 0 4px #22d3ee)" }}
+                />
+              </g>
+
+              {/* FACE PLATE — recessed dark glass */}
+              <path
+                d="M 118 92
+                   Q 118 82 130 82
+                   L 230 82
+                   Q 242 82 242 92
+                   L 242 168
+                   Q 242 184 226 184
+                   L 134 184
+                   Q 118 184 118 168
+                   Z"
+                fill="url(#faceFill)"
+              />
+              {/* Face plate top reflection */}
+              <path
+                d="M 128 90 Q 180 86 232 90"
+                stroke="rgba(34,211,238,0.45)"
                 strokeWidth="1.5"
                 strokeLinecap="round"
                 fill="none"
               />
               {/* Inner cyan glow border */}
               <path
-                d="M 114 82 Q 114 76 122 76 L 198 76 Q 206 76 206 82 L 206 142 Q 206 150 196 150 L 124 150 Q 114 150 114 142 Z"
+                d="M 122 92 Q 122 86 132 86 L 228 86 Q 238 86 238 92 L 238 166 Q 238 180 226 180 L 134 180 Q 122 180 122 166 Z"
                 fill="none"
                 stroke="rgba(34,211,238,0.15)"
                 strokeWidth="1.5"
               />
 
-              {/* EYES — bright cyan curved smiles */}
-              <motion.g
-                style={{ x: eyeOffsetX, y: eyeOffsetY }}
-                animate={blink ? { scaleY: 0.1 } : { scaleY: 1 }}
-                transition={{ duration: 0.1 }}
-              >
-                {/* Left eye — upward curve */}
-                <path
-                  d="M 130 118 Q 142 105 156 118 Q 152 124 144 122 Q 136 122 130 118 Z"
-                  fill="url(#eyeGlow)"
-                  filter="url(#bloom)"
-                />
+              {/* HUD readouts on visor — sci-fi flavor */}
+              <text x="226" y="100" fontSize="6" fill="rgba(34,211,238,0.55)" fontFamily="monospace">
+                ⚡01
+              </text>
+              <text x="128" y="178" fontSize="5.5" fill="rgba(34,211,238,0.45)" fontFamily="monospace">
+                v5.0
+              </text>
+              <text x="180" y="178" fontSize="5" fill="rgba(167,139,250,0.5)" fontFamily="monospace">
+                FORGE-BOT
+              </text>
+
+              {/* EYES — big, bright, cursor-tracking */}
+              <motion.g style={{ x: eyeOffsetX, y: eyeOffsetY }}>
+                {/* Left eye */}
+                <motion.g
+                  animate={blink ? { scaleY: 0.08 } : { scaleY: 1 }}
+                  transition={{ duration: 0.09 }}
+                  style={{ transformOrigin: "153px 130px" }}
+                >
+                  <ellipse
+                    cx="153"
+                    cy="130"
+                    rx="17"
+                    ry="17"
+                    fill="url(#eyeFill)"
+                    filter="url(#bloom)"
+                  />
+                  <ellipse cx="153" cy="130" rx="8" ry="9" fill="#0c4a6e" />
+                  <ellipse cx="156" cy="126" rx="3" ry="3.5" fill="white" />
+                  <circle cx="159" cy="124" r="1.5" fill="white" opacity="0.9" />
+                </motion.g>
                 {/* Right eye */}
-                <path
-                  d="M 164 118 Q 178 105 190 118 Q 184 122 176 122 Q 168 124 164 118 Z"
-                  fill="url(#eyeGlow)"
-                  filter="url(#bloom)"
-                />
-                {/* Inner shine */}
-                <ellipse cx="143" cy="115" rx="5" ry="3" fill="white" style={{ filter: "drop-shadow(0 0 4px #22d3ee)" }} />
-                <ellipse cx="177" cy="115" rx="5" ry="3" fill="white" style={{ filter: "drop-shadow(0 0 4px #22d3ee)" }} />
+                <motion.g
+                  animate={blink ? { scaleY: 0.08 } : { scaleY: 1 }}
+                  transition={{ duration: 0.09 }}
+                  style={{ transformOrigin: "207px 130px" }}
+                >
+                  <ellipse
+                    cx="207"
+                    cy="130"
+                    rx="17"
+                    ry="17"
+                    fill="url(#eyeFill)"
+                    filter="url(#bloom)"
+                  />
+                  <ellipse cx="207" cy="130" rx="8" ry="9" fill="#0c4a6e" />
+                  <ellipse cx="210" cy="126" rx="3" ry="3.5" fill="white" />
+                  <circle cx="213" cy="124" r="1.5" fill="white" opacity="0.9" />
+                </motion.g>
               </motion.g>
 
-              {/* Small HUD details */}
-              <text x="195" y="95" fontSize="6" fill="rgba(34,211,238,0.6)" fontFamily="monospace">⚡</text>
-              <text x="118" y="146" fontSize="5" fill="rgba(34,211,238,0.45)" fontFamily="monospace">v4.0</text>
-
-              {/* Right ear sensor */}
-              <circle cx="232" cy="115" r="14" fill="url(#joint)" />
-              <circle cx="232" cy="115" r="9" fill="#020617" />
-              <motion.circle
-                cx="232"
-                cy="115"
-                r="3"
-                fill="#22d3ee"
-                animate={{ opacity: [0.4, 1, 0.4] }}
-                transition={{ duration: 1.8, repeat: Infinity }}
-                style={{ filter: "drop-shadow(0 0 4px #22d3ee)" }}
+              {/* SMILE — animated glowing curve */}
+              <motion.path
+                d="M 152 158 Q 180 170 208 158"
+                stroke="#67e8f9"
+                strokeWidth="3"
+                strokeLinecap="round"
+                fill="none"
+                animate={{ d: ["M 152 158 Q 180 170 208 158", "M 152 158 Q 180 172 208 158", "M 152 158 Q 180 170 208 158"] }}
+                transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+                style={{ filter: "drop-shadow(0 0 6px #22d3ee)" }}
               />
-              {/* Left ear sensor */}
-              <ellipse cx="86" cy="115" rx="7" ry="13" fill="url(#joint)" />
+
+              {/* CHEEK BLUSHES — adds warmth */}
+              <ellipse
+                cx="130"
+                cy="155"
+                rx="9"
+                ry="5"
+                fill="rgba(244,114,182,0.45)"
+                style={{ filter: "blur(2px)" }}
+              />
+              <ellipse
+                cx="230"
+                cy="155"
+                rx="9"
+                ry="5"
+                fill="rgba(244,114,182,0.45)"
+                style={{ filter: "blur(2px)" }}
+              />
             </motion.g>
 
-            {/* ─── NECK ─── small connector */}
-            <rect x="146" y="170" width="28" height="12" rx="3" fill="url(#joint)" />
+            {/* ═══════════════════════════════════════════════════════════════
+                NECK CONNECTOR
+                ═══════════════════════════════════════════════════════════════ */}
+            <rect x="160" y="206" width="40" height="16" rx="4" fill="url(#jointFill)" />
+            <rect x="165" y="210" width="30" height="2" fill="rgba(34,211,238,0.55)" />
 
-            {/* ─── ARMS ─── */}
-            {/* Left arm */}
+            {/* ═══════════════════════════════════════════════════════════════
+                BODY — substantial, solid
+                ═══════════════════════════════════════════════════════════════ */}
+            <path
+              d="M 112 222
+                 Q 112 215 120 215
+                 L 240 215
+                 Q 248 215 248 222
+                 L 248 320
+                 Q 248 338 230 340
+                 L 130 340
+                 Q 112 338 112 320
+                 Z"
+              fill="url(#bodyFill)"
+            />
+            {/* Top-left highlight */}
+            <path
+              d="M 125 230 Q 165 220 200 220"
+              stroke="rgba(255,255,255,0.55)"
+              strokeWidth="3.5"
+              strokeLinecap="round"
+              fill="none"
+            />
+            <ellipse
+              cx="145"
+              cy="230"
+              rx="20"
+              ry="5"
+              fill="rgba(255,255,255,0.25)"
+              style={{ filter: "blur(3px)" }}
+            />
+            {/* Right rim light */}
+            <path
+              d="M 244 232 Q 248 232 248 244 L 248 312"
+              stroke="url(#rimCyan)"
+              strokeWidth="2.5"
+              fill="none"
+              strokeLinecap="round"
+            />
+            {/* Bottom inner shadow */}
+            <path
+              d="M 118 322 Q 180 340 242 322"
+              stroke="rgba(0,0,0,0.35)"
+              strokeWidth="7"
+              strokeLinecap="round"
+              fill="none"
+            />
+
+            {/* CHEST POWER CORE — the centerpiece */}
+            <motion.g
+              animate={{ scale: [1, 1.06, 1] }}
+              transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
+              style={{ transformOrigin: "180px 285px" }}
+            >
+              {/* Big outer pulsing ring */}
+              <motion.circle
+                cx="180"
+                cy="285"
+                r={pulse ? 34 : 28}
+                fill="none"
+                stroke="#22d3ee"
+                strokeWidth="1"
+                animate={{ opacity: [0.55, 0.15, 0.55] }}
+                transition={{ duration: 2, repeat: Infinity }}
+              />
+              {/* Rotating dashed inner ring */}
+              <motion.g
+                animate={{ rotate: 360 }}
+                transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
+                style={{ transformOrigin: "180px 285px" }}
+              >
+                <circle
+                  cx="180"
+                  cy="285"
+                  r="23"
+                  fill="none"
+                  stroke="#a78bfa"
+                  strokeWidth="0.9"
+                  strokeDasharray="2 5"
+                  opacity="0.65"
+                />
+              </motion.g>
+              {/* Inner glass case */}
+              <circle cx="180" cy="285" r="20" fill="rgba(15,23,42,0.6)" stroke="rgba(34,211,238,0.3)" strokeWidth="1" />
+              {/* Core blob with strong glow */}
+              <motion.circle
+                cx="180"
+                cy="285"
+                r={pulse ? 17 : 14}
+                fill="url(#coreFill)"
+                animate={{ r: [13, 16, 13] }}
+                transition={{ duration: 1.8, repeat: Infinity, ease: "easeInOut" }}
+                filter="url(#strongBloom)"
+              />
+              {/* Lightning bolt symbol */}
+              <path
+                d="M 183 273 L 173 287 L 180 287 L 176 297 L 188 282 L 181 282 Z"
+                fill="white"
+                opacity="0.98"
+                style={{ filter: "drop-shadow(0 0 4px white)" }}
+              />
+            </motion.g>
+
+            {/* CHEST LED BAR — small but premium detail */}
+            <rect x="155" y="318" width="50" height="4" rx="2" fill="rgba(15,23,42,0.6)" />
+            <motion.rect
+              x="157"
+              y="319"
+              width="46"
+              height="2"
+              fill="#22d3ee"
+              animate={{ opacity: [0.5, 1, 0.5] }}
+              transition={{ duration: 2, repeat: Infinity }}
+              style={{ filter: "drop-shadow(0 0 4px #22d3ee)" }}
+            />
+
+            {/* SHOULDER LIGHT PORTS */}
+            <circle
+              cx="128"
+              cy="230"
+              r="3"
+              fill="#22d3ee"
+              style={{ filter: "drop-shadow(0 0 5px #22d3ee)" }}
+            />
+            <circle
+              cx="232"
+              cy="230"
+              r="3"
+              fill="#22d3ee"
+              style={{ filter: "drop-shadow(0 0 5px #22d3ee)" }}
+            />
+
+            {/* ═══════════════════════════════════════════════════════════════
+                ARMS — articulated with shoulder + forearm + hand
+                ═══════════════════════════════════════════════════════════════ */}
+            {/* Left arm — still */}
             <g>
-              {/* Shoulder ball */}
-              <circle cx="80" cy="195" r="16" fill="url(#body)" />
-              <ellipse cx="76" cy="190" rx="6" ry="4" fill="rgba(255,255,255,0.3)" />
+              {/* Shoulder */}
+              <circle cx="100" cy="240" r="18" fill="url(#bodyFill)" />
+              <ellipse
+                cx="93"
+                cy="234"
+                rx="7"
+                ry="4"
+                fill="rgba(255,255,255,0.45)"
+              />
               {/* Upper arm */}
-              <path d="M 68 200 Q 64 215 68 235 L 92 235 Q 96 215 92 200 Z" fill="url(#body)" />
+              <path
+                d="M 84 245 Q 78 268 84 295 L 108 295 Q 112 268 108 246 Z"
+                fill="url(#bodyFill)"
+              />
+              {/* Elbow joint */}
+              <ellipse cx="90" cy="300" rx="13" ry="9" fill="url(#jointFill)" />
+              {/* Forearm */}
+              <path
+                d="M 80 305 Q 76 322 82 342 L 102 342 Q 104 322 100 304 Z"
+                fill="url(#bodyFill)"
+              />
               {/* Hand */}
-              <circle cx="80" cy="245" r="13" fill="url(#body)" />
-              <circle cx="80" cy="244" r="3" fill="#22d3ee" opacity="0.85" style={{ filter: "drop-shadow(0 0 4px #22d3ee)" }} />
+              <circle cx="89" cy="352" r="13" fill="url(#bodyFill)" />
+              <circle
+                cx="89"
+                cy="351"
+                r="3.5"
+                fill="#22d3ee"
+                style={{ filter: "drop-shadow(0 0 5px #22d3ee)" }}
+              />
             </g>
 
             {/* Right arm — waves */}
             <motion.g
-              animate={wave ? { rotate: [0, -30, -15, -30, -15, 0] } : { rotate: 0 }}
+              animate={
+                wave ? { rotate: [0, -35, -18, -35, -18, 0] } : { rotate: 0 }
+              }
               transition={{ duration: 1.4, ease: "easeInOut" }}
-              style={{ transformOrigin: "240px 195px" }}
+              style={{ transformOrigin: "260px 240px" }}
             >
-              {/* Shoulder ball */}
-              <circle cx="240" cy="195" r="16" fill="url(#body)" />
-              <ellipse cx="244" cy="190" rx="6" ry="4" fill="rgba(255,255,255,0.3)" />
-              {/* Upper arm */}
-              <path d="M 228 200 Q 224 215 228 235 L 252 235 Q 256 215 252 200 Z" fill="url(#body)" />
-              {/* Hand */}
-              <circle cx="240" cy="245" r="13" fill="url(#body)" />
-              <circle cx="240" cy="244" r="3" fill="#22d3ee" opacity="0.85" style={{ filter: "drop-shadow(0 0 4px #22d3ee)" }} />
-            </motion.g>
-
-            {/* ─── BODY ─── */}
-            <path
-              d="M 100 185
-                 Q 100 178 108 178
-                 L 212 178
-                 Q 220 178 220 185
-                 L 220 280
-                 Q 220 295 205 298
-                 L 115 298
-                 Q 100 295 100 280
-                 Z"
-              fill="url(#body)"
-            />
-            {/* Top highlight */}
-            <path d="M 112 192 Q 145 184 175 184" stroke="rgba(255,255,255,0.45)" strokeWidth="3" fill="none" strokeLinecap="round" />
-            {/* Right rim light */}
-            <path d="M 215 195 L 215 270" stroke="rgba(34,211,238,0.35)" strokeWidth="2" strokeLinecap="round" fill="none" />
-            {/* Bottom shadow */}
-            <path d="M 105 280 Q 160 296 215 280" stroke="rgba(15,23,42,0.3)" strokeWidth="6" strokeLinecap="round" fill="none" />
-
-            {/* Chest power core */}
-            <motion.g
-              animate={{ scale: [1, 1.05, 1] }}
-              transition={{ duration: 2.2, repeat: Infinity, ease: "easeInOut" }}
-              style={{ transformOrigin: "160px 240px" }}
-            >
-              {/* Outer ring */}
-              <circle cx="160" cy="240" r="28" fill="rgba(15,23,42,0.4)" stroke="rgba(34,211,238,0.2)" strokeWidth="1" />
-              {/* Core glow */}
-              <motion.circle
-                cx="160"
-                cy="240"
-                r="16"
-                fill="url(#core)"
-                animate={{ r: [14, 18, 14] }}
-                transition={{ duration: 1.8, repeat: Infinity, ease: "easeInOut" }}
-                filter="url(#strongBloom)"
+              <circle cx="260" cy="240" r="18" fill="url(#bodyFill)" />
+              <ellipse
+                cx="267"
+                cy="234"
+                rx="7"
+                ry="4"
+                fill="rgba(255,255,255,0.45)"
               />
-              {/* Lightning bolt */}
               <path
-                d="M 162 230 L 154 244 L 159 244 L 156 254 L 165 240 L 160 240 Z"
-                fill="white"
-                opacity="0.95"
+                d="M 252 246 Q 248 268 252 295 L 276 295 Q 282 268 276 245 Z"
+                fill="url(#bodyFill)"
+              />
+              <ellipse cx="270" cy="300" rx="13" ry="9" fill="url(#jointFill)" />
+              <path
+                d="M 260 305 Q 256 322 262 342 L 282 342 Q 286 322 280 304 Z"
+                fill="url(#bodyFill)"
+              />
+              <circle cx="271" cy="352" r="13" fill="url(#bodyFill)" />
+              <circle
+                cx="271"
+                cy="351"
+                r="3.5"
+                fill="#22d3ee"
+                style={{ filter: "drop-shadow(0 0 6px #22d3ee)" }}
               />
             </motion.g>
 
-            {/* Shoulder light ports */}
-            <circle cx="115" cy="190" r="2.5" fill="#22d3ee" style={{ filter: "drop-shadow(0 0 4px #22d3ee)" }} />
-            <circle cx="205" cy="190" r="2.5" fill="#22d3ee" style={{ filter: "drop-shadow(0 0 4px #22d3ee)" }} />
+            {/* ═══════════════════════════════════════════════════════════════
+                FOREGROUND ORBITING RING — passes IN FRONT for 3D illusion
+                ═══════════════════════════════════════════════════════════════ */}
+            <motion.g
+              animate={{ rotate: 360 }}
+              transition={{ duration: 14, repeat: Infinity, ease: "linear" }}
+              style={{ transformOrigin: "180px 230px" }}
+            >
+              <ellipse
+                cx="180"
+                cy="230"
+                rx="155"
+                ry="42"
+                fill="none"
+                stroke="url(#ringFill)"
+                strokeWidth="2.5"
+                opacity="0.55"
+                strokeDasharray="90 600"
+                style={{ filter: "drop-shadow(0 0 8px rgba(34,211,238,0.9))" }}
+              />
+            </motion.g>
           </svg>
         </motion.div>
       </motion.div>
 
-      {/* Floating sparkles */}
-      <FloatingSparkle delay={0} top="8%" left="6%" emoji="✨" />
-      <FloatingSparkle delay={1.5} top="18%" right="4%" emoji="⚡" />
-      <FloatingSparkle delay={3} bottom="22%" left="2%" emoji="✦" />
-      <FloatingSparkle delay={2} bottom="14%" right="6%" emoji="✨" />
+      {/* Floating sparkles outside the SVG */}
+      <FloatingSparkle delay={0} top="6%" left="6%" emoji="✨" />
+      <FloatingSparkle delay={1.4} top="16%" right="4%" emoji="⚡" />
+      <FloatingSparkle delay={2.8} bottom="22%" left="2%" emoji="✦" />
+      <FloatingSparkle delay={1.8} bottom="14%" right="6%" emoji="✨" />
+      <FloatingSparkle delay={0.8} top="40%" left="0%" emoji="·" />
+      <FloatingSparkle delay={2.3} top="55%" right="0%" emoji="·" />
     </div>
   );
 }
@@ -428,15 +879,15 @@ function FloatingSparkle({
         bottom,
         left,
         right,
-        fontSize: "14px",
+        fontSize: "15px",
         color: "#67e8f9",
-        textShadow: "0 0 8px rgba(34,211,238,0.8)",
+        textShadow: "0 0 10px rgba(34,211,238,0.95)",
       }}
       animate={{
-        y: [0, -14, 0],
+        y: [0, -16, 0],
         opacity: [0, 1, 0],
-        scale: [0.4, 1.2, 0.4],
-        rotate: [0, 30, 0],
+        scale: [0.4, 1.3, 0.4],
+        rotate: [0, 35, 0],
       }}
       transition={{
         duration: 3.2,
