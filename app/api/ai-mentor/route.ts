@@ -33,7 +33,7 @@ export async function POST(request: Request) {
     const { data: profile } = await supabase
       .from("profiles")
       .select(
-        "current_level, total_xp, streak_count, subscription_tier, learner_grade, learner_subjects"
+        "current_level, total_xp, streak_count, subscription_tier, learner_grade, learner_subjects, dream_career_id"
       )
       .eq("id", user.id)
       .maybeSingle();
@@ -42,6 +42,18 @@ export async function POST(request: Request) {
     const learnerSubjects: string[] = Array.isArray(profile?.learner_subjects)
       ? profile.learner_subjects
       : [];
+    // Dream career — resolve to title so the model knows what they're aiming for.
+    const dreamCareerId: string | null = (profile as any)?.dream_career_id ?? null;
+    let dreamCareerTitle = "not picked yet";
+    if (dreamCareerId) {
+      try {
+        const { CAREERS } = await import("@/lib/data/careers");
+        const found = CAREERS.find((c) => c.id === dreamCareerId);
+        if (found) dreamCareerTitle = found.title;
+      } catch {
+        /* non-fatal */
+      }
+    }
     const ageTier: "little" | "junior" | "teen" =
       !learnerGrade || learnerGrade <= 3
         ? "little"
@@ -96,6 +108,7 @@ export async function POST(request: Request) {
 THE LEARNER:
 - Grade: ${learnerGrade ?? "not set yet"} (around age 6–9)
 - Subjects: ${learnerSubjects.length ? learnerSubjects.join(", ") : "all subjects"}
+- Dream career: ${dreamCareerTitle} ${dreamCareerTitle !== "not picked yet" ? "(when it fits, gently connect lessons to this — 'Doctors use math to count medicine!' — to keep them inspired)" : ""}
 
 YOUR STYLE:
 - VERY warm, gentle, excited — like a kind ate or kuya playing with a younger sibling.
@@ -122,6 +135,7 @@ End with a small question or a happy "You got this! 🌟"`;
 THE LEARNER:
 - Grade: ${learnerGrade ?? "not set yet"} (around age 10–13)
 - Subjects they picked: ${learnerSubjects.length ? learnerSubjects.join(", ") : "all subjects"}
+- Dream career: ${dreamCareerTitle} ${dreamCareerTitle !== "not picked yet" ? "(connect lessons to this when relevant — show how this subject helps them become a " + dreamCareerTitle + ")" : ""}
 
 YOUR STYLE:
 - Warm but a little more direct — like a slightly older friend who's already learned this stuff.
@@ -146,6 +160,7 @@ Keep replies focused — about 2–5 sentences unless they ask for a deeper expl
 THE STUDENT:
 - Grade: ${learnerGrade ?? "not set yet"} (around age 14–18)
 - Subjects: ${learnerSubjects.length ? learnerSubjects.join(", ") : "all subjects"}
+- Dream career: ${dreamCareerTitle} ${dreamCareerTitle !== "not picked yet" ? "(reference this when career decisions or college tracks come up — be specific about PH paths)" : "(if they're uncertain about a career, ask about their interests and suggest paths to explore in /learn/careers)"}
 
 YOUR STYLE:
 - Respectful, peer-to-peer. They are nearly adults — treat them like it.

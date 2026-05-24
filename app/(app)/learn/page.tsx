@@ -12,6 +12,8 @@ import {
   Zap,
   Target,
   PlayCircle,
+  Compass,
+  Heart,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import {
@@ -23,6 +25,7 @@ import {
   type SubjectId,
 } from "@/lib/data/learner";
 import { LESSONS, type Lesson } from "@/lib/data/learner-lessons";
+import { CAREERS, isCareerUnlocked, getCareer } from "@/lib/data/careers";
 import { PageShimmer } from "@/components/ui/Shimmer";
 
 interface LearnerProfile {
@@ -33,6 +36,7 @@ interface LearnerProfile {
   total_xp: number;
   streak_count: number;
   longest_streak: number;
+  dream_career_id: string | null;
 }
 
 interface CompletionEvent {
@@ -68,7 +72,7 @@ export default function LearnPage() {
           supabase
             .from("profiles")
             .select(
-              "username, learner_grade, learner_subjects, current_level, total_xp, streak_count, longest_streak"
+              "username, learner_grade, learner_subjects, current_level, total_xp, streak_count, longest_streak, dream_career_id"
             )
             .eq("id", uid)
             .maybeSingle(),
@@ -166,6 +170,9 @@ export default function LearnPage() {
   const level = profile?.current_level || 1;
   const tierCopy = TIER_COPY[tier];
   const heading = tierGreeting(tier, name);
+
+  const dreamCareer = profile?.dream_career_id ? getCareer(profile.dream_career_id) : null;
+  const unlockedCareers = CAREERS.filter((c) => isCareerUnlocked(c, totalXp)).length;
 
   // Daily XP goal scales by tier — kids get smaller wins, teens earn more per lesson
   const dailyGoal = tier === "little" ? 100 : tier === "junior" ? 200 : 300;
@@ -327,6 +334,90 @@ export default function LearnPage() {
             )}
           </div>
         )}
+
+        {/* Career spotlight — show dream career progress OR encourage exploring */}
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.14 }}
+        >
+          <Link
+            href={dreamCareer ? `/learn/careers/${dreamCareer.id}` : "/learn/careers"}
+            className="group relative overflow-hidden block rounded-3xl border border-rose-400/20 bg-gradient-to-br from-rose-500/[0.08] via-pink-500/[0.04] to-transparent p-5 hover:border-rose-400/40 transition-all"
+          >
+            <div
+              className="absolute -top-20 -right-20 w-56 h-56 rounded-full opacity-30 pointer-events-none group-hover:opacity-50 transition-opacity"
+              style={{
+                background: dreamCareer
+                  ? `radial-gradient(circle, ${dreamCareer.accentColor}80, transparent 70%)`
+                  : "radial-gradient(circle, rgba(244,63,94,0.5), transparent 70%)",
+              }}
+            />
+            {/* Floating emoji decoration */}
+            <motion.div
+              animate={{ y: [0, -6, 0], rotate: [0, -8, 8, 0] }}
+              transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+              className="absolute top-6 right-8 text-xl opacity-50"
+            >
+              ✨
+            </motion.div>
+            <div className="relative flex items-center gap-4">
+              {dreamCareer ? (
+                <motion.div
+                  animate={{ rotate: [0, -6, 6, 0], scale: [1, 1.05, 1] }}
+                  transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+                  className={`flex-shrink-0 w-14 h-14 rounded-2xl bg-gradient-to-br ${dreamCareer.gradient} flex items-center justify-center text-3xl shadow-xl`}
+                  style={{
+                    boxShadow: `0 10px 30px ${dreamCareer.accentColor}40`,
+                  }}
+                >
+                  {dreamCareer.emoji}
+                </motion.div>
+              ) : (
+                <motion.div
+                  animate={{ rotate: [0, -6, 6, 0] }}
+                  transition={{ duration: 4, repeat: Infinity }}
+                  className="flex-shrink-0 w-14 h-14 rounded-2xl bg-gradient-to-br from-rose-400 to-pink-500 flex items-center justify-center shadow-xl shadow-rose-500/30"
+                >
+                  <Compass size={22} className="text-white" />
+                </motion.div>
+              )}
+              <div className="flex-1 min-w-0">
+                <div className="text-[10px] uppercase tracking-wider text-rose-300 font-bold mb-0.5 inline-flex items-center gap-1">
+                  {dreamCareer ? (
+                    <>
+                      <Heart size={9} fill="currentColor" />
+                      Working toward
+                    </>
+                  ) : (
+                    <>
+                      <Compass size={10} />
+                      Career explorer
+                    </>
+                  )}
+                </div>
+                <div className="text-base sm:text-lg font-semibold tracking-tight leading-tight">
+                  {dreamCareer
+                    ? `Future ${dreamCareer.title} 🌟`
+                    : tier === "little"
+                    ? "What do you want to be?"
+                    : tier === "junior"
+                    ? "Discover dream careers"
+                    : "Explore your future path"}
+                </div>
+                <div className="text-xs text-slate-400 mt-0.5">
+                  {dreamCareer
+                    ? dreamCareer.oneLiner
+                    : `${unlockedCareers}/${CAREERS.length} careers discovered · keep learning to unlock more`}
+                </div>
+              </div>
+              <ArrowRight
+                size={16}
+                className="text-rose-300 group-hover:translate-x-0.5 transition-transform flex-shrink-0"
+              />
+            </div>
+          </Link>
+        </motion.div>
 
         {/* Subjects */}
         <motion.div

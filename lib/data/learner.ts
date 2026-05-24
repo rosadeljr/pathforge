@@ -139,3 +139,62 @@ export function tierGreeting(tier: AgeTier, name: string): string {
   if (tier === "junior") return `Hey ${name} — let's level up.`;
   return `Welcome back, ${name}.`;
 }
+
+/**
+ * Real-world job connection for each subject. Shown inline in lessons so
+ * kids see how the skill ties to actual careers — bridges learning to
+ * dream-job exploration.
+ */
+export interface RealWorldHook {
+  career: string;
+  emoji: string;
+  blurb: string;
+}
+
+export const SUBJECT_REAL_WORLD: Record<SubjectId, RealWorldHook[]> = {
+  math: [
+    { career: "Engineers", emoji: "🏗️", blurb: "use math to design bridges and buildings that don't fall down." },
+    { career: "Pilots", emoji: "✈️", blurb: "use math every flight to plan fuel, altitude, and timing." },
+    { career: "Game designers", emoji: "🎮", blurb: "use math to make game physics feel real — jumps, gravity, scoring." },
+    { career: "Doctors", emoji: "🩺", blurb: "use math to calculate exactly how much medicine a patient needs." },
+    { career: "Astronauts", emoji: "🚀", blurb: "use math to launch rockets and dock with the space station." },
+  ],
+  english: [
+    { career: "Writers", emoji: "✍️", blurb: "craft stories and books that change how people see the world." },
+    { career: "Lawyers", emoji: "⚖️", blurb: "use clear English to defend people and argue cases in court." },
+    { career: "Journalists", emoji: "📰", blurb: "write articles that inform millions of readers." },
+    { career: "Software engineers", emoji: "💻", blurb: "read and write English to code with teammates worldwide." },
+    { career: "Doctors", emoji: "🩺", blurb: "explain treatments clearly so patients understand what to do." },
+  ],
+  filipino: [
+    { career: "Teachers", emoji: "👩‍🏫", blurb: "use Filipino to teach the next generation of bayani." },
+    { career: "Writers", emoji: "✍️", blurb: "ang mga manunulat na tulad ni Rizal — binago ang ating bansa sa salita." },
+    { career: "Filmmakers", emoji: "🎬", blurb: "direct stories in Filipino that win at film festivals around the world." },
+    { career: "Journalists", emoji: "📺", blurb: "report news in Filipino so every Pilipino can understand." },
+    { career: "Lawyers", emoji: "⚖️", blurb: "argue cases in Filipino courts and write contracts in our language." },
+  ],
+  science: [
+    { career: "Doctors", emoji: "🩺", blurb: "use science to figure out what's wrong and how to heal you." },
+    { career: "Scientists", emoji: "🔬", blurb: "do experiments that lead to vaccines, clean energy, and discoveries." },
+    { career: "Veterinarians", emoji: "🐶", blurb: "use biology to keep animals healthy." },
+    { career: "Engineers", emoji: "🏗️", blurb: "apply physics to build everything from skyscrapers to phones." },
+    { career: "Astronauts", emoji: "🚀", blurb: "study physics, biology, and chemistry to live and work in space." },
+  ],
+  "araling-panlipunan": [
+    { career: "Lawyers", emoji: "⚖️", blurb: "study Philippine history and constitution to defend justice today." },
+    { career: "Diplomats", emoji: "🌏", blurb: "understand world history to represent the Philippines abroad." },
+    { career: "Soldiers", emoji: "🪖", blurb: "study PH geography and history to protect every island." },
+    { career: "Entrepreneurs", emoji: "💡", blurb: "understand the PH economy to grow businesses that hire Filipinos." },
+    { career: "Teachers", emoji: "👩‍🏫", blurb: "pass our country's story to the next generation." },
+  ],
+};
+
+/** Pick a real-world hook for a subject, deterministic by lessonId so it's stable per lesson. */
+export function pickRealWorldHook(subject: SubjectId, lessonId: string): RealWorldHook {
+  const hooks = SUBJECT_REAL_WORLD[subject] || [];
+  if (!hooks.length) return { career: "Many people", emoji: "🌟", blurb: "use this every day." };
+  // Hash the lesson id to pick a stable hook
+  let h = 0;
+  for (let i = 0; i < lessonId.length; i++) h = (h * 31 + lessonId.charCodeAt(i)) >>> 0;
+  return hooks[h % hooks.length];
+}

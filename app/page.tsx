@@ -481,7 +481,7 @@ export default function Landing() {
             {[
               { icon: Trophy, title: "Confetti & celebrations", desc: "Right answer? Cue the confetti, mascot cheers, and a streak count.", accent: "#f59e0b" },
               { icon: Flame, title: "Streaks that compound", desc: "Day-streaks and in-lesson streaks. The longer the chain, the bigger the dopamine.", accent: "#ef4444" },
-              { icon: Star, title: "XP, levels & ranks", desc: "Every lesson earns XP. Bonus XP for flawless runs. Watch the level bar fill.", accent: "#a855f7" },
+              { icon: Heart, title: "Dream careers to unlock", desc: "Doctor, astronaut, engineer, game designer — kids unlock careers as they learn and pick their dream.", accent: "#f43f5e" },
               { icon: Bot, title: "ForgeBot — your tutor", desc: "Stuck? Tap the tutor. Voice adapts to your age — gentle for kids, peer-like for teens.", accent: "#6366f1" },
             ].map((f, i) => (
               <motion.div

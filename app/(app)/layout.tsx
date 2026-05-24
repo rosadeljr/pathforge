@@ -12,12 +12,10 @@ import {
   Settings as SettingsIcon,
   LogOut,
   Sparkles,
-  Sun,
-  Moon,
   Home,
   Users,
+  Compass,
 } from "lucide-react";
-import { useTheme } from "@/components/theme/ThemeProvider";
 import { ageTierForGrade } from "@/lib/data/learner";
 
 interface Profile {
@@ -34,6 +32,7 @@ interface Profile {
 const navLinks = [
   { icon: Home, label: "Home", href: "/learn", description: "Today's learning" },
   { icon: Bot, label: "Tutor", href: "/mentor", description: "Ask the tutor anything" },
+  { icon: Compass, label: "Careers", href: "/learn/careers", description: "Explore dream careers" },
   { icon: Users, label: "Friends", href: "/friends", description: "Your study crew" },
   { icon: Sparkles, label: "Achievements", href: "/achievements", description: "Badges you've earned" },
   { icon: Crown, label: "Leaderboard", href: "/leaderboard", description: "Top learners" },
@@ -43,8 +42,8 @@ const navLinks = [
 const mobileNavLinks = [
   { icon: Home, label: "Home", href: "/learn" },
   { icon: Bot, label: "Tutor", href: "/mentor" },
+  { icon: Compass, label: "Careers", href: "/learn/careers" },
   { icon: Users, label: "Friends", href: "/friends" },
-  { icon: Sparkles, label: "Badges", href: "/achievements" },
   { icon: Crown, label: "Ranks", href: "/leaderboard" },
 ];
 
@@ -58,7 +57,6 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const [profile, setProfile] = useState<Profile | null>(null);
 
   const supabase = createClient();
-  const { theme, toggle: toggleTheme } = useTheme();
 
   const isFullscreen = FULLSCREEN_ROUTES.some((route) => pathname?.startsWith(route));
 
@@ -141,16 +139,14 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     }
   }, [authState, router]);
 
-  // Apply kid-friendly visual theme via [data-mode="learner"] + [data-age-tier].
+  // Apply kid-friendly accent styling via [data-mode="learner"] + [data-age-tier].
+  // Always dark mode — keeps the premium sci-fi look consistent everywhere.
   useEffect(() => {
     if (typeof document === "undefined") return;
     const tier = ageTierForGrade(profile?.learner_grade);
     document.documentElement.setAttribute("data-mode", "learner");
     document.documentElement.setAttribute("data-age-tier", tier);
-    // Little/Junior get forced light theme; teens can keep their pick.
-    if (tier !== "teen") {
-      document.documentElement.setAttribute("data-theme", "light");
-    }
+    document.documentElement.setAttribute("data-theme", "dark");
     return () => {
       document.documentElement.removeAttribute("data-mode");
       document.documentElement.removeAttribute("data-age-tier");
@@ -346,23 +342,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                   </span>
                 </Link>
               )}
-              {/* Theme toggle — only for teens; little/junior tiers stay light. */}
-              {isTeen && (
-                <button
-                  onClick={toggleTheme}
-                  className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-slate-400 hover:bg-white/[0.03] hover:text-white transition-all"
-                  aria-label={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}
-                >
-                  {theme === "dark" ? (
-                    <Sun size={17} strokeWidth={2} />
-                  ) : (
-                    <Moon size={17} strokeWidth={2} />
-                  )}
-                  <span className="font-medium">
-                    {theme === "dark" ? "Light mode" : "Dark mode"}
-                  </span>
-                </button>
-              )}
+              {/* Theme toggle removed — dark mode only for the kid experience. */}
               <button
                 onClick={handleSignOut}
                 className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-slate-400 hover:bg-white/[0.03] hover:text-white transition-all"

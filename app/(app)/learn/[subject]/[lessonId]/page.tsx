@@ -16,7 +16,12 @@ import {
   Flame,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
-import { getSubject, ageTierForGrade, type AgeTier } from "@/lib/data/learner";
+import {
+  getSubject,
+  ageTierForGrade,
+  pickRealWorldHook,
+  type AgeTier,
+} from "@/lib/data/learner";
 import { getLesson } from "@/lib/data/learner-lessons";
 import { PageShimmer } from "@/components/ui/Shimmer";
 
@@ -127,6 +132,8 @@ export default function LessonPlayerPage() {
   const correctCount = firstTryCorrect.filter(Boolean).length;
   const isLast = currentIdx === total - 1;
   const q = lesson.questions[currentIdx];
+  // Stable real-world hook for this lesson (same on retry)
+  const realWorld = pickRealWorldHook(lesson.subject, lesson.id);
 
   // Mascot mood reflects the moment
   const mascotMood = (() => {
@@ -376,6 +383,38 @@ export default function LessonPlayerPage() {
             )}
           </motion.div>
 
+          {/* Real-world bridge — connects what they just learned to a career */}
+          <motion.div
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.7 }}
+            className="relative overflow-hidden rounded-2xl border border-amber-400/25 bg-gradient-to-br from-amber-500/[0.10] to-transparent p-4 mb-6"
+          >
+            <div
+              className="absolute -top-12 -right-12 w-36 h-36 rounded-full opacity-30 pointer-events-none"
+              style={{
+                background: "radial-gradient(circle, rgba(245,158,11,0.5), transparent 70%)",
+              }}
+            />
+            <div className="relative">
+              <div className="text-[10px] uppercase tracking-wider text-amber-300 font-bold mb-1.5">
+                Real-world unlock
+              </div>
+              <p className="text-sm text-amber-50 leading-snug mb-3">
+                <span className="text-xl mr-1.5">{realWorld.emoji}</span>
+                <span className="font-semibold text-white">{realWorld.career}</span>{" "}
+                {realWorld.blurb}
+              </p>
+              <Link
+                href="/learn/careers"
+                className="inline-flex items-center gap-1.5 text-xs font-semibold text-amber-200 hover:text-amber-100 transition-colors"
+              >
+                Explore careers like this
+                <ArrowRight size={11} />
+              </Link>
+            </div>
+          </motion.div>
+
           <div className="flex items-center justify-center gap-3 flex-wrap">
             <button
               onClick={restart}
@@ -480,6 +519,42 @@ export default function LessonPlayerPage() {
             />
           </div>
         </div>
+
+        {/* Real-world job hook — only on first question, dismisses afterward */}
+        {currentIdx === 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 8, scale: 0.97 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.97 }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+            className="relative overflow-hidden rounded-2xl border border-amber-400/25 bg-gradient-to-br from-amber-500/[0.08] via-orange-500/[0.04] to-transparent p-3.5"
+          >
+            <div
+              className="absolute -top-12 -right-12 w-32 h-32 rounded-full opacity-25 pointer-events-none"
+              style={{
+                background: "radial-gradient(circle, rgba(245,158,11,0.5), transparent 70%)",
+              }}
+            />
+            <div className="relative flex items-center gap-3">
+              <motion.div
+                animate={{ rotate: [0, -6, 6, 0], y: [0, -2, 0] }}
+                transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+                className="flex-shrink-0 text-2xl"
+              >
+                {realWorld.emoji}
+              </motion.div>
+              <div className="flex-1 min-w-0">
+                <div className="text-[10px] uppercase tracking-wider text-amber-300 font-bold mb-0.5">
+                  In the real world
+                </div>
+                <p className="text-xs sm:text-sm leading-snug text-amber-50">
+                  <span className="font-semibold text-white">{realWorld.career}</span>{" "}
+                  {realWorld.blurb}
+                </p>
+              </div>
+            </div>
+          </motion.div>
+        )}
 
         {/* Mascot + question card */}
         <AnimatePresence mode="wait">
