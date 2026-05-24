@@ -34,7 +34,8 @@ export default function PrivacyPage() {
         </p>
         <p className="text-sm text-slate-500 mb-10">
           Compliant with the Data Privacy Act of 2012 (Republic Act No. 10173) and its
-          Implementing Rules and Regulations.
+          Implementing Rules and Regulations. PathForge is designed for Filipino students
+          ages 6–18; this policy explains how we handle children's data with extra care.
         </p>
 
         <div className="space-y-7 text-slate-300 leading-relaxed">
@@ -68,19 +69,23 @@ export default function PrivacyPage() {
                 hashed password (we never store plaintext passwords)
               </li>
               <li>
-                <strong>Profile data</strong>: selected career path, goals, target salary range,
-                timeline, weekly availability
+                <strong>Learner profile</strong>: grade level (1–12), picked subjects, optional
+                dream career
               </li>
               <li>
-                <strong>Activity data</strong>: quests completed, XP earned, level, streaks,
-                achievements unlocked, projects added
+                <strong>Parent/guardian email</strong>: required for learners under 13. Used only
+                for progress notifications and account recovery.
               </li>
               <li>
-                <strong>User-generated content</strong>: portfolio projects, proof URLs, written
-                reflections, AI mentor messages
+                <strong>Activity data</strong>: lessons completed, XP earned, level, streaks,
+                achievements unlocked, in-lesson answer history
               </li>
               <li>
-                <strong>Subscription data</strong>: subscription tier (free/pro/elite), and the
+                <strong>Tutor messages</strong>: text the learner sends to ForgeBot and the
+                tutor's replies (used to maintain conversation context)
+              </li>
+              <li>
+                <strong>Subscription data</strong>: subscription tier (free/pro/family), and the
                 GCash/Maya payment proof you submit (reference number, amount, optional
                 screenshot) for manual verification
               </li>
@@ -94,6 +99,11 @@ export default function PrivacyPage() {
               government-issued IDs, biometric data, medical records, religious affiliation,
               political beliefs, sexual orientation, or other sensitive personal information
               as defined under Section 3(l) of R.A. 10173.
+            </p>
+            <p className="mt-3">
+              <strong>What we do NOT collect from kids.</strong> No real-name requirement, no
+              physical address, no phone number, no school name, no photos or biometric data,
+              no location tracking.
             </p>
           </Section>
 
@@ -130,37 +140,42 @@ export default function PrivacyPage() {
             <p>We use your personal data to:</p>
             <ul className="list-disc ml-5 mt-2 space-y-1.5">
               <li>Provide, operate, and maintain the Service</li>
-              <li>Personalize your career path, quests, and AI mentor responses</li>
-              <li>Track your progress (XP, levels, achievements, streaks)</li>
-              <li>Display your public profile if you opt in</li>
-              <li>Send transactional emails (welcome, milestones, password reset)</li>
+              <li>Match lessons to the learner's grade and adapt the tutor to their age tier</li>
+              <li>Track progress (XP, levels, achievements, streaks)</li>
+              <li>Show the leaderboard within the learner's age cohort</li>
+              <li>Send transactional emails (welcome, weekly progress to parents, password reset)</li>
               <li>Process subscription payments and prevent fraud</li>
               <li>Improve the Service through anonymized analytics</li>
               <li>Respond to support inquiries</li>
-              <li>Moderate abusive content reported by users</li>
+              <li>Moderate inappropriate content and ensure age-safe interactions</li>
               <li>Comply with legal obligations and protect against legal claims</li>
             </ul>
             <p className="mt-3 font-semibold text-white">
               We will never sell your personal data. We do not share personally identifiable
-              information with third parties for advertising purposes.
+              information with third parties for advertising purposes. We do not target ads to
+              children — there are no ads in PathForge at all.
             </p>
           </Section>
 
-          <Section title="6. Public Profiles">
+          <Section title="6. Leaderboards & Friends">
             <p>
-              If you make your profile public at /u/[username], the following becomes visible
-              to anyone with the link:
+              Limited information is visible to other learners on PathForge:
             </p>
             <ul className="list-disc ml-5 mt-2 space-y-1">
-              <li>Username and optional full name</li>
-              <li>Current level, rank, total XP, streak counts</li>
-              <li>Selected career path</li>
-              <li>Portfolio projects with their public URLs (Live, GitHub)</li>
-              <li>Unlocked achievements</li>
+              <li>
+                <strong>Leaderboard</strong>: username, current level, total XP, streak. Visible
+                only to other signed-in learners.
+              </li>
+              <li>
+                <strong>Friends</strong>: username, level, XP, streak. Visible only to learners
+                you accept as friends. Friend requests are restricted to learners in the same
+                user mode (kids only connect with kids).
+              </li>
             </ul>
             <p className="mt-3">
-              <strong>Your email address is NEVER displayed publicly.</strong> You may disable
-              your public profile from your account settings at any time.
+              <strong>Email, full name, parent email, and grade are NEVER shown to other
+              learners.</strong> You can decline any friend request and remove friends at any
+              time. There are no public-facing learner profile pages.
             </p>
           </Section>
 
@@ -193,9 +208,10 @@ export default function PrivacyPage() {
                 </a>
               </li>
               <li>
-                <strong>OpenAI</strong> (USA) — powers ForgeBot responses (optional; only invoked
-                if an API key is configured). Only your message text and minimal user context
-                (level, career path, active quest titles) are sent.{" "}
+                <strong>OpenAI</strong> (USA) — powers ForgeBot tutor responses. Only the
+                learner's message text and minimal context (grade, picked subjects, dream
+                career, level) are sent. The OpenAI API does not use this data for training
+                under their no-training policy for API customers.{" "}
                 <a
                   href="https://openai.com/privacy"
                   target="_blank"
@@ -345,15 +361,75 @@ export default function PrivacyPage() {
 
           <Section title="11. Children's Privacy">
             <p>
-              The Service is not intended for users under sixteen (16) years of age. We do not
-              knowingly collect personal information from children under sixteen. If we learn
-              we have inadvertently collected data from a child under sixteen, we will delete
-              it promptly. Parents or guardians who believe their child has provided us
-              personal data may contact us at{" "}
+              PathForge is built for Filipino students <strong>ages 6 to 18</strong>. We treat
+              children's data with extra care under R.A. 10173, NPC Advisory Opinions on
+              minors' personal data, and aligned with international best practices (UN CRC
+              General Comment No. 25).
+            </p>
+
+            <p className="mt-3 font-semibold text-white">For learners under 13 years old:</p>
+            <ul className="list-disc ml-5 mt-2 space-y-1.5">
+              <li>
+                Account creation requires the consent of a parent or legal guardian, who
+                must provide a verifiable parent/guardian email during signup.
+              </li>
+              <li>
+                Parents may request to access, correct, or delete their child's data at any
+                time by emailing{" "}
+                <a href="mailto:privacy@pathforger.app" className="text-indigo-300 underline">
+                  privacy@pathforger.app
+                </a>
+                .
+              </li>
+              <li>
+                Weekly progress emails are sent to the parent/guardian email on Pro and Family
+                plans.
+              </li>
+            </ul>
+
+            <p className="mt-4 font-semibold text-white">Universal child-safety measures:</p>
+            <ul className="list-disc ml-5 mt-2 space-y-1.5">
+              <li>
+                <strong>No ads, no in-app purchases marketed to kids.</strong> Subscriptions
+                are sold only to adults via the parent-facing pricing page.
+              </li>
+              <li>
+                <strong>AI tutor guardrails.</strong> ForgeBot is age-tier calibrated. It
+                refuses violence, adult content, drugs/alcohol, self-harm, and any sensitive
+                topic outside school subjects. Sensitive personal topics (mental health,
+                family stress) are gently redirected to trusted adults or PH crisis lines
+                (e.g., NCMH 1553).
+              </li>
+              <li>
+                <strong>No external links surfaced to kids.</strong> The app never sends a
+                learner outside PathForge.
+              </li>
+              <li>
+                <strong>Friend connections are restricted</strong> to learners in the same
+                user mode. There are no DMs, no chat, no group messaging — only friend
+                connections that show shared leaderboard standings.
+              </li>
+              <li>
+                <strong>No photos, no biometrics, no location data</strong> are collected
+                from learners — ever.
+              </li>
+              <li>
+                Profiles are private by default. There are no public-facing profile pages.
+              </li>
+              <li>
+                <strong>Right to be forgotten:</strong> a parent or learner can request full
+                account deletion at any time. We remove all personal data within 30 days,
+                except where retention is required by Philippine law.
+              </li>
+            </ul>
+
+            <p className="mt-3">
+              If you believe a child has signed up without parental consent or if you have any
+              concern about a learner's safety on PathForge, please email{" "}
               <a href="mailto:privacy@pathforger.app" className="text-indigo-300 underline">
                 privacy@pathforger.app
-              </a>
-              .
+              </a>{" "}
+              and we will act within 24 hours.
             </p>
           </Section>
 

@@ -62,11 +62,29 @@ export default function TermsPage() {
 
           <Section title="2. Eligibility">
             <p>
-              You must be at least sixteen (16) years of age to create an account. Users under
-              the age of eighteen (18) require parental or guardian consent under Article 234
-              of the Civil Code of the Philippines (R.A. 6809). By using the Service, you
-              represent that you meet the age requirement and have the legal capacity to enter
-              into this agreement.
+              PathForge is designed for Filipino students <strong>ages 6 to 18</strong>.
+            </p>
+            <ul className="list-disc ml-5 mt-2 space-y-1.5">
+              <li>
+                Learners <strong>under 13</strong> must have a parent or legal guardian
+                create the account on their behalf. The parent/guardian email collected at
+                signup represents that consent has been given under Article 234 of the
+                Civil Code of the Philippines (R.A. 6809) and the NPC's guidance on minors'
+                personal data.
+              </li>
+              <li>
+                Learners <strong>13 and above</strong> may create their own account but
+                still need parental consent to subscribe to paid plans (Pro / Family). The
+                parent/guardian who pays accepts these Terms on the learner's behalf.
+              </li>
+              <li>
+                The person paying for a subscription must be the parent, legal guardian, or
+                an adult with legal capacity to enter contracts under Philippine law.
+              </li>
+            </ul>
+            <p className="mt-3">
+              By using the Service, you represent that you meet these requirements or have the
+              appropriate parental/guardian consent.
             </p>
           </Section>
 
@@ -97,7 +115,7 @@ export default function TermsPage() {
                 cyber-libel
               </li>
               <li>Attempt to gain unauthorized access to other accounts, systems, or data</li>
-              <li>Scrape, copy, reproduce, or redistribute the curated career content, quest templates, or any other proprietary material</li>
+              <li>Scrape, copy, reproduce, or redistribute the curated lesson content, career data, or any other proprietary material</li>
               <li>Impersonate any person or entity, or falsely represent your affiliation</li>
               <li>Upload viruses, malware, or other malicious code</li>
               <li>Interfere with, disrupt, or overload the Service infrastructure</li>
@@ -111,7 +129,7 @@ export default function TermsPage() {
             <p>
               In accordance with the Intellectual Property Code of the Philippines (R.A. 8293),
               all content, features, and functionality of the Service — including but not
-              limited to career path content, quest templates, the PathForge name and logo,
+              limited to lesson content, career exploration data, the PathForge name and logo,
               software code, design, graphics, and compilation — are the exclusive property
               of ZenForge Technologies and are protected by Philippine and international
               copyright, trademark, patent, and other intellectual property laws.
@@ -129,7 +147,7 @@ export default function TermsPage() {
 
           <Section title="6. Subscriptions, Fees, and Payment">
             <p>
-              The Service offers a free tier and paid subscription plans (Pro and Elite).
+              The Service offers a free tier and paid subscription plans (Pro and Family).
               Paid plans are priced monthly in Philippine Pesos (PHP). Payment is made manually
               via GCash or Maya — after sending payment, you submit a proof of payment which our
               team verifies (typically within 4 hours during PH business hours) before your plan
@@ -159,13 +177,14 @@ export default function TermsPage() {
             </p>
           </Section>
 
-          <Section title="7. Public Profiles and Sharing">
+          <Section title="7. Leaderboards and Friend Connections">
             <p>
-              If you choose to make your profile public at /u/[username], the displayed data
-              (username, optional full name, level, rank, XP, streaks, career path, completed
-              projects, and unlocked achievements) is visible to anyone with the link. Your
-              email address is never displayed publicly. You may disable your public profile
-              at any time from your account settings.
+              The leaderboard shows usernames, levels, total XP, and streaks of other learners
+              — visible only to other signed-in PathForge learners. Friends see the same
+              limited information plus your shared friend connection. There are no public
+              profile pages, no DMs, no group messaging, and no way for non-learners to view
+              learner data. Email addresses and parent/guardian emails are never displayed to
+              anyone other than the account owner.
             </p>
           </Section>
 
@@ -182,11 +201,12 @@ export default function TermsPage() {
           <Section title="9. Disclaimers">
             <p>
               The Service is provided on an "AS IS" and "AS AVAILABLE" basis without any
-              warranties, express or implied. While PathForge is designed to support your
-              career development, <strong>we do not guarantee any specific outcomes</strong>,
-              including but not limited to employment, freelance income, promotion, or skill
-              mastery. Results depend on your individual effort, market conditions, and
-              factors beyond our control.
+              warranties, express or implied. While PathForge is designed to support a
+              learner's academic and personal development, <strong>we do not guarantee any
+              specific outcomes</strong>, including but not limited to school grades, exam
+              scores, or career trajectories. Results depend on the learner's individual
+              effort, family support, and factors beyond our control. PathForge is a learning
+              supplement, not a substitute for school or professional educational guidance.
             </p>
             <p className="mt-2">
               To the maximum extent permitted by law, we disclaim all warranties including

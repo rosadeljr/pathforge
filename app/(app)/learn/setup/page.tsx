@@ -23,11 +23,16 @@ import {
 export default function LearnerSetupPage() {
   const router = useRouter();
   const supabase = createClient();
-  const [step, setStep] = useState<"grade" | "subjects">("grade");
+  const [step, setStep] = useState<"grade" | "subjects" | "parent">("grade");
   const [grade, setGrade] = useState<number | null>(null);
   const [subjects, setSubjects] = useState<string[]>([]);
+  const [parentEmail, setParentEmail] = useState("");
   const [saving, setSaving] = useState(false);
   const [redirecting, setRedirecting] = useState(true);
+
+  // Approximate age from grade: Grade 1 ≈ age 6, Grade 7 ≈ age 12.
+  // Anything Grade 7 or below = under 13 = parent consent required.
+  const requiresParentConsent = grade !== null && grade <= 7;
 
   // If they already have grade set, bounce out.
   useEffect(() => {
@@ -66,6 +71,12 @@ export default function LearnerSetupPage() {
 
   async function finish() {
     if (!grade) return;
+    // Under-13s must provide a parent email
+    if (requiresParentConsent && !parentEmail.includes("@")) {
+      toast.error("Parent email is required for kids under 13.");
+      setStep("parent");
+      return;
+    }
     setSaving(true);
     try {
       const { data: { session } } = await supabase.auth.getSession();
@@ -75,6 +86,7 @@ export default function LearnerSetupPage() {
         .update({
           learner_grade: grade,
           learner_subjects: subjects.length ? subjects : null,
+          parent_email: parentEmail.trim() || null,
         })
         .eq("id", session.user.id);
       if (error) throw error;
@@ -119,6 +131,12 @@ export default function LearnerSetupPage() {
             <span className={step === "grade" ? "text-white font-medium" : ""}>1. Grade</span>
             <span className="text-slate-700">·</span>
             <span className={step === "subjects" ? "text-white font-medium" : ""}>2. Subjects</span>
+            {requiresParentConsent && (
+              <>
+                <span className="text-slate-700">·</span>
+                <span className={step === "parent" ? "text-white font-medium" : ""}>3. Parent</span>
+              </>
+            )}
           </div>
         </div>
 
@@ -272,9 +290,78 @@ export default function LearnerSetupPage() {
                       ← Back
                     </button>
                     <button
-                      onClick={finish}
+                      onClick={() => {
+                        if (requiresParentConsent) {
+                          setStep("parent");
+                        } else {
+                          finish();
+                        }
+                      }}
                       disabled={saving}
                       className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-amber-400 to-orange-500 text-slate-900 font-semibold text-sm hover:opacity-90 disabled:opacity-50 transition-opacity"
+                    >
+                      {saving ? (
+                        <>
+                          <Loader2 size={14} className="animate-spin" />
+                          Saving…
+                        </>
+                      ) : (
+                        <>
+                          {requiresParentConsent ? "Next" : "Start learning"}
+                          <ArrowRight size={14} />
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </motion.div>
+              )}
+
+              {step === "parent" && (
+                <motion.div
+                  key="parent"
+                  initial={{ opacity: 0, y: 12 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -12 }}
+                  transition={{ duration: 0.4 }}
+                >
+                  <div className="text-center mb-8">
+                    <div className="text-5xl mb-3">👨‍👩‍👧‍👦</div>
+                    <h1 className="text-3xl sm:text-4xl font-semibold tracking-tight mb-2">
+                      Parent or guardian email
+                    </h1>
+                    <p className="text-sm text-slate-400 max-w-md mx-auto">
+                      Required for kids under 13 (Philippine Data Privacy Act). We'll only
+                      use it for weekly progress emails and account recovery — never for ads,
+                      never shared.
+                    </p>
+                  </div>
+
+                  <label className="block text-xs font-medium text-slate-300 mb-1.5">
+                    Parent / guardian email
+                  </label>
+                  <input
+                    type="email"
+                    value={parentEmail}
+                    onChange={(e) => setParentEmail(e.target.value)}
+                    placeholder="parent@example.com"
+                    className="w-full px-3.5 py-2.5 bg-white/[0.03] border border-white/[0.08] rounded-xl text-sm focus:outline-none focus:border-amber-400/60 focus:ring-2 focus:ring-amber-400/20 transition-all"
+                  />
+                  <p className="text-[10px] text-slate-500 mt-1.5">
+                    Have your parent or guardian enter their email — they'll be linked to
+                    your account.
+                  </p>
+
+                  <div className="mt-7 flex items-center justify-between">
+                    <button
+                      onClick={() => setStep("subjects")}
+                      className="text-sm text-slate-400 hover:text-white transition-colors"
+                    >
+                      ← Back
+                    </button>
+                    <button
+                      onClick={finish}
+                      disabled={saving || !parentEmail.includes("@")}
+                      className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-amber-400 to-orange-500 text-slate-900 font-semibold text-sm hover:opacity-90 disabled:opacity-40 transition-opacity"
                     >
                       {saving ? (
                         <>

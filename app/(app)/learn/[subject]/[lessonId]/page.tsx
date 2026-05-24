@@ -202,12 +202,24 @@ export default function LessonPlayerPage() {
     persistCompletion();
   }
 
+  const [isFirstEver, setIsFirstEver] = useState(false);
+
   async function persistCompletion() {
     setPersisting(true);
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session?.user) return;
       const uid = session.user.id;
+
+      // Detect if this is the user's FIRST lesson ever (for celebration)
+      const { count: completedCount } = await supabase
+        .from("analytics_events")
+        .select("id", { count: "exact", head: true })
+        .eq("user_id", uid)
+        .eq("event_type", "lesson_completed");
+      if ((completedCount ?? 0) === 0) {
+        setIsFirstEver(true);
+      }
 
       const { data: existing } = await supabase
         .from("analytics_events")
@@ -312,10 +324,42 @@ export default function LessonPlayerPage() {
     const bonusXp = isFlawless ? Math.round(lesson.xpReward * 0.25) : 0;
     return (
       <div className="min-h-screen pb-12 relative overflow-hidden">
-        {/* Confetti burst — only for great runs */}
-        {pct >= 80 && <ConfettiCelebration tier={tier} />}
+        {/* Confetti burst — bigger for first-ever lesson, otherwise 80%+ */}
+        {(isFirstEver || pct >= 80) && <ConfettiCelebration tier={tier} />}
 
         <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-12 lg:py-16 relative z-10">
+          {/* First-lesson celebration banner */}
+          {isFirstEver && (
+            <motion.div
+              initial={{ opacity: 0, y: -20, scale: 0.9 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              transition={{ type: "spring", stiffness: 220, damping: 18, delay: 0.1 }}
+              className="relative overflow-hidden rounded-3xl border border-amber-400/40 bg-gradient-to-br from-amber-500/[0.20] via-orange-500/[0.10] to-transparent p-5 mb-7 text-center"
+            >
+              <div
+                className="absolute -top-12 left-1/2 -translate-x-1/2 w-72 h-32 rounded-full opacity-50 pointer-events-none"
+                style={{
+                  background: "radial-gradient(ellipse, rgba(245,158,11,0.6), transparent 70%)",
+                }}
+              />
+              <div className="relative">
+                <motion.div
+                  animate={{ rotate: [0, -8, 8, -8, 0], scale: [1, 1.15, 1] }}
+                  transition={{ duration: 1.2, repeat: Infinity, repeatDelay: 1 }}
+                  className="text-5xl mb-2 inline-block"
+                >
+                  🎉
+                </motion.div>
+                <div className="text-[10px] uppercase tracking-wider text-amber-300 font-bold mb-1">
+                  Your first lesson — ever!
+                </div>
+                <div className="text-base sm:text-lg font-bold text-amber-50">
+                  Welcome to PathForge, Forger. Your journey starts here.
+                </div>
+              </div>
+            </motion.div>
+          )}
+
           <motion.div
             initial={{ opacity: 0, scale: 0.85, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}

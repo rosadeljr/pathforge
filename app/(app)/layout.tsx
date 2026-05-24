@@ -25,11 +25,12 @@ interface Profile {
   total_xp: number;
   streak_count: number;
   is_admin?: boolean;
+  is_parent_account?: boolean;
   learner_grade?: number | null;
 }
 
-// One nav for everyone — this is a kids' learning app.
-const navLinks = [
+// LEARNER nav (for kids).
+const learnerNav = [
   { icon: Home, label: "Home", href: "/learn", description: "Today's learning" },
   { icon: Bot, label: "Tutor", href: "/mentor", description: "Ask the tutor anything" },
   { icon: Compass, label: "Careers", href: "/learn/careers", description: "Explore dream careers" },
@@ -38,13 +39,22 @@ const navLinks = [
   { icon: Crown, label: "Leaderboard", href: "/leaderboard", description: "Top learners" },
   { icon: SettingsIcon, label: "Settings", href: "/settings", description: "Preferences" },
 ];
-
-const mobileNavLinks = [
+const learnerMobileNav = [
   { icon: Home, label: "Home", href: "/learn" },
   { icon: Bot, label: "Tutor", href: "/mentor" },
   { icon: Compass, label: "Careers", href: "/learn/careers" },
   { icon: Users, label: "Friends", href: "/friends" },
   { icon: Crown, label: "Ranks", href: "/leaderboard" },
+];
+
+// PARENT nav (for the Family / Pro parent dashboard).
+const parentNav = [
+  { icon: Home, label: "Dashboard", href: "/parent", description: "Your kids' progress" },
+  { icon: SettingsIcon, label: "Settings", href: "/settings", description: "Preferences" },
+];
+const parentMobileNav = [
+  { icon: Home, label: "Dashboard", href: "/parent" },
+  { icon: SettingsIcon, label: "Settings", href: "/settings" },
 ];
 
 // Setup flow is the only fullscreen route now (no sidebar).
@@ -77,7 +87,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       const { data: existing } = await supabase
         .from("profiles")
         .select(
-          "username, current_level, current_xp, total_xp, streak_count, is_admin, learner_grade, user_mode"
+          "username, current_level, current_xp, total_xp, streak_count, is_admin, learner_grade, user_mode, is_parent_account"
         )
         .eq("id", userId)
         .maybeSingle();
@@ -154,9 +164,19 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   }, [profile?.learner_grade]);
 
   // Route new learners (or any leftover users without a grade) to setup.
+  // Parent accounts skip this and go straight to /parent.
   useEffect(() => {
     if (authState !== "authenticated" || !profile || !pathname) return;
     const onFullscreen = FULLSCREEN_ROUTES.some((r) => pathname.startsWith(r));
+    const isParent = profile.is_parent_account === true;
+    if (isParent) {
+      // Parents landing on /learn should be bounced to /parent
+      if (pathname === "/learn") {
+        router.replace("/parent");
+      }
+      return;
+    }
+    // Learner without a grade → setup
     if (profile.learner_grade == null && !onFullscreen) {
       router.replace("/learn/setup");
     }
@@ -201,6 +221,10 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const tier = ageTierForGrade(profile?.learner_grade);
   const isLittle = tier === "little";
   const isTeen = tier === "teen";
+  const isParent = profile?.is_parent_account === true;
+  const navLinks = isParent ? parentNav : learnerNav;
+  const mobileNavLinks = isParent ? parentMobileNav : learnerMobileNav;
+  const homeHref = isParent ? "/parent" : "/learn";
 
   return (
     <div className="min-h-screen bg-[#0a0a0f] text-white">
@@ -220,12 +244,12 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       {authenticated && (
         <div className="md:hidden sticky top-0 z-40 bg-[#0a0a0f]/80 backdrop-blur-xl border-b border-white/[0.06]">
           <div className="px-4 h-14 flex items-center justify-between">
-            <Link href="/learn" className="flex items-center gap-2">
+            <Link href={homeHref} className="flex items-center gap-2">
               <Logo size={28} />
               <span className="font-semibold tracking-tight">PathForge</span>
             </Link>
             <Link
-              href="/learn"
+              href={homeHref}
               className="flex items-center gap-2 px-2.5 py-1 rounded-lg bg-white/[0.04] border border-white/[0.06]"
             >
               <div className="w-5 h-5 rounded-md bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-[10px] font-bold">
@@ -250,7 +274,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         {authenticated && (
           <aside className="hidden md:flex md:w-64 lg:w-72 flex-col fixed inset-y-0 left-0 z-30 border-r border-white/[0.06] bg-[#0a0a0f]/80 backdrop-blur-xl">
             <div className="px-6 py-6 border-b border-white/[0.06]">
-              <Link href="/learn" className="flex items-center gap-2.5 group">
+              <Link href={homeHref} className="flex items-center gap-2.5 group">
                 <Logo size={32} />
                 <span className="text-base font-semibold tracking-tight">PathForge</span>
               </Link>

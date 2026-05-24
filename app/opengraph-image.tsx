@@ -2,7 +2,7 @@ import { ImageResponse } from "next/og";
 
 // Social share card — shown when a PathForge link is posted to X, Facebook,
 // LinkedIn, WhatsApp, Slack, etc.
-export const alt = "PathForge — Forge the career you actually want";
+export const alt = "PathForge — Where kids forge their future";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
@@ -96,19 +96,19 @@ export default function Image() {
               lineHeight: 1.05,
             }}
           >
-            Forge the career
+            Where kids
           </div>
           <div
             style={{
               display: "flex",
               fontSize: 84,
               fontWeight: 800,
-              color: "#c084fc",
+              color: "#fbbf24",
               letterSpacing: "-0.03em",
               lineHeight: 1.05,
             }}
           >
-            you actually want.
+            forge their future.
           </div>
         </div>
 
@@ -121,7 +121,7 @@ export default function Image() {
             letterSpacing: "-0.01em",
           }}
         >
-          Personalized roadmaps · Daily quests · ForgeBot career coach
+          K-12 learning, gamified · Ages 6–18 · 🇵🇭 Filipino-built
         </div>
       </div>
     ),
