@@ -17,6 +17,7 @@ import {
   Compass,
 } from "lucide-react";
 import { ageTierForGrade } from "@/lib/data/learner";
+import { InstallPrompt } from "@/components/pwa/InstallPrompt";
 
 interface Profile {
   username: string | null;
@@ -422,6 +423,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           </div>
         </nav>
       )}
+
+      {/* PWA install prompt — only shown to signed-in users, dismissable for 14d */}
+      {authenticated && <InstallPrompt />}
     </div>
   );
 }
