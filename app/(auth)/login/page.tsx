@@ -175,28 +175,30 @@ export default function Login() {
           >
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/[0.04] border border-white/[0.06] mb-6">
               <div className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-              <span className="text-xs font-medium text-slate-300 tracking-wide">Career operating system</span>
+              <span className="text-xs font-medium text-slate-300 tracking-wide">
+                K-12 learning, gamified · ages 6–18
+              </span>
             </div>
 
             <h1 className="text-5xl xl:text-6xl font-semibold tracking-tight leading-[1.05] mb-6">
-              Build the career
+              Where kids
               <br />
-              <span className="bg-gradient-to-r from-indigo-300 via-purple-300 to-pink-300 bg-clip-text text-transparent">
-                you actually want.
+              <span className="bg-gradient-to-r from-amber-300 via-orange-300 to-pink-300 bg-clip-text text-transparent">
+                forge their future.
               </span>
             </h1>
 
             <p className="text-lg text-slate-400 leading-relaxed max-w-md">
-              Personalized roadmaps, AI mentorship, and gamified progress
-              tracking — all in one place.
+              Fun, interactive K-12 lessons across Math, English, Filipino, Science,
+              and Araling Panlipunan — with a kid-safe AI tutor.
             </p>
 
             {/* Stats */}
             <div className="mt-12 grid grid-cols-3 gap-8 max-w-md">
               {[
-                { value: "16", label: "Career paths" },
-                { value: "60+", label: "Curated quests" },
-                { value: "Free", label: "To start" },
+                { value: "5", label: "Core subjects" },
+                { value: "32", label: "Careers to unlock" },
+                { value: "1–12", label: "Grades (K-12)" },
               ].map((stat, i) => (
                 <motion.div
                   key={i}
@@ -214,7 +216,7 @@ export default function Login() {
           {/* Footer */}
           <div className="flex items-center gap-2 text-xs text-slate-500">
             <ShieldCheck size={14} />
-            <span>End-to-end encrypted · SOC 2 compliant</span>
+            <span>Kid-safe AI · Filipino-built · No ads</span>
           </div>
         </div>
 
@@ -397,7 +399,7 @@ export default function Login() {
             {/* Mobile footer */}
             <div className="lg:hidden mt-12 flex items-center justify-center gap-2 text-xs text-slate-500">
               <ShieldCheck size={12} />
-              <span>End-to-end encrypted</span>
+              <span>Kid-safe · Filipino-built</span>
             </div>
           </motion.div>
         </div>

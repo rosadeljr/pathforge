@@ -291,7 +291,7 @@ export default function SignUp() {
                 Create your account
               </h2>
               <p className="text-sm text-slate-400">
-                Free forever — no credit card needed.
+                Start learning in under a minute.
               </p>
             </div>
 
@@ -604,30 +604,32 @@ export default function SignUp() {
             className="max-w-xl ml-auto"
           >
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/[0.04] border border-white/[0.06] mb-6">
-              <div className="w-1.5 h-1.5 rounded-full bg-purple-400" />
-              <span className="text-xs font-medium text-slate-300 tracking-wide">For the ambitious</span>
+              <div className="w-1.5 h-1.5 rounded-full bg-amber-400" />
+              <span className="text-xs font-medium text-slate-300 tracking-wide">
+                For Filipino students, ages 6–18
+              </span>
             </div>
 
             <h1 className="text-5xl xl:text-6xl font-semibold tracking-tight leading-[1.05] mb-6">
-              Your career,
+              Learning,
               <br />
-              <span className="bg-gradient-to-r from-purple-300 via-pink-300 to-indigo-300 bg-clip-text text-transparent">
-                gamified.
+              <span className="bg-gradient-to-r from-amber-300 via-orange-300 to-pink-300 bg-clip-text text-transparent">
+                leveled up.
               </span>
             </h1>
 
             <p className="text-lg text-slate-400 leading-relaxed max-w-md mb-10">
-              Set goals, earn XP, level up your skills, and watch your progress
-              compound week after week.
+              Quests, streaks, mascots, confetti — and 32 careers to unlock as
+              your kid learns. School, but actually fun.
             </p>
 
             {/* Feature list */}
             <ul className="space-y-3.5">
               {[
-                "Personalized career roadmap powered by AI",
-                "Daily quests aligned with your goals",
-                "Real-time progress tracking and analytics",
-                "Portfolio builder that recruiters love",
+                "5 core PH subjects, grades 1–12",
+                "Kid-safe AI tutor that adapts to age",
+                "Career adventures with 5-stage progression",
+                "Parent dashboard with weekly progress",
               ].map((feature, i) => (
                 <motion.li
                   key={i}
@@ -637,7 +639,7 @@ export default function SignUp() {
                   className="flex items-start gap-3 text-sm text-slate-300"
                 >
                   <div className="mt-0.5 w-5 h-5 rounded-full bg-white/[0.05] border border-white/[0.08] flex items-center justify-center flex-shrink-0">
-                    <Check size={12} className="text-indigo-300" strokeWidth={3} />
+                    <Check size={12} className="text-amber-300" strokeWidth={3} />
                   </div>
                   <span>{feature}</span>
                 </motion.li>
@@ -648,7 +650,7 @@ export default function SignUp() {
           {/* Footer */}
           <div className="flex items-center justify-end gap-2 text-xs text-slate-500">
             <ShieldCheck size={14} />
-            <span>End-to-end encrypted · SOC 2 compliant</span>
+            <span>Kid-safe AI · Filipino-built · No ads</span>
           </div>
         </div>
       </div>
