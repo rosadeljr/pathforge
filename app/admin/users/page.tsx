@@ -38,7 +38,7 @@ interface AdminUser {
   last_quest_completed_at: string | null;
 }
 
-type TierFilter = "all" | "free" | "pro" | "elite";
+type TierFilter = "all" | "free" | "pro" | "family";
 
 export default function AdminUsers() {
   const [users, setUsers] = useState<AdminUser[]>([]);
@@ -108,7 +108,7 @@ export default function AdminUsers() {
           />
         </div>
         <div className="flex items-center gap-2">
-          {(["all", "free", "pro", "elite"] as TierFilter[]).map((t) => (
+          {(["all", "free", "pro", "family"] as TierFilter[]).map((t) => (
             <button
               key={t}
               onClick={() => setTierFilter(t)}
@@ -210,7 +210,7 @@ function TierBadge({ tier }: { tier: string }) {
   const meta: Record<string, { label: string; color: string; bg: string }> = {
     free: { label: "Free", color: "#94a3b8", bg: "bg-white/[0.04] border-white/[0.08]" },
     pro: { label: "Pro", color: "#a855f7", bg: "bg-violet-500/15 border-violet-500/30 text-violet-300" },
-    elite: { label: "Elite", color: "#f59e0b", bg: "bg-amber-500/15 border-amber-500/30 text-amber-300" },
+    family: { label: "Family", color: "#f59e0b", bg: "bg-amber-500/15 border-amber-500/30 text-amber-300" },
   };
   const m = meta[tier] || meta.free;
   return (
@@ -238,7 +238,7 @@ function UserDetailModal({
     : null;
   const currentTier = user.subscription_tier || "free";
 
-  async function setTier(tier: "free" | "pro" | "elite") {
+  async function setTier(tier: "free" | "pro" | "family") {
     if (currentTier === tier) return;
     setSaving(tier);
     try {
@@ -417,10 +417,10 @@ function UserDetailModal({
               color="#a855f7"
             />
             <TierButton
-              tier="elite"
+              tier="family"
               currentTier={currentTier}
               saving={saving}
-              onClick={() => setTier("elite")}
+              onClick={() => setTier("family")}
               icon={Crown}
               color="#f59e0b"
             />
@@ -499,7 +499,7 @@ function TierButton({
   icon: Icon,
   color,
 }: {
-  tier: "free" | "pro" | "elite";
+  tier: "free" | "pro" | "family";
   currentTier: string;
   saving: string | null;
   onClick: () => void;

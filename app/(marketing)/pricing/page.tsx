@@ -9,9 +9,10 @@ import {
   Sparkles,
   ArrowRight,
   CreditCard,
-  Crown,
+  Heart,
   Zap,
   ArrowLeft,
+  Users,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import toast from "react-hot-toast";
@@ -26,14 +27,14 @@ const PLANS = [
     accent: "#94a3b8",
     price: "₱0",
     period: "forever",
-    description: "Everything you need to start. Free forever.",
+    description: "Everything kids need to get started — free forever.",
     features: [
-      "Full career roadmap & daily quests",
-      "ForgeBot AI coach — 10 messages/day",
-      "Resume Builder (build & preview)",
-      "Public portfolio + profile page",
-      "Earn PathForge AI Academy certificates",
+      "5 lessons per day across all subjects",
+      "ForgeBot tutor — 10 messages/day",
+      "Pick a dream career & track progress",
+      "All 5 subjects unlocked (Math, English, Filipino, Science, AP)",
       "XP, levels, streaks & achievements",
+      "Leaderboards with friends",
     ],
     cta: "Start free",
     highlight: false,
@@ -42,35 +43,37 @@ const PLANS = [
     name: "Pro",
     icon: Sparkles,
     accent: "#a855f7",
-    price: "₱249",
+    price: "₱149",
     period: "per month",
-    description: "For ambitious forgers ready to get hired.",
+    description: "For kids learning every day — unlimited everything.",
     features: [
       "Everything in Free",
-      "Unlimited ForgeBot — no daily cap",
-      "Download & share your verified certificates",
-      "Export your resume to PDF",
-      "One-click Add to LinkedIn",
+      "Unlimited lessons — no daily cap",
+      "Unlimited ForgeBot tutor — no message cap",
+      "Parent dashboard with weekly progress reports",
       "Priority support",
+      "Cancel anytime",
     ],
     cta: "Go Pro",
     highlight: true,
     badge: "Most popular",
   },
   {
-    name: "Elite",
-    icon: Crown,
+    name: "Family",
+    icon: Users,
     accent: "#f59e0b",
-    price: "₱999",
+    price: "₱299",
     period: "per month",
-    description: "Total career acceleration. White-glove.",
+    description: "One subscription. Up to 4 kids. Everyone learns.",
     features: [
-      "Everything in Pro",
-      "ForgeBot Mock Interview — practice with AI-graded feedback",
-      "Early access to new advanced tools",
-      "Direct line to the founders (VIP support)",
+      "Everything in Pro for each kid",
+      "Up to 4 separate kid profiles",
+      "Parent dashboard for all kids in one view",
+      "Weekly progress emails per child",
+      "Sibling leaderboard (fun motivation)",
+      "Save vs. 4× Pro plans",
     ],
-    cta: "Go Elite",
+    cta: "Go Family",
     highlight: false,
   },
 ];
@@ -78,27 +81,27 @@ const PLANS = [
 const FAQS = [
   {
     q: "Is there really a free tier?",
-    a: "Yes. Free forever, no credit card needed. You get the full roadmap, daily quests, ForgeBot (10 messages/day), your portfolio, and you can even earn Academy certificates. Upgrade only when you outgrow it.",
+    a: "Yes. Free forever, no credit card needed. Your kid gets 5 lessons/day, 10 tutor messages/day, dream career picking, and all 5 subjects unlocked. Upgrade only when they outgrow it.",
   },
   {
-    q: "What is a PathForge AI Academy certificate?",
-    a: "Complete a career program and you earn a verifiable Certificate of Completion with a unique credential ID and a public verification page recruiters can check. Everyone earns them free — Pro unlocks downloading the certificate and adding it to LinkedIn.",
+    q: "How does the kid-safe AI tutor work?",
+    a: "ForgeBot adapts to your child's age tier — gentle and short replies for ages 6–9, friendly for 10–13, peer-mentor for 14–18. Strict safety guardrails block any inappropriate topic. No external links. No data sharing.",
   },
   {
     q: "Can I cancel anytime?",
-    a: "Anytime. We don't lock you in. If you cancel, you keep your account and progress — you just lose Pro/Elite features at the end of the billing period.",
+    a: "Anytime. We don't lock you in. If you cancel, your kid keeps their account and progress — they just lose Pro features at the end of the billing period.",
   },
   {
-    q: "How does the pricing compare globally?",
-    a: "₱249/mo Pro is roughly the cost of one streaming subscription. ₱999/mo Elite is less than a typical gym membership. Designed to feel like an easy yes for someone serious about their career.",
+    q: "Why so affordable?",
+    a: "₱149/mo Pro is less than a single tutoring session. ₱299/mo Family covers 4 kids — that's ₱75/kid. PathForge should be a no-brainer for any Filipino family that values education.",
   },
   {
-    q: "Do I need to know how to code?",
-    a: "Nope. Half our career paths are non-technical — Design, Marketing, Content, Virtual Assistant, Customer Success, Copywriting. Anyone ambitious can use PathForge.",
+    q: "Is it safe for my kid?",
+    a: "Yes. No ads. No in-app purchases for kids. No external links. AI tutor has strict age-based content guardrails. Friends can only connect within the same mode. Built by parents, for parents.",
   },
   {
     q: "What payment methods do you accept?",
-    a: "We accept GCash and Maya. After signup, click Upgrade — you'll see the mobile number and amount to send. Submit your reference number, and we'll verify and unlock Pro/Elite within 4 hours (PH business hours).",
+    a: "We accept GCash and Maya. After signup, click Upgrade — you'll see the mobile number and amount to send. Submit your reference number, and we'll verify within 4 hours (PH business hours).",
   },
   {
     q: "Is there a refund policy?",
@@ -106,15 +109,15 @@ const FAQS = [
   },
 ];
 
-const PRICE_BY_TIER: Record<"pro" | "elite", number> = {
-  pro: 249,
-  elite: 999,
+const PRICE_BY_TIER: Record<"pro" | "family", number> = {
+  pro: 149,
+  family: 299,
 };
 
 export default function PricingPage() {
   const [authenticated, setAuthenticated] = useState<boolean | null>(null);
   const [errorBanner, setErrorBanner] = useState<string | null>(null);
-  const [paymentModal, setPaymentModal] = useState<{ tier: "pro" | "elite"; amount: number } | null>(null);
+  const [paymentModal, setPaymentModal] = useState<{ tier: "pro" | "family"; amount: number } | null>(null);
   const router = useRouter();
   const supabase = createClient();
 
@@ -154,7 +157,7 @@ export default function PricingPage() {
     }
 
     // Authenticated: open GCash / Maya payment modal
-    const tier = planName.toLowerCase() as "pro" | "elite";
+    const tier = planName.toLowerCase() as "pro" | "family";
     setPaymentModal({ tier, amount: PRICE_BY_TIER[tier] });
   };
 

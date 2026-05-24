@@ -17,7 +17,7 @@ import toast from "react-hot-toast";
 import { createClient } from "@/lib/supabase/client";
 
 interface Props {
-  tier: "pro" | "elite";
+  tier: "pro" | "family";
   amount: number; // PHP
   onClose: () => void;
 }

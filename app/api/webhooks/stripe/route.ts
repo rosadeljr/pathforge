@@ -9,7 +9,7 @@ import { createClient as createSupabaseAdmin } from "@supabase/supabase-js";
  *   STRIPE_SECRET_KEY         — same key used everywhere
  *   STRIPE_WEBHOOK_SECRET     — from Stripe Dashboard webhook endpoint
  *   STRIPE_PRICE_PRO          — Pro price ID
- *   STRIPE_PRICE_ELITE        — Elite price ID
+ *   STRIPE_PRICE_FAMILY       — Family price ID
  *   SUPABASE_SERVICE_ROLE_KEY — server-only key, bypasses RLS for writes
  *   NEXT_PUBLIC_SUPABASE_URL  — your Supabase project URL
  *
@@ -41,17 +41,17 @@ function getServiceClient() {
   );
 }
 
-function tierFromPriceId(priceId: string | undefined): "pro" | "elite" | "free" {
+function tierFromPriceId(priceId: string | undefined): "pro" | "family" | "free" {
   if (!priceId) return "free";
   if (priceId === process.env.STRIPE_PRICE_PRO) return "pro";
-  if (priceId === process.env.STRIPE_PRICE_ELITE) return "elite";
+  if (priceId === process.env.STRIPE_PRICE_FAMILY) return "family";
   return "free";
 }
 
-function tierFromSubscription(sub: Stripe.Subscription): "pro" | "elite" | "free" {
+function tierFromSubscription(sub: Stripe.Subscription): "pro" | "family" | "free" {
   // Try metadata first (we set it during checkout)
   const metaTier = sub.metadata?.tier;
-  if (metaTier === "pro" || metaTier === "elite") return metaTier;
+  if (metaTier === "pro" || metaTier === "family") return metaTier;
 
   // Fall back to price ID
   const priceId = sub.items.data[0]?.price?.id;
@@ -100,7 +100,7 @@ export async function POST(request: Request) {
       case "checkout.session.completed": {
         const session = event.data.object as Stripe.Checkout.Session;
         const userId = session.metadata?.user_id;
-        const tier = (session.metadata?.tier as "pro" | "elite") || "pro";
+        const tier = (session.metadata?.tier as "pro" | "family") || "pro";
 
         if (!userId) {
           console.warn("[stripe-webhook] No user_id in checkout session metadata");

@@ -48,7 +48,7 @@ export default function Settings() {
   const [username, setUsername] = useState("");
   const [fullName, setFullName] = useState("");
   const [soundOn, setSoundOn] = useState(true);
-  const [payModal, setPayModal] = useState<{ tier: "pro" | "elite"; amount: number } | null>(null);
+  const [payModal, setPayModal] = useState<{ tier: "pro" | "family"; amount: number } | null>(null);
   const { theme, toggle: toggleTheme } = useTheme();
 
   useEffect(() => {

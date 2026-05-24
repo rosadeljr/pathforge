@@ -19,7 +19,7 @@ import {
 interface PaymentRequest {
   id: string;
   user_id: string;
-  tier: "pro" | "elite";
+  tier: "pro" | "family";
   amount_php: number;
   payment_method: "gcash" | "maya";
   sender_name: string | null;
@@ -218,7 +218,7 @@ export default function AdminPaymentsPage() {
                   <div className="flex items-center gap-2 flex-wrap">
                     <span
                       className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md border ${
-                        req.tier === "elite"
+                        req.tier === "family"
                           ? "bg-amber-500/15 text-amber-300 border-amber-500/30"
                           : "bg-violet-500/15 text-violet-300 border-violet-500/30"
                       }`}
