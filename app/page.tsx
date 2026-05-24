@@ -20,6 +20,7 @@ import { PrimaryLinkButton } from "@/components/ui/PrimaryButton";
 import { StickyCTA } from "@/components/landing/StickyCTA";
 import { FloatingParticles } from "@/components/landing/FloatingParticles";
 import { ForgeBotMascot } from "@/components/landing/ForgeBotMascot";
+import { HeroPreview } from "@/components/landing/HeroPreview";
 
 export default function Landing() {
   return (
@@ -215,6 +216,18 @@ export default function Landing() {
             </span>
           </motion.div>
         </div>
+
+        {/* Live dashboard preview — shows the real /learn experience */}
+        <motion.div
+          initial={{ opacity: 0, y: 40 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 1, delay: 0.8, ease: [0.16, 1, 0.3, 1] }}
+          className="relative max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 mt-16 lg:mt-20"
+        >
+          <div className="min-h-[420px]">
+            <HeroPreview />
+          </div>
+        </motion.div>
       </section>
 
       {/* ============ AGE TIERS ============ */}
