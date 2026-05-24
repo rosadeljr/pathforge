@@ -15,24 +15,24 @@ interface Message {
 
 const SUGGESTED_PROMPTS = [
   {
-    title: "What should I learn first?",
-    description: "Get a personalized starting point",
-    prompt: "Based on my career path, what should I focus on learning first?",
+    title: "Explain a tricky topic",
+    description: "Get a simple, step-by-step explanation",
+    prompt: "Can you explain photosynthesis to me in a simple way I'll remember?",
   },
   {
-    title: "Help me build a portfolio project",
-    description: "Get a project idea matched to your skills",
-    prompt: "Give me 3 portfolio project ideas that would help me land my dream job.",
+    title: "Help with homework",
+    description: "Walk through a problem step-by-step",
+    prompt: "I'm stuck on this math problem — can you help me figure it out without just giving me the answer?",
   },
   {
-    title: "I'm feeling stuck",
-    description: "Get unstuck with actionable steps",
-    prompt: "I'm feeling stuck on my career journey. Help me figure out what to do next.",
+    title: "Tell me about my dream career",
+    description: "What does this job actually look like?",
+    prompt: "What does a typical day look like for my dream career? What subjects help most?",
   },
   {
-    title: "Resume / portfolio tips",
-    description: "Optimize how you present yourself",
-    prompt: "How can I make my resume and portfolio stand out for my target role?",
+    title: "Quiz me",
+    description: "Practice with a quick mini-quiz",
+    prompt: "Quiz me with 3 fun questions on any subject I'm learning. Make them age-appropriate.",
   },
 ];
 
@@ -184,8 +184,8 @@ export default function Mentor() {
 
   const isEmpty = messages.length === 0;
 
-  // Daily message counter (free tier only — Pro/Elite are unlimited).
-  const isPaid = tier === "pro" || tier === "elite";
+  // Daily message counter (free tier only — Pro/Family are unlimited).
+  const isPaid = tier === "pro" || tier === "family";
   const startOfDay = new Date();
   startOfDay.setHours(0, 0, 0, 0);
   const usedToday = messages.filter(

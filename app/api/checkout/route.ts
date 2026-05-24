@@ -8,7 +8,7 @@ import Stripe from "stripe";
  * Requires env vars:
  *   STRIPE_SECRET_KEY                    — Stripe secret key (sk_test_... or sk_live_...)
  *   STRIPE_PRICE_PRO                     — Stripe Price ID for Pro tier
- *   STRIPE_PRICE_ELITE                   — Stripe Price ID for Elite tier
+ *   STRIPE_PRICE_FAMILY                  — Stripe Price ID for Family tier
  *   NEXT_PUBLIC_APP_URL                  — Public site URL (e.g. https://pathforger.app)
  */
 
@@ -22,7 +22,7 @@ function getStripe(): Stripe | null {
 
 const PRICE_IDS = {
   pro: process.env.STRIPE_PRICE_PRO,
-  elite: process.env.STRIPE_PRICE_ELITE,
+  family: process.env.STRIPE_PRICE_FAMILY,
 };
 
 function getAppUrl(request: NextRequest): string {
@@ -42,7 +42,7 @@ async function handleCheckout(request: NextRequest, tier: string) {
     );
   }
 
-  if (!tier || !["pro", "elite"].includes(tier)) {
+  if (!tier || !["pro", "family"].includes(tier)) {
     return NextResponse.json({ error: "Invalid tier" }, { status: 400 });
   }
 

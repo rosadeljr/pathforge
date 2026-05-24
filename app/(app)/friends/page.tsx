@@ -232,12 +232,10 @@ export default function FriendsPage() {
             </span>
           </div>
           <h1 className="text-3xl sm:text-4xl font-semibold tracking-tight mb-1">
-            {isLearner ? "Find your study buddies" : "Connect with other forgers"}
+            Find your study buddies
           </h1>
           <p className="text-sm text-slate-400">
-            {isLearner
-              ? "Add friends to compare progress and climb leaderboards together."
-              : "Add friends to share the journey and stay accountable."}
+            Add friends to compare progress and climb leaderboards together.
           </p>
         </motion.div>
 
@@ -258,7 +256,7 @@ export default function FriendsPage() {
             <input
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder={isLearner ? "Type a friend's username…" : "Search forgers by username…"}
+              placeholder="Type a friend's username…"
               className="w-full pl-10 pr-10 py-2.5 bg-white/[0.03] border border-white/[0.06] rounded-lg text-sm focus:outline-none focus:border-indigo-500/50"
             />
             {searching && (
@@ -319,7 +317,7 @@ export default function FriendsPage() {
             )}
             {query.trim().length >= 2 && !searching && results.length === 0 && (
               <p className="text-xs text-slate-500 mt-3">
-                No {isLearner ? "learners" : "forgers"} match "{query}".
+                No learners match "{query}".
               </p>
             )}
           </AnimatePresence>

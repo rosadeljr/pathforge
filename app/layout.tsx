@@ -16,9 +16,9 @@ const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "https://pathforge-zeta.verce
 
 export const metadata: Metadata = {
   metadataBase: new URL(APP_URL),
-  title: "PathForge — Forge the career you actually want",
+  title: "PathForge — Where kids forge their future",
   description:
-    "Personalized roadmaps, daily quests, and ForgeBot — your career coach. Built for the ambitious, anywhere in the world.",
+    "Fun, interactive K-12 lessons for Filipino kids ages 6–18. Quests, streaks, careers to unlock, and a kid-safe AI tutor. Built for Filipino families.",
   applicationName: "PathForge",
   manifest: "/manifest.webmanifest",
   appleWebApp: {
@@ -27,16 +27,16 @@ export const metadata: Metadata = {
     statusBarStyle: "black-translucent",
   },
   openGraph: {
-    title: "PathForge — Forge the career you actually want",
+    title: "PathForge — Where kids forge their future",
     description:
-      "Personalized roadmaps, daily quests, and ForgeBot — your career coach.",
+      "K-12 learning, gamified · Ages 6–18 · Built for Filipino students.",
     siteName: "PathForge",
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    title: "PathForge — Forge the career you actually want",
-    description: "Career growth, gamified. Personalized roadmaps + ForgeBot coach.",
+    title: "PathForge — Where kids forge their future",
+    description: "K-12 learning, gamified. Filipino-built. Ages 6–18.",
   },
 };
 

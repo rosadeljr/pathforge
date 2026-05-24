@@ -354,8 +354,8 @@ export default function Settings() {
                   </div>
                   <p className="text-xs text-slate-400 mt-1">
                     {isPro
-                      ? "Unlimited AI mentor, advanced quests, priority support"
-                      : "Daily quests, basic AI mentor, portfolio basics"}
+                      ? "Unlimited lessons + tutor, parent dashboard, priority support"
+                      : "5 lessons/day, 10 tutor messages/day, all subjects unlocked"}
                   </p>
                 </div>
                 {tier === "free" ? (
@@ -443,7 +443,7 @@ export default function Settings() {
                 <div>
                   <div className="text-sm font-semibold">Sound effects</div>
                   <div className="text-xs text-slate-400">
-                    Plays celebratory chimes on quest complete, level up, and achievements.
+                    Plays celebratory chimes on lesson complete, level up, and achievements.
                   </div>
                 </div>
               </div>

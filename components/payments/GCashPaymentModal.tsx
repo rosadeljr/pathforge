@@ -156,7 +156,7 @@ export function GCashPaymentModal({ tier, amount, onClose }: Props) {
                     </span>
                   </div>
                   <h2 className="text-2xl font-semibold tracking-tight mb-1">
-                    Upgrade to {tier === "pro" ? "Pro" : "Elite"}
+                    Upgrade to {tier === "pro" ? "Pro" : "Family"}
                   </h2>
                   <p className="text-sm text-slate-400">
                     Send ₱{amount.toLocaleString()} via GCash or Maya, then submit your proof.

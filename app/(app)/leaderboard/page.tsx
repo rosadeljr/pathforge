@@ -1,15 +1,14 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
-import { CAREER_PATHS } from "@/lib/data/career-paths";
+import { ageTierForGrade, type AgeTier, TIER_COPY } from "@/lib/data/learner";
 import { PageShimmer } from "@/components/ui/Shimmer";
 import {
   Trophy,
   Crown,
-  Medal,
   Zap,
   Flame,
   Sparkles,
@@ -24,7 +23,7 @@ interface LeaderboardEntry {
   total_xp: number;
   streak_count: number;
   longest_streak: number;
-  selected_career_path_id: string | null;
+  learner_grade: number | null;
 }
 
 type SortMode = "xp" | "level" | "streak";
@@ -57,17 +56,23 @@ const RANK_COLORS: Record<string, { gradient: string; color: string }> = {
   SSS: { gradient: "from-cyan-400 to-violet-500", color: "#06b6d4" },
 };
 
+const TIER_GRADES: Record<AgeTier, number[]> = {
+  little: [1, 2, 3],
+  junior: [4, 5, 6, 7],
+  teen: [8, 9, 10, 11, 12],
+};
+
 export default function Leaderboard() {
   const [entries, setEntries] = useState<LeaderboardEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [sortMode, setSortMode] = useState<SortMode>("xp");
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
-  const [myPathId, setMyPathId] = useState<string | null>(null);
-  const [viewPathId, setViewPathId] = useState<string | null>(null);
+  const [myGrade, setMyGrade] = useState<number | null>(null);
+  const [viewTier, setViewTier] = useState<AgeTier>("junior");
 
   const supabase = createClient();
 
-  // Load the viewer's identity + their own career path.
+  // Init: viewer + their tier.
   useEffect(() => {
     async function init() {
       try {
@@ -76,14 +81,12 @@ export default function Leaderboard() {
           setCurrentUserId(session.user.id);
           const { data: profile } = await supabase
             .from("profiles")
-            .select("selected_career_path_id")
+            .select("learner_grade")
             .eq("id", session.user.id)
             .maybeSingle();
-          const path = profile?.selected_career_path_id || null;
-          setMyPathId(path);
-          setViewPathId(path || CAREER_PATHS[0]?.id || null);
-        } else {
-          setViewPathId(CAREER_PATHS[0]?.id || null);
+          const grade = profile?.learner_grade ?? null;
+          setMyGrade(grade);
+          setViewTier(ageTierForGrade(grade));
         }
       } catch (e) {
         console.error("Leaderboard init error:", e);
@@ -93,22 +96,26 @@ export default function Leaderboard() {
     init();
   }, [supabase]);
 
-  // Load the ranking for the path being viewed.
+  // Load the ranking for the tier being viewed.
   useEffect(() => {
-    if (!viewPathId) return;
     let cancelled = false;
     async function loadBoard() {
       setLoading(true);
       try {
         const orderColumn =
-          sortMode === "xp" ? "total_xp" :
-          sortMode === "level" ? "current_level" :
-          "longest_streak";
+          sortMode === "xp"
+            ? "total_xp"
+            : sortMode === "level"
+            ? "current_level"
+            : "longest_streak";
 
+        const grades = TIER_GRADES[viewTier];
         const { data } = await supabase
           .from("profiles")
-          .select("id, username, full_name, current_level, total_xp, streak_count, longest_streak, selected_career_path_id")
-          .eq("selected_career_path_id", viewPathId)
+          .select(
+            "id, username, full_name, current_level, total_xp, streak_count, longest_streak, learner_grade"
+          )
+          .in("learner_grade", grades)
           .not("username", "is", null)
           .order(orderColumn, { ascending: false })
           .limit(50);
@@ -124,13 +131,14 @@ export default function Leaderboard() {
     return () => {
       cancelled = true;
     };
-  }, [supabase, sortMode, viewPathId]);
+  }, [supabase, sortMode, viewTier]);
 
-  const viewPath = CAREER_PATHS.find((p) => p.id === viewPathId);
-  const isOwnPath = viewPathId === myPathId && !!myPathId;
+  const myTier = useMemo(() => ageTierForGrade(myGrade), [myGrade]);
+  const isOwnTier = myTier === viewTier && myGrade != null;
   const myRank = currentUserId
     ? entries.findIndex((e) => e.id === currentUserId) + 1
     : 0;
+  const tierCopy = TIER_COPY[viewTier];
 
   const getStat = (e: LeaderboardEntry) => {
     if (sortMode === "xp") return { value: e.total_xp.toLocaleString(), label: "XP" };
@@ -138,9 +146,11 @@ export default function Leaderboard() {
     return { value: `${e.longest_streak}d`, label: "Streak" };
   };
 
+  if (loading && entries.length === 0) return <PageShimmer />;
+
   return (
     <div className="min-h-screen pb-12">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-10 space-y-8">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-10 space-y-7">
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: 8 }}
@@ -149,19 +159,21 @@ export default function Leaderboard() {
         >
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/[0.04] border border-white/[0.06] mb-3">
             <Crown size={11} className="text-amber-400" />
-            <span className="text-xs font-medium text-slate-300 tracking-wide">Leaderboard</span>
+            <span className="text-xs font-medium text-slate-300 tracking-wide">
+              Leaderboard
+            </span>
           </div>
-          <h1 className="text-3xl sm:text-4xl font-semibold tracking-tight mb-2 flex items-center gap-2 flex-wrap">
-            {viewPath && <span>{viewPath.emoji}</span>}
-            <span>{viewPath ? `Top ${viewPath.title}s` : "Leaderboard"}</span>
+          <h1 className="text-3xl sm:text-4xl font-semibold tracking-tight mb-1 inline-flex items-center gap-2 flex-wrap">
+            <span>{tierCopy.emoji}</span>
+            <span>Top {tierCopy.label}</span>
           </h1>
           <p className="text-sm text-slate-400">
-            You&apos;re ranked only against others on the same path — a fair fight.
+            You're ranked against other learners in your age tier — a fair fight.
           </p>
         </motion.div>
 
-        {/* No-path nudge */}
-        {!myPathId && (
+        {/* No-grade nudge */}
+        {!myGrade && (
           <div className="rounded-2xl border border-amber-500/20 bg-amber-500/[0.06] p-4 flex items-start gap-3">
             <Sparkles size={15} className="text-amber-300 flex-shrink-0 mt-0.5" />
             <div className="flex-1 text-sm">
@@ -179,241 +191,171 @@ export default function Leaderboard() {
           </div>
         )}
 
-        {/* Path selector + your standing */}
-        <div className="flex flex-wrap items-center gap-3">
-          <select
-            value={viewPathId || ""}
-            onChange={(e) => setViewPathId(e.target.value)}
-            className="px-3 py-2 rounded-lg bg-white/[0.03] border border-white/[0.08] text-sm text-slate-200 focus:outline-none focus:border-indigo-500/50 cursor-pointer"
-          >
-            {CAREER_PATHS.map((p) => (
-              <option key={p.id} value={p.id}>
-                {p.emoji} {p.title}
-                {p.id === myPathId ? " — your path" : ""}
-              </option>
-            ))}
-          </select>
-          {isOwnPath && myRank > 0 && (
+        {/* Tier tabs + your standing */}
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex flex-wrap gap-1.5">
+            {(["little", "junior", "teen"] as AgeTier[]).map((t) => {
+              const c = TIER_COPY[t];
+              const active = viewTier === t;
+              return (
+                <button
+                  key={t}
+                  onClick={() => setViewTier(t)}
+                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                    active
+                      ? "bg-white text-slate-900"
+                      : "bg-white/[0.04] border border-white/[0.08] text-slate-300 hover:bg-white/[0.08] hover:text-white"
+                  }`}
+                >
+                  <span>{c.emoji}</span>
+                  {c.label}
+                  {t === myTier && myGrade != null && (
+                    <span className={`text-[9px] ${active ? "text-slate-600" : "text-emerald-300"}`}>
+                      · you
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+          {isOwnTier && myRank > 0 && (
             <span className="text-xs text-slate-400">
-              You&apos;re{" "}
-              <strong className="text-indigo-300">#{myRank}</strong> on this board
+              You're <strong className="text-indigo-300">#{myRank}</strong> on this board
             </span>
           )}
         </div>
 
-        {/* Sort filter */}
-        <div className="flex flex-wrap gap-2">
-          {SORT_OPTIONS.map((opt) => (
+        {/* Sort tabs */}
+        <div className="flex flex-wrap gap-1.5">
+          {SORT_OPTIONS.map(({ value, label, icon: Icon }) => (
             <button
-              key={opt.value}
-              onClick={() => setSortMode(opt.value)}
-              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
-                sortMode === opt.value
-                  ? "bg-white text-slate-900"
-                  : "bg-white/[0.03] text-slate-300 border border-white/[0.06] hover:bg-white/[0.06]"
+              key={value}
+              onClick={() => setSortMode(value)}
+              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                sortMode === value
+                  ? "bg-white/[0.08] text-white border border-white/[0.18]"
+                  : "bg-white/[0.02] border border-white/[0.06] text-slate-400 hover:text-white hover:bg-white/[0.04]"
               }`}
             >
-              <opt.icon size={12} />
-              {opt.label}
+              <Icon size={11} />
+              {label}
             </button>
           ))}
         </div>
 
-        {loading ? (
-          <PageShimmer />
+        {/* Entries */}
+        {entries.length === 0 ? (
+          <div className="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-12 text-center">
+            <p className="text-sm text-slate-400">
+              No {tierCopy.label.toLowerCase()} on the board yet — be the first!
+            </p>
+          </div>
         ) : (
-          <>
-            {/* Podium (top 3) */}
-            {entries.length >= 3 && (
-              <motion.div
-                initial={{ opacity: 0, y: 12 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.1 }}
-                className="grid grid-cols-3 gap-3 items-end"
-              >
-                <PodiumCard entry={entries[1]} rank={2} stat={getStat(entries[1])} />
-                <PodiumCard entry={entries[0]} rank={1} stat={getStat(entries[0])} />
-                <PodiumCard entry={entries[2]} rank={3} stat={getStat(entries[2])} />
-              </motion.div>
-            )}
-
-            {/* Full list */}
-            {entries.length === 0 ? (
-              <div className="p-12 rounded-2xl border border-white/[0.06] bg-white/[0.02] text-center">
-                <p className="text-sm text-slate-400">
-                  No forgers on this path yet.{" "}
-                  {isOwnPath ? "Be the first to claim #1." : ""}
-                </p>
-              </div>
-            ) : (
-              <div className="rounded-2xl border border-white/[0.06] bg-white/[0.02] overflow-hidden">
-                <div className="px-5 py-3 border-b border-white/[0.06] text-[10px] uppercase tracking-wider text-slate-500 font-semibold grid grid-cols-[2rem_1fr_auto] gap-4 items-center">
-                  <div>Rank</div>
-                  <div>Hunter</div>
-                  <div className="text-right">
-                    {SORT_OPTIONS.find((o) => o.value === sortMode)?.label}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.4 }}
+            className="space-y-1.5"
+          >
+            {entries.map((e, i) => {
+              const rank = getRank(e.current_level);
+              const rankMeta = RANK_COLORS[rank];
+              const stat = getStat(e);
+              const isMe = e.id === currentUserId;
+              const position = i + 1;
+              return (
+                <motion.div
+                  key={e.id}
+                  initial={{ opacity: 0, x: -8 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.3, delay: i * 0.02 }}
+                  className={`flex items-center gap-3 p-3 rounded-xl border ${
+                    isMe
+                      ? "border-indigo-400/40 bg-indigo-500/[0.08]"
+                      : "border-white/[0.06] bg-white/[0.02]"
+                  }`}
+                >
+                  {/* Position */}
+                  <div
+                    className={`flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center text-sm font-bold ${
+                      position === 1
+                        ? "bg-gradient-to-br from-amber-400 to-orange-500 text-slate-900"
+                        : position === 2
+                        ? "bg-gradient-to-br from-slate-300 to-slate-500 text-slate-900"
+                        : position === 3
+                        ? "bg-gradient-to-br from-amber-600 to-orange-700 text-white"
+                        : "bg-white/[0.04] border border-white/[0.08] text-slate-400"
+                    }`}
+                  >
+                    {position}
                   </div>
-                </div>
-                <div className="divide-y divide-white/[0.04]">
-                  {entries.map((entry, i) => {
-                    const rank = i + 1;
-                    const userRank = getRank(entry.current_level);
-                    const rankStyle = RANK_COLORS[userRank];
-                    const stat = getStat(entry);
-                    const isYou = entry.id === currentUserId;
-
-                    return (
-                      <Link
-                        key={entry.id}
-                        href={entry.username ? `/u/${entry.username}` : "#"}
-                        className={`grid grid-cols-[2rem_1fr_auto] gap-4 items-center px-5 py-3 transition-colors ${
-                          isYou
-                            ? "bg-indigo-500/[0.06] hover:bg-indigo-500/[0.1]"
-                            : "hover:bg-white/[0.03]"
-                        }`}
-                      >
-                        <div className="text-sm font-bold tabular-nums text-slate-400">
-                          {rank <= 3 ? (
-                            <Medal
-                              size={16}
-                              className={
-                                rank === 1
-                                  ? "text-amber-400"
-                                  : rank === 2
-                                  ? "text-slate-300"
-                                  : "text-orange-400"
-                              }
-                              fill="currentColor"
-                            />
-                          ) : (
-                            `#${rank}`
-                          )}
-                        </div>
-
-                        <div className="flex items-center gap-3 min-w-0">
-                          <div
-                            className={`w-9 h-9 rounded-lg bg-gradient-to-br ${rankStyle.gradient} flex items-center justify-center text-xs font-bold flex-shrink-0`}
-                          >
-                            {(entry.username || "?").slice(0, 2).toUpperCase()}
-                          </div>
-                          <div className="min-w-0">
-                            <div className="text-sm font-semibold truncate flex items-center gap-2">
-                              {entry.full_name || entry.username}
-                              {isYou && (
-                                <span className="text-[9px] font-bold tracking-wider px-1 py-0.5 rounded bg-indigo-500/15 text-indigo-300 border border-indigo-500/30">
-                                  YOU
-                                </span>
-                              )}
-                            </div>
-                            <div className="text-[10px] text-slate-500 flex items-center gap-1.5">
-                              <span className="font-bold" style={{ color: rankStyle.color }}>
-                                {userRank}-Rank
-                              </span>
-                              <span>· Lv {entry.current_level}</span>
-                            </div>
-                          </div>
-                        </div>
-
-                        <div className="text-right">
-                          <div className="text-sm font-semibold tabular-nums">
-                            {stat.value}
-                          </div>
-                        </div>
-                      </Link>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
-          </>
+                  {/* Avatar */}
+                  <div className="flex-shrink-0 w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-xs font-bold">
+                    {(e.username || "?").slice(0, 2).toUpperCase()}
+                  </div>
+                  {/* Name + rank */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <span className="text-sm font-semibold truncate">
+                        {e.username || "anonymous"}
+                      </span>
+                      {isMe && (
+                        <span className="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-md bg-indigo-500/20 text-indigo-200 border border-indigo-400/30">
+                          You
+                        </span>
+                      )}
+                    </div>
+                    <div className="text-[11px] text-slate-500 inline-flex items-center gap-2">
+                      <span className={`inline-flex items-center gap-1 font-medium`} style={{ color: rankMeta.color }}>
+                        <span
+                          className={`inline-flex items-center justify-center w-4 h-4 rounded text-[8px] font-bold text-white bg-gradient-to-br ${rankMeta.gradient}`}
+                        >
+                          {rank}
+                        </span>
+                        Lv {e.current_level}
+                      </span>
+                      {e.streak_count > 0 && (
+                        <span className="inline-flex items-center gap-0.5 text-amber-300">
+                          <Flame size={9} />
+                          {e.streak_count}d
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  {/* Stat */}
+                  <div className="text-right flex-shrink-0">
+                    <div className="text-sm font-semibold tabular-nums">{stat.value}</div>
+                    <div className="text-[9px] text-slate-500 uppercase tracking-wider">
+                      {stat.label}
+                    </div>
+                  </div>
+                </motion.div>
+              );
+            })}
+          </motion.div>
         )}
 
-        {/* CTA */}
+        {/* Motivation footer */}
         <motion.div
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.3 }}
-          className="relative overflow-hidden rounded-2xl border border-white/[0.06] p-5 text-center"
+          className="rounded-2xl border border-amber-500/20 bg-amber-500/[0.04] p-5 text-center"
         >
-          <div
-            className="absolute inset-0 opacity-30"
-            style={{ background: "radial-gradient(ellipse at center, rgba(245,158,11,0.3), transparent 70%)" }}
-          />
-          <div className="relative">
-            <Sparkles size={18} className="text-amber-300 mx-auto mb-2" />
-            <h3 className="text-base font-semibold mb-1">Want to climb?</h3>
-            <p className="text-sm text-slate-400 max-w-md mx-auto mb-4">
-              Complete lessons, build streaks, unlock achievements. The leaderboard updates as you learn.
-            </p>
-            <Link
-              href="/learn"
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-white text-slate-900 text-sm font-semibold hover:bg-slate-100 transition-colors"
-            >
-              Open lessons
-              <ArrowRight size={14} />
-            </Link>
-          </div>
+          <Sparkles size={18} className="text-amber-300 mx-auto mb-2" />
+          <h3 className="text-base font-semibold mb-1">Want to climb?</h3>
+          <p className="text-sm text-slate-400 max-w-md mx-auto mb-4">
+            Complete lessons, build streaks, unlock achievements. The leaderboard updates as you learn.
+          </p>
+          <Link
+            href="/learn"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-white text-slate-900 text-sm font-semibold hover:bg-slate-100 transition-colors"
+          >
+            Open lessons
+            <ArrowRight size={14} />
+          </Link>
         </motion.div>
       </div>
     </div>
-  );
-}
-
-function PodiumCard({
-  entry,
-  rank,
-  stat,
-}: {
-  entry: LeaderboardEntry;
-  rank: 1 | 2 | 3;
-  stat: { value: string; label: string };
-}) {
-  const userRank = getRank(entry.current_level);
-  const rankStyle = RANK_COLORS[userRank];
-  const podiumColors = {
-    1: "from-amber-400 to-amber-600",
-    2: "from-slate-300 to-slate-500",
-    3: "from-orange-400 to-orange-600",
-  };
-  const height = rank === 1 ? "h-32" : rank === 2 ? "h-24" : "h-20";
-
-  return (
-    <Link
-      href={entry.username ? `/u/${entry.username}` : "#"}
-      className="group flex flex-col items-center"
-    >
-      <div className="relative mb-2">
-        <div
-          className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${rankStyle.gradient} flex items-center justify-center text-base font-bold shadow-xl`}
-          style={{ boxShadow: `0 12px 32px ${rankStyle.color}40` }}
-        >
-          {(entry.username || "?").slice(0, 2).toUpperCase()}
-        </div>
-        <div
-          className={`absolute -top-2 -right-2 w-6 h-6 rounded-full bg-gradient-to-br ${podiumColors[rank]} flex items-center justify-center text-xs font-black text-white shadow-lg`}
-        >
-          {rank}
-        </div>
-      </div>
-      <div className="text-xs font-semibold truncate max-w-full text-center mb-0.5">
-        {entry.full_name || entry.username}
-      </div>
-      <div className="text-[10px] text-slate-500 mb-2">
-        <span style={{ color: rankStyle.color }} className="font-bold">
-          {userRank}-Rank
-        </span>
-        {" · Lv "}
-        {entry.current_level}
-      </div>
-      <div
-        className={`w-full ${height} rounded-t-xl flex flex-col items-center justify-center px-2 transition-transform group-hover:scale-[1.02] relative overflow-hidden border border-white/[0.08]`}
-        style={{
-          background: `linear-gradient(180deg, ${rankStyle.color}30, ${rankStyle.color}10)`,
-        }}
-      >
-        <div className="text-base font-bold tabular-nums">{stat.value}</div>
-        <div className="text-[9px] text-slate-400 uppercase tracking-wider">{stat.label}</div>
-      </div>
-    </Link>
   );
 }

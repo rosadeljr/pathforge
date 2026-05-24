@@ -30,7 +30,7 @@ interface Overview {
   wau: number;
   mau: number;
   pro_users: number;
-  elite_users: number;
+  family_users: number;
   free_users: number;
 }
 
@@ -132,7 +132,7 @@ export default function AdminOverview() {
     overview.total_users > 0
       ? Math.round((overview.users_completed_quest / overview.total_users) * 100)
       : 0;
-  const paidUsers = overview.pro_users + overview.elite_users;
+  const paidUsers = overview.pro_users + overview.family_users;
   const pctPaid =
     overview.total_users > 0 ? Math.round((paidUsers / overview.total_users) * 100) : 0;
 
@@ -267,7 +267,7 @@ export default function AdminOverview() {
           <div className="p-5 space-y-3">
             <SubBar label="Free" count={overview.free_users} total={overview.total_users} color="#94a3b8" />
             <SubBar label="Pro" count={overview.pro_users} total={overview.total_users} color="#a855f7" />
-            <SubBar label="Elite" count={overview.elite_users} total={overview.total_users} color="#f59e0b" />
+            <SubBar label="Family" count={overview.family_users} total={overview.total_users} color="#f59e0b" />
           </div>
         </motion.section>
       </div>
@@ -354,7 +354,7 @@ export default function AdminOverview() {
       >
         <div>
           <h3 className="text-base font-semibold mb-0.5">Manage users</h3>
-          <p className="text-xs text-slate-400">Grant Pro/Elite, view individual stats, ban accounts</p>
+          <p className="text-xs text-slate-400">Grant Pro/Family, view individual stats, ban accounts</p>
         </div>
         <ArrowUpRight size={16} className="text-slate-400 group-hover:text-white transition-colors" />
       </Link>
