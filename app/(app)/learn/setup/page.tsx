@@ -81,12 +81,28 @@ export default function LearnerSetupPage() {
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session?.user) throw new Error("Not signed in");
+
+      // If a parent email was provided, see if that parent already has an
+      // account — if so, link this kid to them right now (retroactive link).
+      let parentProfileId: string | null = null;
+      const cleanedParentEmail = parentEmail.trim().toLowerCase();
+      if (cleanedParentEmail) {
+        const { data: parentProfile } = await supabase
+          .from("profiles")
+          .select("id")
+          .eq("email", cleanedParentEmail)
+          .eq("is_parent_account", true)
+          .maybeSingle();
+        if (parentProfile?.id) parentProfileId = parentProfile.id;
+      }
+
       const { error } = await supabase
         .from("profiles")
         .update({
           learner_grade: grade,
           learner_subjects: subjects.length ? subjects : null,
-          parent_email: parentEmail.trim() || null,
+          parent_email: cleanedParentEmail || null,
+          parent_profile_id: parentProfileId,
         })
         .eq("id", session.user.id);
       if (error) throw error;

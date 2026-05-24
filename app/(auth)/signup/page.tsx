@@ -38,6 +38,7 @@ export default function SignUp() {
   const [configError, setConfigError] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [touched, setTouched] = useState<Record<string, boolean>>({});
+  const [role, setRole] = useState<"learner" | "parent">("learner");
   const router = useRouter();
   const searchParams = useSearchParams();
   const supabase = createClient();
@@ -178,13 +179,15 @@ export default function SignUp() {
       }
 
       // Try to create/update profile - don't fail signup if this errors
-      // (DB trigger should handle this automatically, but we try as backup)
+      const isParent = role === "parent";
       try {
         const { error: profileError } = await supabase.from("profiles").upsert(
           {
             id: data.user.id,
             email: data.user.email || email,
             username,
+            user_mode: "learner",
+            is_parent_account: isParent,
           },
           { onConflict: "id" }
         );
@@ -195,13 +198,35 @@ export default function SignUp() {
         console.warn("[signup] profile upsert threw (non-fatal):", profileError);
       }
 
+      // If signing up as a parent, auto-link any existing kid profiles
+      // whose parent_email matches the parent's email.
+      if (isParent && data.user) {
+        try {
+          const { data: linked, error: linkErr } = await supabase
+            .from("profiles")
+            .update({ parent_profile_id: data.user.id })
+            .eq("parent_email", email.toLowerCase().trim())
+            .neq("id", data.user.id)
+            .select("id");
+          if (linkErr) {
+            console.warn("[signup] kid link (non-fatal):", linkErr);
+          } else if (linked && linked.length > 0) {
+            toast.success(`Linked ${linked.length} kid${linked.length > 1 ? "s" : ""} to your account 👨‍👩‍👧‍👦`, {
+              duration: 5000,
+            });
+          }
+        } catch (e) {
+          console.warn("[signup] kid link threw (non-fatal):", e);
+        }
+      }
+
       // Check if email confirmation is required
       if (data.session) {
         // Track signup event (fire-and-forget)
-        track(supabase, data.user.id, "signup", { payload: { username, email } });
+        track(supabase, data.user.id, "signup", { payload: { username, email, role } });
         toast.success("Welcome to PathForge");
-        // Hard navigation ensures cookies are fully established
-        window.location.href = "/learn/setup";
+        // Parents go straight to /parent. Kids go to setup.
+        window.location.href = isParent ? "/parent" : "/learn/setup";
       } else {
         toast.success("Check your email to verify your account", { duration: 6000 });
         router.push("/login?error=email_verification_sent");
@@ -261,13 +286,53 @@ export default function SignUp() {
             </Link>
 
             {/* Header */}
-            <div className="mb-8">
+            <div className="mb-6">
               <h2 className="text-3xl font-semibold tracking-tight mb-2">
                 Create your account
               </h2>
               <p className="text-sm text-slate-400">
-                Start building your career roadmap today.
+                Free forever — no credit card needed.
               </p>
+            </div>
+
+            {/* Role toggle */}
+            <div className="mb-6">
+              <div className="text-xs font-medium text-slate-300 mb-2">
+                I'm signing up as:
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={() => setRole("learner")}
+                  className={`relative p-3 rounded-xl border text-left transition-all ${
+                    role === "learner"
+                      ? "border-indigo-400/50 bg-indigo-500/[0.10]"
+                      : "border-white/[0.08] bg-white/[0.02] hover:bg-white/[0.04]"
+                  }`}
+                >
+                  <div className="text-lg mb-1">🎒</div>
+                  <div className="text-xs font-semibold">A learner</div>
+                  <div className="text-[10px] text-slate-500">Ages 6–18</div>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setRole("parent")}
+                  className={`relative p-3 rounded-xl border text-left transition-all ${
+                    role === "parent"
+                      ? "border-rose-400/50 bg-rose-500/[0.10]"
+                      : "border-white/[0.08] bg-white/[0.02] hover:bg-white/[0.04]"
+                  }`}
+                >
+                  <div className="text-lg mb-1">👨‍👩‍👧‍👦</div>
+                  <div className="text-xs font-semibold">A parent</div>
+                  <div className="text-[10px] text-slate-500">Track your kids</div>
+                </button>
+              </div>
+              {role === "parent" && (
+                <p className="text-[11px] text-slate-500 mt-2 leading-relaxed">
+                  💡 Use the <span className="text-white">same email</span> your kid entered as their parent email — we'll link them to your account automatically.
+                </p>
+              )}
             </div>
 
             {/* Config Error */}

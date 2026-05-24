@@ -195,16 +195,45 @@ export default function ParentDashboardPage() {
             <div className="text-5xl mb-4">👨‍👩‍👧‍👦</div>
             <h2 className="text-xl font-semibold mb-2">No kids linked yet</h2>
             <p className="text-sm text-slate-400 max-w-md mx-auto mb-5">
-              Have your child sign up using your email as their parent email. Their progress
-              will appear here automatically.
+              Have your child sign up at{" "}
+              <span className="text-white font-medium">pathforger.app</span> and enter your
+              email as their <strong>parent email</strong> during setup. They'll be linked
+              automatically.
             </p>
             {parentEmail && (
-              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white/[0.04] border border-white/[0.08] text-sm">
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white/[0.04] border border-white/[0.08] text-sm mb-4">
                 <Mail size={14} className="text-emerald-300" />
                 <span className="text-slate-300">Your parent email:</span>
                 <span className="font-mono text-emerald-200">{parentEmail}</span>
               </div>
             )}
+            <div>
+              <button
+                onClick={async () => {
+                  if (!parentEmail) return;
+                  const { data: { session } } = await supabase.auth.getSession();
+                  if (!session?.user) return;
+                  const { data: linked } = await supabase
+                    .from("profiles")
+                    .update({ parent_profile_id: session.user.id })
+                    .eq("parent_email", parentEmail.toLowerCase())
+                    .neq("id", session.user.id)
+                    .is("parent_profile_id", null)
+                    .select("id");
+                  if (linked && linked.length > 0) {
+                    window.location.reload();
+                  } else {
+                    alert(
+                      "No kids found with that parent email yet. Have your kid sign up first using exactly: " +
+                        parentEmail
+                    );
+                  }
+                }}
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white text-slate-900 text-sm font-semibold hover:bg-slate-100 transition-colors"
+              >
+                Scan for my kids
+              </button>
+            </div>
             <p className="text-xs text-slate-500 mt-5">
               Need help? Email{" "}
               <a
