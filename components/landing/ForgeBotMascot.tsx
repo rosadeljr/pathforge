@@ -89,10 +89,10 @@ export function ForgeBotMascot({ size = 360, className = "" }: ForgeBotMascotPro
         }}
       />
 
-      {/* Idle hover bob */}
+      {/* Idle hover bob — slightly bouncier for friendliness */}
       <motion.div
-        animate={{ y: [0, -10, 0] }}
-        transition={{ duration: 4.5, repeat: Infinity, ease: "easeInOut" }}
+        animate={{ y: [0, -12, 0, -6, 0] }}
+        transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
         style={{ width: "100%", height: "100%" }}
       >
         {/* Tilt to cursor */}
@@ -371,64 +371,91 @@ export function ForgeBotMascot({ size = 360, className = "" }: ForgeBotMascotPro
                 strokeWidth="1.5"
               />
 
-              {/* ═══ EYES — simple blue LED dashes (EVE's signature) ═══ */}
+              {/* Soft warm "cheek" glows on the visor — barely visible
+                  but adds approachability without being kiddy */}
+              <ellipse
+                cx="120"
+                cy="168"
+                rx="14"
+                ry="6"
+                fill="rgba(244,114,182,0.22)"
+                style={{ filter: "blur(4px)" }}
+              />
+              <ellipse
+                cx="240"
+                cy="168"
+                rx="14"
+                ry="6"
+                fill="rgba(244,114,182,0.22)"
+                style={{ filter: "blur(4px)" }}
+              />
+
+              {/* ═══ EYES — HAPPY upward-curving LED arcs (^_^) ═══
+                  EVE's iconic happy expression: eyes curve like a smile. */}
               <motion.g style={{ x: eyeOffsetX }}>
-                {/* Left eye — angled rounded rectangle */}
+                {/* Left eye — curved upward arc with thick stroke */}
                 <motion.g
-                  animate={blink ? { scaleY: 0.12 } : { scaleY: 1 }}
+                  animate={blink ? { scaleY: 0.15 } : { scaleY: 1 }}
                   transition={{ duration: 0.1 }}
-                  style={{ transformOrigin: "152px 145px" }}
+                  style={{ transformOrigin: "152px 148px" }}
                 >
-                  <rect
-                    x="138"
-                    y="138"
-                    width="28"
-                    height="14"
-                    rx="7"
-                    fill="url(#eyeLED)"
+                  {/* Outer glow layer */}
+                  <path
+                    d="M 132 152 Q 152 130 172 152"
+                    stroke="url(#eyeLED)"
+                    strokeWidth="14"
+                    strokeLinecap="round"
+                    fill="none"
                     filter="url(#eyeBloom)"
-                    transform="rotate(-8 152 145)"
                   />
-                  <rect
-                    x="142"
-                    y="140"
-                    width="20"
-                    height="4"
-                    rx="2"
-                    fill="white"
-                    opacity="0.85"
-                    transform="rotate(-8 152 142)"
+                  {/* Inner bright core for crispness */}
+                  <path
+                    d="M 136 150 Q 152 134 168 150"
+                    stroke="white"
+                    strokeWidth="4"
+                    strokeLinecap="round"
+                    fill="none"
+                    opacity="0.95"
                   />
+                  {/* Tiny shine highlight */}
+                  <circle cx="146" cy="142" r="2" fill="white" opacity="0.9" />
                 </motion.g>
 
                 {/* Right eye — mirrored */}
                 <motion.g
-                  animate={blink ? { scaleY: 0.12 } : { scaleY: 1 }}
+                  animate={blink ? { scaleY: 0.15 } : { scaleY: 1 }}
                   transition={{ duration: 0.1 }}
-                  style={{ transformOrigin: "208px 145px" }}
+                  style={{ transformOrigin: "208px 148px" }}
                 >
-                  <rect
-                    x="194"
-                    y="138"
-                    width="28"
-                    height="14"
-                    rx="7"
-                    fill="url(#eyeLED)"
+                  <path
+                    d="M 188 152 Q 208 130 228 152"
+                    stroke="url(#eyeLED)"
+                    strokeWidth="14"
+                    strokeLinecap="round"
+                    fill="none"
                     filter="url(#eyeBloom)"
-                    transform="rotate(8 208 145)"
                   />
-                  <rect
-                    x="198"
-                    y="140"
-                    width="20"
-                    height="4"
-                    rx="2"
-                    fill="white"
-                    opacity="0.85"
-                    transform="rotate(8 208 142)"
+                  <path
+                    d="M 192 150 Q 208 134 224 150"
+                    stroke="white"
+                    strokeWidth="4"
+                    strokeLinecap="round"
+                    fill="none"
+                    opacity="0.95"
                   />
+                  <circle cx="202" cy="142" r="2" fill="white" opacity="0.9" />
                 </motion.g>
               </motion.g>
+
+              {/* ═══ TINY SUBTLE SMILE — single soft cyan dot under the eyes */}
+              <ellipse
+                cx="180"
+                cy="178"
+                rx="14"
+                ry="2"
+                fill="rgba(103,232,249,0.35)"
+                style={{ filter: "blur(2px)" }}
+              />
             </motion.g>
 
             {/* ═══════════════════════════════════════════════════════════
