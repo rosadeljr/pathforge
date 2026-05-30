@@ -23,6 +23,7 @@ import {
   Check,
   CheckCircle2,
 } from "lucide-react";
+import { isProfaneUsername } from "@/lib/validations/username";
 
 interface FieldErrors {
   email?: string;
@@ -95,6 +96,7 @@ export default function SignUp() {
       if (!value) errors.username = "Name is required";
       else if (value.length < 3) errors.username = "Must be at least 3 characters";
       else if (!/^[a-zA-Z0-9_-]+$/.test(value)) errors.username = "Only letters, numbers, _ and -";
+      else if (isProfaneUsername(value)) errors.username = "Please choose a different username";
       else delete errors.username;
     }
     setFieldErrors(errors);
@@ -108,7 +110,8 @@ export default function SignUp() {
       /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) &&
       password.length >= 8 &&
       username.length >= 3 &&
-      /^[a-zA-Z0-9_-]+$/.test(username)
+      /^[a-zA-Z0-9_-]+$/.test(username) &&
+      !isProfaneUsername(username)
     );
   };
 

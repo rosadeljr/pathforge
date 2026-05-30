@@ -26,6 +26,12 @@ import {
 } from "@/lib/data/learner";
 import { LESSONS, type Lesson } from "@/lib/data/learner-lessons";
 import { CAREERS, isCareerUnlocked, getCareer } from "@/lib/data/careers";
+import {
+  todaysQuests,
+  progressForQuest,
+  type Quest,
+  type TodayStats,
+} from "@/lib/data/daily-quests";
 import { PageShimmer } from "@/components/ui/Shimmer";
 
 interface LearnerProfile {
@@ -53,6 +59,7 @@ export default function LearnPage() {
   const [profile, setProfile] = useState<LearnerProfile | null>(null);
   const [completions, setCompletions] = useState<CompletionEvent[]>([]);
   const [todayXp, setTodayXp] = useState(0);
+  const [todayLessonEvents, setTodayLessonEvents] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const supabase = createClient();
 
@@ -85,7 +92,7 @@ export default function LearnPage() {
             .limit(50),
           supabase
             .from("analytics_events")
-            .select("xp_delta")
+            .select("xp_delta, event_type, event_payload")
             .eq("user_id", uid)
             .gte("created_at", startOfDay.toISOString()),
         ]);
@@ -104,6 +111,9 @@ export default function LearnPage() {
             (sum: number, e: any) => sum + (e?.xp_delta || 0),
             0
           )
+        );
+        setTodayLessonEvents(
+          (todayEvents || []).filter((e: any) => e.event_type === "lesson_completed")
         );
       } catch (e) {
         console.error("Learn home load error:", e);
@@ -178,6 +188,26 @@ export default function LearnPage() {
   const dailyGoal = tier === "little" ? 100 : tier === "junior" ? 200 : 300;
   const goalPct = Math.min((todayXp / dailyGoal) * 100, 100);
   const goalHit = todayXp >= dailyGoal;
+
+  // Daily Quests — rotate by date, compute progress from today's events
+  const quests = useMemo(() => todaysQuests(), []);
+  const todayStats: TodayStats = useMemo(() => {
+    const subjects = new Set<SubjectId>();
+    let perfect = 0;
+    for (const e of todayLessonEvents) {
+      const p = e?.event_payload || {};
+      if (p.subject) subjects.add(p.subject);
+      if (p.score === p.total && p.flawless) perfect++;
+    }
+    return {
+      xpToday: todayXp,
+      lessonsToday: todayLessonEvents.length,
+      subjectsToday: subjects,
+      perfectLessonsToday: perfect,
+      dailyGoalHit: goalHit,
+      streakKept: todayLessonEvents.length > 0,
+    };
+  }, [todayXp, todayLessonEvents, goalHit]);
 
   // Highlight subjects the user picked; show the rest as discoverable.
   const pickedSet = new Set(picked);
@@ -295,6 +325,88 @@ export default function LearnPage() {
                 />
               </div>
             </div>
+          </div>
+        </motion.div>
+
+        {/* Daily Quests — rotate by date */}
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.06 }}
+        >
+          <div className="flex items-baseline justify-between mb-3">
+            <h2 className="text-sm font-semibold text-slate-300 uppercase tracking-wider">
+              Daily quests
+            </h2>
+            <span className="text-xs text-slate-500">
+              Refreshes every day · {quests.filter((q) => progressForQuest(q, todayStats).done).length}/3 done
+            </span>
+          </div>
+          <div className="grid sm:grid-cols-3 gap-2.5">
+            {quests.map((q, i) => {
+              const prog = progressForQuest(q, todayStats);
+              return (
+                <motion.div
+                  key={q.id}
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.4, delay: 0.08 + i * 0.04 }}
+                  className={`relative overflow-hidden rounded-2xl border p-3.5 transition-all ${
+                    prog.done
+                      ? "border-emerald-400/40 bg-gradient-to-br from-emerald-500/[0.10] to-transparent"
+                      : "border-white/[0.06] bg-white/[0.02]"
+                  }`}
+                >
+                  <div
+                    className="absolute -top-10 -right-10 w-28 h-28 rounded-full opacity-25 pointer-events-none"
+                    style={{
+                      background: `radial-gradient(circle, ${q.accentColor}, transparent 70%)`,
+                    }}
+                  />
+                  <div className="relative">
+                    <div className="flex items-center justify-between mb-1.5">
+                      <div
+                        className={`w-9 h-9 rounded-xl bg-gradient-to-br ${q.gradient} flex items-center justify-center text-lg shadow-lg`}
+                        style={{ boxShadow: `0 6px 18px ${q.accentColor}30` }}
+                      >
+                        {q.emoji}
+                      </div>
+                      {prog.done ? (
+                        <span className="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-md bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
+                          ✓ Done
+                        </span>
+                      ) : (
+                        <span className="text-[10px] text-indigo-300 font-semibold">
+                          +{q.xpReward} XP
+                        </span>
+                      )}
+                    </div>
+                    <div className="text-xs font-bold tracking-tight mb-0.5">{q.title}</div>
+                    <div className="text-[10px] text-slate-400 leading-snug mb-2 line-clamp-2">
+                      {q.description}
+                    </div>
+                    <div className="flex items-center justify-between text-[10px] tabular-nums mb-1">
+                      <span className="text-slate-500">Progress</span>
+                      <span className={prog.done ? "text-emerald-300 font-semibold" : "text-slate-300"}>
+                        {prog.current} / {prog.target}
+                      </span>
+                    </div>
+                    <div className="h-1 rounded-full bg-white/[0.06] overflow-hidden">
+                      <motion.div
+                        initial={{ width: 0 }}
+                        animate={{ width: `${prog.pct}%` }}
+                        transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+                        className={
+                          prog.done
+                            ? "h-full bg-gradient-to-r from-emerald-400 to-teal-500"
+                            : `h-full bg-gradient-to-r ${q.gradient}`
+                        }
+                      />
+                    </div>
+                  </div>
+                </motion.div>
+              );
+            })}
           </div>
         </motion.div>
 

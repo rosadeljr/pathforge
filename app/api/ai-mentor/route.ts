@@ -61,6 +61,26 @@ export async function POST(request: Request) {
         ? "junior"
         : "teen";
 
+    // Per-minute rate limit — 20 user messages per minute, every tier.
+    // Stops spam / runaway OpenAI bills.
+    const oneMinuteAgo = new Date(Date.now() - 60_000);
+    const { count: lastMinCount } = await supabase
+      .from("ai_messages")
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", user.id)
+      .eq("role", "user")
+      .gte("created_at", oneMinuteAgo.toISOString());
+    if ((lastMinCount ?? 0) >= 20) {
+      return NextResponse.json(
+        {
+          error: "rate_limit",
+          message:
+            "Whoa, slow down a sec! 🫨 Give the tutor a moment before sending more messages.",
+        },
+        { status: 429 }
+      );
+    }
+
     // Free-tier daily message cap.
     const entitlements = getEntitlements(profile?.subscription_tier);
     if (entitlements.forgeBotDailyMessages !== -1) {

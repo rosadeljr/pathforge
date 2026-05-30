@@ -28,6 +28,7 @@ import {
   generateCredentialCode,
 } from "@/lib/certificates";
 import { PageShimmer } from "@/components/ui/Shimmer";
+import { LevelUpOverlay } from "@/components/learn/LevelUpOverlay";
 
 type Phase = "loading" | "playing" | "done";
 
@@ -210,6 +211,7 @@ export default function LessonPlayerPage() {
   const [newCerts, setNewCerts] = useState<
     { career_id: string; career_title: string; credential_code: string }[]
   >([]);
+  const [leveledUpTo, setLeveledUpTo] = useState<number | null>(null);
 
   async function persistCompletion() {
     setPersisting(true);
@@ -261,19 +263,31 @@ export default function LessonPlayerPage() {
       if (awardXp > 0) {
         const { data: prof } = await supabase
           .from("profiles")
-          .select("total_xp, current_xp, username, full_name")
+          .select("total_xp, current_xp, current_level, username, full_name")
           .eq("id", uid)
           .single();
         if (prof) {
+          const oldLevel = prof.current_level || 1;
           const newTotalXp = (prof.total_xp || 0) + awardXp;
+          // Compute level-up: each level requires (level * 1000) XP from current_xp.
+          let currentXp = (prof.current_xp || 0) + awardXp;
+          let newLevel = oldLevel;
+          while (currentXp >= newLevel * 1000) {
+            currentXp -= newLevel * 1000;
+            newLevel++;
+          }
           await supabase
             .from("profiles")
             .update({
               total_xp: newTotalXp,
-              current_xp: (prof.current_xp || 0) + awardXp,
+              current_xp: currentXp,
+              current_level: newLevel,
               last_quest_completed_at: new Date().toISOString(),
             })
             .eq("id", uid);
+          if (newLevel > oldLevel) {
+            setLeveledUpTo(newLevel);
+          }
 
           // 🏆 Career mastery — auto-award certificates for any newly
           // mastered career (reached final stage at new total XP).
@@ -374,6 +388,14 @@ export default function LessonPlayerPage() {
       <div className="min-h-screen pb-12 relative overflow-hidden">
         {/* Confetti burst — bigger for first-ever lesson, otherwise 80%+ */}
         {(isFirstEver || pct >= 80) && <ConfettiCelebration tier={tier} />}
+
+        {/* Level-up celebration — fires on top of everything when crossing a level */}
+        {leveledUpTo !== null && (
+          <LevelUpOverlay
+            level={leveledUpTo}
+            onClose={() => setLeveledUpTo(null)}
+          />
+        )}
 
         <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-12 lg:py-16 relative z-10">
           {/* First-lesson celebration banner */}
