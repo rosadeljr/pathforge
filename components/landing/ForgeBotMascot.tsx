@@ -95,7 +95,16 @@ export function ForgeBotMascot({ size = 380, className = "" }: ForgeBotMascotPro
       onMouseMove={handleMove}
       onMouseLeave={handleLeave}
       className={`relative inline-block ${className}`}
-      style={{ width: size, height: size, perspective: "1400px" }}
+      style={{
+        // Responsive: maxes out at `size` on large screens, scales down
+        // smoothly on smaller viewports without needing a second DOM copy.
+        width: `min(${size}px, 78vw)`,
+        height: `min(${size}px, 78vw)`,
+        maxWidth: size,
+        maxHeight: size,
+        aspectRatio: "1 / 1",
+        perspective: "1400px",
+      }}
     >
       {/* OUTER ring halo only — does NOT wash over body */}
       <motion.div

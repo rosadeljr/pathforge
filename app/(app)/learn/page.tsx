@@ -342,7 +342,7 @@ export default function LearnPage() {
               Refreshes every day · {quests.filter((q) => progressForQuest(q, todayStats).done).length}/3 done
             </span>
           </div>
-          <div className="grid sm:grid-cols-3 gap-2.5">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
             {quests.map((q, i) => {
               const prog = progressForQuest(q, todayStats);
               return (

@@ -118,8 +118,9 @@ export default function Landing() {
             transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
             className="flex justify-center mb-2"
           >
-            <ForgeBotMascot size={260} className="sm:hidden" />
-            <ForgeBotMascot size={320} className="hidden sm:block" />
+            {/* Single instance — auto-scales via the component's responsive
+                width (min(size, 78vw)). Saves a duplicate animation tree. */}
+            <ForgeBotMascot size={320} />
           </motion.div>
 
           {/* Eyebrow */}
@@ -181,15 +182,15 @@ export default function Landing() {
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, delay: 0.6 }}
-            className="flex flex-col sm:flex-row items-center justify-center gap-3 mb-6"
+            className="flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-3 mb-6 px-4 sm:px-0 max-w-md sm:max-w-none mx-auto"
           >
-            <PrimaryLinkButton href="/signup" size="lg">
+            <PrimaryLinkButton href="/signup" size="lg" className="justify-center">
               Start learning — free
               <ArrowRight size={14} className="group-hover:translate-x-0.5 transition-transform" />
             </PrimaryLinkButton>
             <Link
               href="#how-it-works"
-              className="inline-flex items-center gap-2 px-5 py-3 rounded-xl text-sm font-medium text-slate-300 hover:text-white border border-white/[0.08] hover:border-white/[0.16] hover:bg-white/[0.03] transition-all"
+              className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl text-sm font-medium text-slate-300 hover:text-white border border-white/[0.08] hover:border-white/[0.16] hover:bg-white/[0.03] transition-all"
             >
               <PlayCircle size={16} />
               See how it works

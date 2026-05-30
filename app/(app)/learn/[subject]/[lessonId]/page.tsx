@@ -740,7 +740,7 @@ export default function LessonPlayerPage() {
             {/* Mascot — sits in the corner, reacts to events */}
             <Mascot mood={mascotMood} tier={tier} />
 
-            <p className="text-2xl sm:text-3xl font-semibold tracking-tight text-center mb-6 leading-tight pr-10">
+            <p className="text-xl sm:text-2xl lg:text-3xl font-semibold tracking-tight text-center mb-6 leading-tight pr-10">
               {q.prompt}
             </p>
 
@@ -749,7 +749,7 @@ export default function LessonPlayerPage() {
                 const isPicked = pickedIdx === i;
                 const isCorrect = i === q.correctIndex;
                 let cls =
-                  "p-4 rounded-2xl border text-base font-semibold transition-all text-left";
+                  "p-4 rounded-2xl border text-sm sm:text-base font-semibold transition-all text-left min-h-[56px]";
                 if (revealed) {
                   if (isCorrect) {
                     cls +=
