@@ -9,10 +9,12 @@ Complete each section below in order before going public.
 Run these in order. Each is idempotent — safe to re-run.
 
 ```
-1. LEARNER_MODE_MIGRATION.sql    — adds user_mode, learner_grade, learner_subjects, parent_email
-2. FRIENDSHIPS_MIGRATION.sql      — friendships table + same-mode trigger + RLS
-3. CAREERS_MIGRATION.sql          — adds dream_career_id to profiles
-4. PARENT_FAMILY_MIGRATION.sql    — adds is_parent_account, parent_profile_id + parent RLS
+1. LEARNER_MODE_MIGRATION.sql      — adds user_mode, learner_grade, learner_subjects, parent_email
+2. FRIENDSHIPS_MIGRATION.sql       — friendships table + same-mode trigger + RLS
+3. CAREERS_MIGRATION.sql           — adds dream_career_id to profiles
+4. PARENT_FAMILY_MIGRATION.sql     — adds is_parent_account, parent_profile_id + parent RLS
+5. CERTIFICATES_MIGRATION.sql      — career_certificates table + RLS for kids + parents
+6. PRIVACY_CONTROLS_MIGRATION.sql  — show_on_leaderboard + display_mode (pseudonymous)
 ```
 
 After running all four, verify the columns exist:

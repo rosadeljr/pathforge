@@ -3,12 +3,13 @@ import type { SubjectId } from "./learner";
 /**
  * Learner mode — lesson content.
  *
- * Phase 1 ships ~8 Grade-3 Math lessons (PH-flavored where natural).
- * English, Filipino, and higher grades land in Phase 2.
+ * Each lesson is a multi-question unit aligned to a PH K-10 competency.
+ * The curriculum metadata fields below let us track mastery, gate
+ * prerequisite skills, surface "next best lesson" recommendations, and
+ * give parents/teachers an audit trail of what their kid is learning.
  *
- * Each lesson is a sequence of multiple-choice questions with optional
- * teaching explanations. XP per lesson is fixed; the player awards a
- * bonus for first-try perfection (handled in the page).
+ * Lesson schema is intentionally additive — new fields are optional so
+ * old lessons keep working while we backfill curriculum metadata.
  */
 
 export interface LessonQuestion {
@@ -17,9 +18,21 @@ export interface LessonQuestion {
   options: string[];
   correctIndex: number;
   explanation?: string;
+  /** Tags the misconception this question is designed to surface. */
+  misconceptionTag?: string;
 }
 
+/** Quarter inside a PH school year (1–4) or "year-round" for non-quarterly skills. */
+export type Quarter = 1 | 2 | 3 | 4 | "year-round";
+
+/** Status of teacher/curriculum review for the lesson. */
+export type ReviewStatus = "draft" | "reviewed" | "published";
+
+/** Primary language of instruction in the lesson. */
+export type LessonLanguage = "en" | "fil" | "taglish";
+
 export interface Lesson {
+  // Required core
   id: string;
   subject: SubjectId;
   grade: number;
@@ -28,6 +41,34 @@ export interface Lesson {
   emoji: string;
   xpReward: number;
   questions: LessonQuestion[];
+
+  // ── Curriculum metadata (optional, additive — backfill over time) ──
+  /** Slug for the K-10 competency (e.g. "math-3-add-2digit-no-regroup"). */
+  competency?: string;
+  /** Bayanihan-style human description of the skill being trained. */
+  competencyTitle?: string;
+  /** Approximate school quarter this content lives in. */
+  quarter?: Quarter;
+  /** Skill slugs that should be mastered first. */
+  prerequisites?: string[];
+  /** Estimated time to complete in minutes — used in parent reports. */
+  estimatedMinutes?: number;
+  /** 1 (gentle intro) to 5 (boss challenge). */
+  difficulty?: 1 | 2 | 3 | 4 | 5;
+  /**
+   * Mastery threshold — fraction of first-try-correct (0..1) at or above
+   * which the learner is considered to have mastered the competency.
+   * Defaults to 0.8 if omitted.
+   */
+  masteryThreshold?: number;
+  /** Career ids whose skill tree includes this competency. */
+  careerLinks?: string[];
+  /** Primary language of instruction. Defaults to "en" if omitted. */
+  language?: LessonLanguage;
+  /** Curriculum review state — affects whether the lesson is surfaced. */
+  reviewStatus?: ReviewStatus;
+  /** Why this skill matters / how to teach if asked. Internal-only. */
+  teacherNotes?: string;
 }
 
 export const LESSONS: Lesson[] = [
@@ -1013,72 +1054,6 @@ export const LESSONS: Lesson[] = [
     ],
   },
 
-  // ============ GRADE 11–12 · SENIOR HIGH ============
-  {
-    id: "math-11-functions",
-    subject: "math",
-    grade: 11,
-    title: "Functions: f(x) basics",
-    description: "Domain, range, and evaluating functions.",
-    emoji: "📊",
-    xpReward: 200,
-    questions: [
-      { id: "q1", prompt: "If f(x) = 2x + 3, what is f(4)?", options: ["7", "9", "11", "13"], correctIndex: 2, explanation: "f(4) = 2(4) + 3 = 8 + 3 = 11." },
-      { id: "q2", prompt: "If f(x) = x², what is f(-3)?", options: ["-9", "-6", "6", "9"], correctIndex: 3, explanation: "(-3)² = 9." },
-      { id: "q3", prompt: "A function maps each input to...", options: ["many outputs", "exactly one output", "no outputs", "zero only"], correctIndex: 1 },
-      { id: "q4", prompt: "f(x) = 3x - 5. Find f(0).", options: ["-5", "0", "3", "5"], correctIndex: 0 },
-      { id: "q5", prompt: "The set of all valid inputs is the...", options: ["range", "domain", "function", "output"], correctIndex: 1 },
-    ],
-  },
-  {
-    id: "math-12-derivatives-intro",
-    subject: "math",
-    grade: 12,
-    title: "Intro to derivatives",
-    description: "Slope of a curve — the first step into calculus.",
-    emoji: "📈",
-    xpReward: 220,
-    questions: [
-      { id: "q1", prompt: "If f(x) = x², then f'(x) = ?", options: ["x", "2x", "x²", "2"], correctIndex: 1, explanation: "Power rule: d/dx[xⁿ] = n·xⁿ⁻¹. So d/dx[x²] = 2x." },
-      { id: "q2", prompt: "Derivative of f(x) = 5x?", options: ["0", "5", "5x", "x"], correctIndex: 1 },
-      { id: "q3", prompt: "Derivative of a constant (like 7)?", options: ["0", "1", "7", "x"], correctIndex: 0 },
-      { id: "q4", prompt: "If f(x) = x³, then f'(x) = ?", options: ["x²", "2x²", "3x²", "3x"], correctIndex: 2 },
-      { id: "q5", prompt: "The derivative represents the...", options: ["area under curve", "slope at a point", "y-intercept", "x-intercept"], correctIndex: 1 },
-    ],
-  },
-  {
-    id: "english-11-rhetoric",
-    subject: "english",
-    grade: 11,
-    title: "Rhetoric: ethos, pathos, logos",
-    description: "The three classical persuasive appeals.",
-    emoji: "🗣️",
-    xpReward: 180,
-    questions: [
-      { id: "q1", prompt: "Appeal to logic and reason is called...", options: ["ethos", "pathos", "logos", "kairos"], correctIndex: 2 },
-      { id: "q2", prompt: "Appeal to emotion is...", options: ["ethos", "pathos", "logos", "kairos"], correctIndex: 1 },
-      { id: "q3", prompt: "Appeal to credibility/character is...", options: ["ethos", "pathos", "logos", "kairos"], correctIndex: 0 },
-      { id: "q4", prompt: "A doctor citing 20 years of practice uses primarily...", options: ["ethos", "pathos", "logos", "none"], correctIndex: 0 },
-      { id: "q5", prompt: "Using statistics in an argument is mainly...", options: ["ethos", "pathos", "logos", "none"], correctIndex: 2 },
-    ],
-  },
-  {
-    id: "english-12-college-essay",
-    subject: "english",
-    grade: 12,
-    title: "College admission essay",
-    description: "Tell your story — specific, honest, memorable.",
-    emoji: "🎓",
-    xpReward: 200,
-    questions: [
-      { id: "q1", prompt: "The strongest college essays are usually...", options: ["generic", "specific & personal", "very long", "list of achievements"], correctIndex: 1 },
-      { id: "q2", prompt: "A 'hook' is...", options: ["a fishing tool", "the engaging opening", "the title", "a citation"], correctIndex: 1 },
-      { id: "q3", prompt: "What should you AVOID in a college essay?", options: ["specific stories", "honest reflection", "clichés like 'changed my life forever'", "your voice"], correctIndex: 2 },
-      { id: "q4", prompt: "The best topic is one that...", options: ["sounds impressive", "is true to you", "uses big words", "is sad"], correctIndex: 1 },
-      { id: "q5", prompt: "Showing growth or self-awareness usually...", options: ["hurts your essay", "is irrelevant", "strengthens your essay", "is required word count filler"], correctIndex: 2 },
-    ],
-  },
-
   // ============ SCIENCE — across grades ============
   {
     id: "science-3-living-things",
@@ -1145,9 +1120,9 @@ export const LESSONS: Lesson[] = [
     ],
   },
   {
-    id: "science-11-newton-laws",
+    id: "science-10-newton-laws",
     subject: "science",
-    grade: 11,
+    grade: 10,
     title: "Newton's laws of motion",
     description: "Three rules that explain how things move.",
     emoji: "🍎",

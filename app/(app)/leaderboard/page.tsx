@@ -24,6 +24,20 @@ interface LeaderboardEntry {
   streak_count: number;
   longest_streak: number;
   learner_grade: number | null;
+  show_on_leaderboard?: boolean;
+  display_mode?: "username" | "pseudonymous";
+}
+
+/**
+ * Resolve what name to show for a leaderboard entry. If a kid opted in
+ * to pseudonymous display, we never expose their username to peers —
+ * we render their tier label + level instead.
+ */
+function displayNameFor(e: LeaderboardEntry, tierLabel: string): string {
+  if (e.display_mode === "pseudonymous") {
+    return `${tierLabel} · Lv ${e.current_level}`;
+  }
+  return e.username || "anonymous";
 }
 
 type SortMode = "xp" | "level" | "streak";
@@ -113,10 +127,14 @@ export default function Leaderboard() {
         const { data } = await supabase
           .from("profiles")
           .select(
-            "id, username, full_name, current_level, total_xp, streak_count, longest_streak, learner_grade"
+            "id, username, full_name, current_level, total_xp, streak_count, longest_streak, learner_grade, show_on_leaderboard, display_mode"
           )
           .in("learner_grade", grades)
           .not("username", "is", null)
+          // Honour the parent opt-out — if a kid's account is hidden,
+          // they don't appear in anyone else's leaderboard view. They
+          // still see themselves in their own page (handled client-side).
+          .eq("show_on_leaderboard", true)
           .order(orderColumn, { ascending: false })
           .limit(50);
 
@@ -289,15 +307,17 @@ export default function Leaderboard() {
                   >
                     {position}
                   </div>
-                  {/* Avatar */}
+                  {/* Avatar — uses placeholder for pseudonymous learners */}
                   <div className="flex-shrink-0 w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-xs font-bold">
-                    {(e.username || "?").slice(0, 2).toUpperCase()}
+                    {e.display_mode === "pseudonymous"
+                      ? tierCopy.emoji
+                      : (e.username || "?").slice(0, 2).toUpperCase()}
                   </div>
                   {/* Name + rank */}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-1.5 flex-wrap">
                       <span className="text-sm font-semibold truncate">
-                        {e.username || "anonymous"}
+                        {displayNameFor(e, tierCopy.label)}
                       </span>
                       {isMe && (
                         <span className="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-md bg-indigo-500/20 text-indigo-200 border border-indigo-400/30">

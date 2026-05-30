@@ -30,6 +30,58 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Message is required" }, { status: 400 });
     }
 
+    // ── Inbound moderation — block harmful content BEFORE it hits the
+    // tutor or gets stored. Two layers:
+    //   1. Quick local profanity check (cheap, no API call).
+    //   2. OpenAI moderation endpoint when key is configured (more nuanced).
+    // On flag, store a moderation event so parents see in the audit log.
+    try {
+      const { isProfaneUsername } = await import("@/lib/validations/username");
+      if (isProfaneUsername(message)) {
+        await supabase.from("ai_messages").insert({
+          user_id: user.id,
+          role: "system",
+          content: "[moderated: inbound message blocked by local filter]",
+        });
+        return NextResponse.json({
+          reply:
+            "Let's keep our chats kind and safe. Try asking your question again in a friendlier way? 🌱",
+          suggestedActions: [],
+        });
+      }
+    } catch {
+      /* non-fatal */
+    }
+    if (process.env.OPENAI_API_KEY) {
+      try {
+        const { OpenAI } = await import("openai");
+        const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+        const mod = await client.moderations.create({
+          model: "omni-moderation-latest",
+          input: message,
+        });
+        const r = mod.results?.[0];
+        if (r?.flagged) {
+          const flaggedCats = Object.entries(r.categories || {})
+            .filter(([, v]) => v === true)
+            .map(([k]) => k)
+            .join(",");
+          await supabase.from("ai_messages").insert({
+            user_id: user.id,
+            role: "system",
+            content: `[moderated: ${flaggedCats || "policy"}]`,
+          });
+          return NextResponse.json({
+            reply:
+              "I can't help with that one. If something serious is on your mind, please talk to a trusted grown-up or a teacher right away. For mental-health support in the PH you can also message NCMH at 1553.",
+            suggestedActions: [],
+          });
+        }
+      } catch {
+        /* moderation outage is non-fatal — fall through to normal flow */
+      }
+    }
+
     const { data: profile } = await supabase
       .from("profiles")
       .select(

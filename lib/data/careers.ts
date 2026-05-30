@@ -12,14 +12,26 @@
 
 import type { SubjectId } from "./learner";
 
+/**
+ * Career categories — designed for the Philippine market so paths like
+ * TVL, maritime, agriculture, BPO, public service, and trades are
+ * first-class instead of being squeezed into "Service" or "Business."
+ */
 export type CareerCategory =
   | "STEM"
   | "Health"
   | "Arts"
+  | "Creative"
   | "Sports"
   | "Business"
   | "Service"
-  | "Creative";
+  | "TVL"
+  | "Maritime"
+  | "Agriculture"
+  | "PublicService"
+  | "BPO"
+  | "Trades"
+  | "Entrepreneurship";
 
 export type CareerRarity = "common" | "uncommon" | "rare" | "legendary";
 
@@ -57,6 +69,29 @@ export interface Career {
   // How many XP earned in helpful subjects unlocks this career card.
   // Set to 0 to unlock immediately.
   xpToUnlock: number;
+
+  /**
+   * Subject-mastery gates — REPLACES raw XP for career unlocking.
+   * Maps SubjectId → XP that must be earned IN THAT SUBJECT before the
+   * career is unlocked. Falls back to xpToUnlock when this is undefined.
+   *
+   * Designed so a kid who has 5,000 XP but all in Filipino can't unlock
+   * "AI Engineer" — they need Math + Science specifically. This is the
+   * mastery-based unlock the audit called for.
+   */
+  requiredSubjectXp?: Partial<Record<SubjectId, number>>;
+
+  /**
+   * Mini-capstone the kid can attempt once unlocked. Project-based
+   * exploration tied to the career, not a quiz.
+   */
+  capstone?: {
+    title: string;
+    description: string;
+    /** What to do — kid-friendly steps. */
+    steps: string[];
+    estimatedMinutes: number;
+  };
 
   // Teen-tier extra info (Grade 8+)
   pathToBecome: string;
@@ -848,6 +883,168 @@ export const CAREERS: Career[] = [
     collegeTrack: "STEM",
     phContext: "PH crypto scene: Coins.ph, PDAX. Many remote Web3 roles in EU/US/Singapore.",
   },
+
+  // ============ PH-SPECIFIC TRACKS (TVL / BPO / Maritime / Ag / PubSvc) ============
+  // These cover the categories the original list under-represented but
+  // that are MASSIVE in the Filipino job market.
+
+  {
+    id: "seafarer",
+    title: "Seafarer",
+    filipinoTitle: "Marino",
+    emoji: "⚓",
+    category: "Maritime",
+    rarity: "uncommon",
+    oneLiner: "Sails the world's oceans on cargo ships and tankers.",
+    whatTheyDo: [
+      "Navigate cargo ships across continents",
+      "Run the engine room or the bridge",
+      "Earn dollars while supporting family back home",
+      "See the world — one port at a time",
+    ],
+    funFact: "1 in 4 of the world's seafarers is Filipino. Marino remittances are one of the largest contributors to the PH economy.",
+    gradient: "from-sky-500 to-blue-700",
+    accentColor: "#0284c7",
+    helpfulSubjects: ["math", "science", "english"],
+    xpToUnlock: 600,
+    requiredSubjectXp: { math: 200, english: 150 },
+    pathToBecome: "Maritime course (BSMarE or BSMT, 4 yrs) → board exam → cadet → officer.",
+    collegeTrack: "TVL / STEM",
+    phContext: "Top schools: PMMA, MAAP, John B. Lacson. Major employers: Magsaysay, Trans-Global, Stolt-Nielsen.",
+    capstone: {
+      title: "Plot a route from Manila to Singapore",
+      description: "Use a map + simple math to plan a sea route. Just like real seafarers do every voyage.",
+      steps: [
+        "Find Manila and Singapore on a map.",
+        "Measure the distance using the scale.",
+        "If the ship travels 18 knots (about 33 km/h), calculate how many hours the trip takes.",
+        "Convert hours to days. Write a 2-sentence trip log.",
+      ],
+      estimatedMinutes: 25,
+    },
+  },
+
+  {
+    id: "farmer-agri",
+    title: "Modern Farmer",
+    filipinoTitle: "Magsasaka",
+    emoji: "🌾",
+    category: "Agriculture",
+    rarity: "uncommon",
+    oneLiner: "Grows the food that feeds the country — with modern science.",
+    whatTheyDo: [
+      "Plant rice, corn, vegetables, or fruit",
+      "Use modern techniques: drip irrigation, drones, soil sensors",
+      "Care for livestock and poultry",
+      "Sell crops at the palengke or to supermarkets",
+    ],
+    funFact: "Rice farming feeds 100M+ Filipinos. IRRI in Los Baños invented modern rice varieties used worldwide.",
+    gradient: "from-emerald-400 to-green-700",
+    accentColor: "#22c55e",
+    helpfulSubjects: ["science", "math", "araling-panlipunan"],
+    xpToUnlock: 200,
+    requiredSubjectXp: { science: 100 },
+    pathToBecome: "Agriculture course (BSA, 4 yrs) at UPLB / CLSU / VSU → barangay extension officer or own farm.",
+    collegeTrack: "STEM / TVL Agri-Fishery Arts",
+    phContext: "Department of Agriculture, IRRI, PhilRice. Or run a family farm with modern methods.",
+    capstone: {
+      title: "Design a small backyard garden",
+      description: "Plan what to grow in a 2m × 2m plot for a Filipino kitchen.",
+      steps: [
+        "Pick 3 plants that grow well in PH (e.g. kangkong, kamatis, sili).",
+        "Sketch where each goes — group plants with the same sun/water needs.",
+        "List what each plant needs weekly (water, fertilizer).",
+        "Estimate when you can harvest the first crop.",
+      ],
+      estimatedMinutes: 20,
+    },
+  },
+
+  {
+    id: "customer-service-bpo",
+    title: "Customer Service Pro",
+    filipinoTitle: "Call Center Agent",
+    emoji: "🎧",
+    category: "BPO",
+    rarity: "common",
+    oneLiner: "Helps customers from around the world — using clear English.",
+    whatTheyDo: [
+      "Talk to customers via call, chat, or email",
+      "Solve problems using a help system",
+      "Stay calm with hard customers",
+      "Earn a stable salary right after high school + training",
+    ],
+    funFact: "PH is the world's #1 contact-center country — over 1.5M Filipinos work in BPO. Many bought their first house with their first BPO job.",
+    gradient: "from-cyan-400 to-sky-600",
+    accentColor: "#06b6d4",
+    helpfulSubjects: ["english", "filipino"],
+    xpToUnlock: 0,
+    requiredSubjectXp: { english: 200 },
+    pathToBecome: "High school diploma → BPO training program → entry-level agent → team lead.",
+    collegeTrack: "TVL / GAS / HUMSS",
+    phContext: "Top employers: Concentrix, Teleperformance, TaskUs, Sutherland, Accenture. Megacenters in Manila, Cebu, Davao.",
+    capstone: {
+      title: "Handle a tricky customer call",
+      description: "Practice the words you'd say when a customer is upset but you have to stay professional.",
+      steps: [
+        "Read this scenario: 'A customer's order is 3 days late and they're frustrated.'",
+        "Write 3 sentences acknowledging their feelings.",
+        "Write 2 sentences explaining what you'll do to help.",
+        "Re-read out loud — does it sound calm and confident?",
+      ],
+      estimatedMinutes: 15,
+    },
+  },
+
+  {
+    id: "electrician-trade",
+    title: "Electrician",
+    filipinoTitle: "Elektrisyan",
+    emoji: "🔌",
+    category: "Trades",
+    rarity: "common",
+    oneLiner: "Wires homes, offices, and factories — keeping the country powered.",
+    whatTheyDo: [
+      "Install wiring in new buildings",
+      "Fix broken outlets, switches, and breakers",
+      "Read electrical plans",
+      "Work safely with high voltage",
+    ],
+    funFact: "Filipino electricians work both at home and abroad — many earn more than office workers, especially overseas.",
+    gradient: "from-amber-400 to-orange-600",
+    accentColor: "#f59e0b",
+    helpfulSubjects: ["science", "math"],
+    xpToUnlock: 150,
+    requiredSubjectXp: { math: 100 },
+    pathToBecome: "TESDA NC II in Electrical Installation & Maintenance → apprentice → licensed electrician.",
+    collegeTrack: "TVL Industrial Arts",
+    phContext: "TESDA centers nationwide. Massive demand in construction (Meralco, AboitizPower, big builders).",
+  },
+
+  {
+    id: "public-service-officer",
+    title: "Public Service Officer",
+    filipinoTitle: "Pampublikong Lingkod",
+    emoji: "🏛️",
+    category: "PublicService",
+    rarity: "rare",
+    oneLiner: "Works in government to serve the Filipino people.",
+    whatTheyDo: [
+      "Help process documents (LTO, SSS, DSWD, etc.)",
+      "Plan and run public programs",
+      "Make sure laws and rules are followed",
+      "Build a stable career serving the bayan",
+    ],
+    funFact: "There are over 1.8M government employees in PH. Civil service exams are how you qualify — many great careers start there.",
+    gradient: "from-rose-500 to-red-700",
+    accentColor: "#ef4444",
+    helpfulSubjects: ["english", "araling-panlipunan", "filipino"],
+    xpToUnlock: 800,
+    requiredSubjectXp: { "araling-panlipunan": 300, english: 200 },
+    pathToBecome: "Any college degree (often Public Admin / Political Science) → Civil Service Exam → government post.",
+    collegeTrack: "HUMSS / ABM",
+    phContext: "Civil Service Commission. Entry roles at LGUs, DSWD, DepEd, DOH, DA. Career progression is real.",
+  },
 ];
 
 /** Find a career by id. */
@@ -861,12 +1058,49 @@ export function careersByCategory(cat: CareerCategory): Career[] {
 }
 
 /**
- * Decide if a career is unlocked for a learner based on their total XP
- * earned in helpful subjects. Currently using total XP as a proxy —
- * future iterations can use per-subject XP for sharper targeting.
+ * Decide if a career is unlocked.
+ *
+ * - Back-compat: if only `totalXp` is passed, falls back to the old
+ *   "total XP >= xpToUnlock" check used everywhere in v1.
+ * - Mastery-aware: when `subjectXp` is provided AND the career has
+ *   `requiredSubjectXp`, every required subject threshold must be met.
+ *   This prevents unlocking AI Engineer with 5,000 XP from Filipino
+ *   alone — kids have to actually have done Math/Science.
  */
-export function isCareerUnlocked(career: Career, totalXp: number): boolean {
+export function isCareerUnlocked(
+  career: Career,
+  totalXp: number,
+  subjectXp?: Partial<Record<SubjectId, number>>
+): boolean {
+  if (career.requiredSubjectXp && subjectXp) {
+    for (const [subj, need] of Object.entries(career.requiredSubjectXp)) {
+      const have = subjectXp[subj as SubjectId] || 0;
+      if (have < (need as number)) return false;
+    }
+    return true;
+  }
   return totalXp >= career.xpToUnlock;
+}
+
+/**
+ * Returns the closest gating subject for a locked career — used in UI
+ * to nudge "Do more {subject} lessons" when a kid asks why it's locked.
+ */
+export function careerUnlockHint(
+  career: Career,
+  subjectXp: Partial<Record<SubjectId, number>>
+): { subject: SubjectId; need: number; have: number } | null {
+  if (!career.requiredSubjectXp) return null;
+  let worst: { subject: SubjectId; need: number; have: number } | null = null;
+  for (const [s, need] of Object.entries(career.requiredSubjectXp)) {
+    const subject = s as SubjectId;
+    const have = subjectXp[subject] || 0;
+    const gap = (need as number) - have;
+    if (gap > 0 && (!worst || gap > worst.need - worst.have)) {
+      worst = { subject, need: need as number, have };
+    }
+  }
+  return worst;
 }
 
 export const ALL_CATEGORIES: CareerCategory[] = [
@@ -877,4 +1111,11 @@ export const ALL_CATEGORIES: CareerCategory[] = [
   "Service",
   "Sports",
   "Business",
+  "TVL",
+  "Maritime",
+  "Agriculture",
+  "PublicService",
+  "BPO",
+  "Trades",
+  "Entrepreneurship",
 ];
