@@ -22,7 +22,7 @@ import {
   pickRealWorldHook,
   type AgeTier,
 } from "@/lib/data/learner";
-import { getLesson } from "@/lib/data/learner-lessons";
+import { getLesson, lessonIsBoss } from "@/lib/data/learner-lessons";
 import {
   newlyMasteredCareers,
   generateCredentialCode,
@@ -670,12 +670,19 @@ export default function LessonPlayerPage() {
             </AnimatePresence>
           </div>
 
-          {/* Title + counter */}
-          <div className="flex items-center justify-between text-xs mb-2">
-            <span className="text-slate-400 font-medium">
-              {lesson.emoji} {lesson.title}
+          {/* Title + counter — boss lessons get a gold "Boss Battle" pill */}
+          <div className="flex items-center justify-between text-xs mb-2 gap-2">
+            <span className="text-slate-400 font-medium inline-flex items-center gap-1.5 min-w-0">
+              {lessonIsBoss(lesson) && (
+                <span className="inline-flex items-center gap-1 text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-md bg-amber-500/20 text-amber-200 border border-amber-400/40 flex-shrink-0">
+                  ⚔️ Boss Battle
+                </span>
+              )}
+              <span className="truncate">
+                {lesson.emoji} {lesson.title}
+              </span>
             </span>
-            <span className="text-slate-300 tabular-nums font-semibold">
+            <span className="text-slate-300 tabular-nums font-semibold flex-shrink-0">
               {currentIdx + 1} / {total}
             </span>
           </div>

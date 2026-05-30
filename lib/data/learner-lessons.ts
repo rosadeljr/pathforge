@@ -69,6 +69,36 @@ export interface Lesson {
   reviewStatus?: ReviewStatus;
   /** Why this skill matters / how to teach if asked. Internal-only. */
   teacherNotes?: string;
+
+  // ── RPG layer (cosmetic + mechanical reframing — no academic shift) ──
+  /**
+   * When TRUE this lesson is a Realm Boss Battle. Visually elevated in
+   * the lesson player (gold border, "Boss" pill, dramatic done screen)
+   * and only counts as cleared if the kid hits the masteryThreshold.
+   * Default false. Auto-promoted by lessonIsBoss() if not set.
+   */
+  isBoss?: boolean;
+  /**
+   * Crown awarded for boss clears at perfect first-try score. Tracked
+   * separately from regular completion analytics. Drives the "Crown
+   * Count" surfaced to parents.
+   */
+  bossCrown?: "bronze" | "silver" | "gold";
+}
+
+/**
+ * Heuristic: every 5th lesson in a (subject, grade) sequence is a Boss
+ * Battle. Lets us reframe content as RPG mastery checkpoints without
+ * editing every lesson row.
+ */
+export function lessonIsBoss(lesson: Lesson, allLessons: Lesson[] = LESSONS): boolean {
+  if (lesson.isBoss !== undefined) return lesson.isBoss;
+  const cohort = allLessons.filter(
+    (l) => l.subject === lesson.subject && l.grade === lesson.grade
+  );
+  const idx = cohort.findIndex((l) => l.id === lesson.id);
+  // 0-indexed: indexes 4, 9, 14, ... are bosses (every 5th lesson).
+  return idx >= 4 && (idx + 1) % 5 === 0;
 }
 
 export const LESSONS: Lesson[] = [

@@ -26,6 +26,8 @@ import {
 } from "@/lib/data/learner";
 import { LESSONS, type Lesson } from "@/lib/data/learner-lessons";
 import { CAREERS, isCareerUnlocked, getCareer } from "@/lib/data/careers";
+import { REALMS } from "@/lib/data/realms";
+import { guildForCareer, currentRank } from "@/lib/data/guilds";
 import {
   todaysQuests,
   progressForQuest,
@@ -499,28 +501,42 @@ export default function LearnPage() {
                   {dreamCareer ? (
                     <>
                       <Heart size={9} fill="currentColor" />
-                      Working toward
+                      Your Guild
                     </>
                   ) : (
                     <>
                       <Compass size={10} />
-                      Career explorer
+                      Guild Hall
                     </>
                   )}
                 </div>
                 <div className="text-base sm:text-lg font-semibold tracking-tight leading-tight">
-                  {dreamCareer
-                    ? `Future ${dreamCareer.title} 🌟`
-                    : tier === "little"
-                    ? "What do you want to be?"
-                    : tier === "junior"
-                    ? "Discover dream careers"
-                    : "Explore your future path"}
+                  {(() => {
+                    if (!dreamCareer) {
+                      return tier === "little"
+                        ? "What do you want to be?"
+                        : tier === "junior"
+                        ? "Pledge to a Guild"
+                        : "Choose a Guild path";
+                    }
+                    const guild = guildForCareer(dreamCareer.id);
+                    if (guild) {
+                      const { rank } = currentRank(guild, totalXp);
+                      return `${rank.emoji} ${rank.title}`;
+                    }
+                    return `Future ${dreamCareer.title} 🌟`;
+                  })()}
                 </div>
                 <div className="text-xs text-slate-400 mt-0.5">
-                  {dreamCareer
-                    ? dreamCareer.oneLiner
-                    : `${unlockedCareers}/${CAREERS.length} careers discovered · keep learning to unlock more`}
+                  {(() => {
+                    if (!dreamCareer) {
+                      return `${unlockedCareers}/${CAREERS.length} guilds discovered · learn to unlock more`;
+                    }
+                    const guild = guildForCareer(dreamCareer.id);
+                    return guild
+                      ? `${guild.name} — ${dreamCareer.oneLiner}`
+                      : dreamCareer.oneLiner;
+                  })()}
                 </div>
               </div>
               <ArrowRight
@@ -531,7 +547,7 @@ export default function LearnPage() {
           </Link>
         </motion.div>
 
-        {/* Subjects */}
+        {/* Subjects — framed as Knowledge Realms */}
         <motion.div
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
@@ -539,10 +555,10 @@ export default function LearnPage() {
         >
           <div className="flex items-baseline justify-between mb-4">
             <h2 className="text-sm font-semibold text-slate-300 uppercase tracking-wider">
-              {tier === "little" ? "Pick a subject to play" : "Pick a subject"}
+              {tier === "little" ? "Pick a realm to explore" : "Knowledge Realms"}
             </h2>
             <span className="text-xs text-slate-500">
-              {grade ? `Grade ${grade} lessons highlighted` : "Set your grade in Settings"}
+              {grade ? `Grade ${grade} content highlighted` : "Set your grade in Settings"}
             </span>
           </div>
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -725,23 +741,37 @@ function SubjectCard({
           >
             {subject.emoji}
           </motion.div>
-          <div className="flex items-center gap-2 mb-1 flex-wrap">
-            <h3 className="text-base font-semibold tracking-tight">{subject.title}</h3>
-            {isPicked && (
-              <span className="text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-md bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">
-                Picked
-              </span>
-            )}
-            {disabled && (
-              <span className="inline-flex items-center gap-1 text-[10px] font-medium text-slate-500">
-                <Lock size={9} />
-                Soon
-              </span>
-            )}
-          </div>
-          <p className="text-xs text-slate-400 leading-relaxed mb-3 line-clamp-2">
-            {subject.description}
-          </p>
+          {(() => {
+            const realm = REALMS.find((r) => r.subjectId === subject.id);
+            return (
+              <>
+                <div className="flex items-center gap-2 mb-0.5 flex-wrap">
+                  <h3 className="text-base font-semibold tracking-tight">
+                    {realm ? realm.name : subject.title}
+                  </h3>
+                  {isPicked && (
+                    <span className="text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-md bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">
+                      Picked
+                    </span>
+                  )}
+                  {disabled && (
+                    <span className="inline-flex items-center gap-1 text-[10px] font-medium text-slate-500">
+                      <Lock size={9} />
+                      Soon
+                    </span>
+                  )}
+                </div>
+                {realm && (
+                  <div className="text-[10px] uppercase tracking-wider text-slate-500 mb-2">
+                    {subject.title} · Guardian {realm.guardian}
+                  </div>
+                )}
+                <p className="text-xs text-slate-400 leading-relaxed mb-3 line-clamp-2">
+                  {realm ? realm.tagline : subject.description}
+                </p>
+              </>
+            );
+          })()}
           {!disabled && progress && progress.total > 0 && (
             <div className="mb-3">
               <div className="flex items-center justify-between text-[10px] mb-1">

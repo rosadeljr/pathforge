@@ -124,7 +124,7 @@ export default function CareersPage() {
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/[0.04] border border-white/[0.06]">
               <Compass size={11} className="text-amber-400" />
               <span className="text-xs font-medium text-slate-300 tracking-wide">
-                Career explorer
+                Guild Hall
               </span>
             </div>
             <Link

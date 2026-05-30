@@ -16,8 +16,10 @@ import { createClient } from "@/lib/supabase/client";
 import { getSubject, type SubjectId } from "@/lib/data/learner";
 import {
   getLessonsBySubject,
+  lessonIsBoss,
   type Lesson,
 } from "@/lib/data/learner-lessons";
+import { realmForSubject, regionForGrade } from "@/lib/data/realms";
 import { PageShimmer } from "@/components/ui/Shimmer";
 
 export default function SubjectLessonsPage() {
@@ -162,6 +164,48 @@ export default function SubjectLessonsPage() {
               <p className="text-sm text-slate-400">{subject.description}</p>
             </div>
           </motion.div>
+
+          {/* RPG Realm banner — frames the subject as a knowledge realm */}
+          {(() => {
+            const realm = realmForSubject(subject.id as SubjectId);
+            if (!realm) return null;
+            const region = regionForGrade(realm, userGrade);
+            return (
+              <motion.div
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.08 }}
+                className="relative overflow-hidden rounded-2xl border border-white/[0.08] bg-gradient-to-br from-white/[0.04] via-white/[0.02] to-transparent p-4 mt-4"
+              >
+                <div
+                  className="absolute -top-12 -right-12 w-40 h-40 rounded-full opacity-25 pointer-events-none"
+                  style={{
+                    background: `radial-gradient(circle, ${realm.accentColor}, transparent 70%)`,
+                  }}
+                />
+                <div className="relative flex items-center gap-3">
+                  <div className="text-3xl flex-shrink-0">{realm.emoji}</div>
+                  <div className="flex-1 min-w-0">
+                    <div className="text-[10px] uppercase tracking-wider text-slate-500 font-semibold mb-0.5">
+                      Realm · Guardian {realm.guardian}
+                    </div>
+                    <div className="text-sm font-semibold">
+                      {realm.name}
+                      {region && (
+                        <span className="text-slate-400 font-normal">
+                          {" "}
+                          → {region.emoji} {region.name}
+                        </span>
+                      )}
+                    </div>
+                    <div className="text-[11px] text-slate-400 mt-0.5 italic">
+                      {realm.tagline}
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            );
+          })()}
         </div>
 
         {/* Progress */}
@@ -277,6 +321,7 @@ function LessonCard({
   isDone: boolean;
   index: number;
 }) {
+  const isBoss = lessonIsBoss(lesson);
   return (
     <motion.div
       initial={{ opacity: 0, y: 8 }}
@@ -285,35 +330,64 @@ function LessonCard({
     >
       <Link
         href={`/learn/${subjectId}/${lesson.id}`}
-        className="group relative overflow-hidden block rounded-2xl border border-white/[0.06] bg-white/[0.02] p-5 hover:bg-white/[0.04] hover:border-white/[0.12] transition-all"
+        className={`group relative overflow-hidden block rounded-2xl border p-5 transition-all ${
+          isBoss
+            ? "border-amber-400/40 bg-gradient-to-br from-amber-500/[0.10] via-orange-500/[0.04] to-transparent hover:border-amber-400/60"
+            : "border-white/[0.06] bg-white/[0.02] hover:bg-white/[0.04] hover:border-white/[0.12]"
+        }`}
       >
-        <div className="flex items-start justify-between gap-3 mb-3">
-          <div className="text-3xl">{lesson.emoji}</div>
-          {isDone && (
-            <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">
-              <Check size={10} strokeWidth={3} />
-              Done
-            </span>
-          )}
-        </div>
-        <h3 className="text-base font-semibold tracking-tight mb-1">
-          {lesson.title}
-        </h3>
-        <p className="text-xs text-slate-400 leading-relaxed mb-3 line-clamp-2">
-          {lesson.description}
-        </p>
-        <div className="flex items-center gap-3 text-xs">
-          <span className="inline-flex items-center gap-1 text-slate-400">
-            <Sparkles size={11} />
-            {lesson.questions.length} questions
-          </span>
-          <span className="inline-flex items-center gap-1 text-indigo-300 font-semibold">
-            <Zap size={11} />+{lesson.xpReward} XP
-          </span>
-          <ArrowRight
-            size={12}
-            className="ml-auto text-slate-500 group-hover:text-white group-hover:translate-x-0.5 transition-all"
+        {isBoss && (
+          <div
+            className="absolute -top-12 -right-12 w-32 h-32 rounded-full opacity-30 pointer-events-none"
+            style={{
+              background:
+                "radial-gradient(circle, rgba(245,158,11,0.55), transparent 70%)",
+            }}
           />
+        )}
+        <div className="relative">
+          <div className="flex items-start justify-between gap-3 mb-3">
+            <div className="text-3xl">{isBoss ? "⚔️" : lesson.emoji}</div>
+            <div className="flex items-center gap-1.5">
+              {isBoss && (
+                <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md bg-amber-500/20 text-amber-200 border border-amber-400/40">
+                  ⚡ Boss
+                </span>
+              )}
+              {isDone && (
+                <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">
+                  <Check size={10} strokeWidth={3} />
+                  Done
+                </span>
+              )}
+            </div>
+          </div>
+          <h3 className="text-base font-semibold tracking-tight mb-1">
+            {isBoss ? `Boss · ${lesson.title}` : lesson.title}
+          </h3>
+          <p className="text-xs text-slate-400 leading-relaxed mb-3 line-clamp-2">
+            {isBoss
+              ? `Realm checkpoint. Prove mastery to clear ${lesson.title.toLowerCase()}.`
+              : lesson.description}
+          </p>
+          <div className="flex items-center gap-3 text-xs">
+            <span className="inline-flex items-center gap-1 text-slate-400">
+              <Sparkles size={11} />
+              {lesson.questions.length} questions
+            </span>
+            <span
+              className={`inline-flex items-center gap-1 font-semibold ${
+                isBoss ? "text-amber-300" : "text-indigo-300"
+              }`}
+            >
+              <Zap size={11} />+{isBoss ? Math.round(lesson.xpReward * 1.5) : lesson.xpReward}{" "}
+              XP
+            </span>
+            <ArrowRight
+              size={12}
+              className="ml-auto text-slate-500 group-hover:text-white group-hover:translate-x-0.5 transition-all"
+            />
+          </div>
         </div>
       </Link>
     </motion.div>
