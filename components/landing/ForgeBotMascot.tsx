@@ -96,13 +96,13 @@ export function ForgeBotMascot({ size = 380, className = "" }: ForgeBotMascotPro
       onMouseLeave={handleLeave}
       className={`relative inline-block ${className}`}
       style={{
-        // Responsive: maxes out at `size` on large screens, scales down
-        // smoothly on smaller viewports without needing a second DOM copy.
-        width: `min(${size}px, 78vw)`,
-        height: `min(${size}px, 78vw)`,
-        maxWidth: size,
-        maxHeight: size,
-        aspectRatio: "1 / 1",
+        // Identical rendering on web + mobile. The SVG keeps its 400:440
+        // intrinsic aspect ratio via preserveAspectRatio="xMidYMid meet".
+        // On narrow screens we clamp to 90vw so it never overflows.
+        width: `clamp(240px, 90vw, ${size}px)`,
+        // height auto = SVG controls its own intrinsic height (matches the
+        // 400:440 viewBox ratio). This is the key — forcing 1:1 here was
+        // distorting the rendered bot vs. desktop.
         perspective: "1400px",
       }}
     >
@@ -121,7 +121,7 @@ export function ForgeBotMascot({ size = 380, className = "" }: ForgeBotMascotPro
       <motion.div
         animate={{ y: [0, -12, 0, -6, 0] }}
         transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-        style={{ width: "100%", height: "100%" }}
+        style={{ width: "100%" }}
       >
         <motion.div
           style={{
@@ -129,15 +129,18 @@ export function ForgeBotMascot({ size = 380, className = "" }: ForgeBotMascotPro
             rotateX,
             transformStyle: "preserve-3d",
             width: "100%",
-            height: "100%",
           }}
         >
           <svg
             viewBox="0 0 400 440"
             width="100%"
-            height="100%"
+            height="auto"
+            preserveAspectRatio="xMidYMid meet"
             xmlns="http://www.w3.org/2000/svg"
-            style={{ filter: "drop-shadow(0 30px 60px rgba(34,211,238,0.45))" }}
+            style={{
+              display: "block",
+              filter: "drop-shadow(0 30px 60px rgba(34,211,238,0.45))",
+            }}
           >
             <defs>
               {/* ═══ PURE WHITE BODY — bright + crisp, NOT washed out ═══ */}
