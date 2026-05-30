@@ -124,19 +124,32 @@ export default function Leaderboard() {
             : "longest_streak";
 
         const grades = TIER_GRADES[viewTier];
-        const { data } = await supabase
+        const baseFields =
+          "id, username, full_name, current_level, total_xp, streak_count, longest_streak, learner_grade";
+        // Try the privacy-aware query first. If the columns don't exist
+        // yet (PRIVACY_CONTROLS_MIGRATION not run), fall back to the
+        // legacy query so the page still works without the migration.
+        let data: any[] | null = null;
+        const primary = await supabase
           .from("profiles")
-          .select(
-            "id, username, full_name, current_level, total_xp, streak_count, longest_streak, learner_grade, show_on_leaderboard, display_mode"
-          )
+          .select(`${baseFields}, show_on_leaderboard, display_mode`)
           .in("learner_grade", grades)
           .not("username", "is", null)
-          // Honour the parent opt-out — if a kid's account is hidden,
-          // they don't appear in anyone else's leaderboard view. They
-          // still see themselves in their own page (handled client-side).
           .eq("show_on_leaderboard", true)
           .order(orderColumn, { ascending: false })
           .limit(50);
+        if (primary.error) {
+          const fallback = await supabase
+            .from("profiles")
+            .select(baseFields)
+            .in("learner_grade", grades)
+            .not("username", "is", null)
+            .order(orderColumn, { ascending: false })
+            .limit(50);
+          data = fallback.data;
+        } else {
+          data = primary.data;
+        }
 
         if (!cancelled) setEntries((data as LeaderboardEntry[]) || []);
       } catch (e) {
