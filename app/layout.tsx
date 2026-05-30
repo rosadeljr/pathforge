@@ -4,6 +4,7 @@ import { Analytics } from "@vercel/analytics/react";
 import { Inter } from "next/font/google";
 import { AppToaster } from "@/components/ui/AppToaster";
 import { ThemeProvider } from "@/components/theme/ThemeProvider";
+import { Pixels } from "@/components/marketing/Pixels";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -109,6 +110,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           {children}
           <AppToaster />
           <Analytics />
+          <Pixels />
         </ThemeProvider>
       </body>
     </html>

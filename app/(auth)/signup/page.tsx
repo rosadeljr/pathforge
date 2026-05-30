@@ -9,6 +9,7 @@ import Link from "next/link";
 import { Logo } from "@/components/brand/Logo";
 import { GoogleButton } from "@/components/auth/GoogleButton";
 import { track } from "@/lib/analytics/track";
+import { trackConversion, readUtm } from "@/lib/marketing/track";
 import {
   AlertCircle,
   Mail,
@@ -222,8 +223,12 @@ export default function SignUp() {
 
       // Check if email confirmation is required
       if (data.session) {
-        // Track signup event (fire-and-forget)
-        track(supabase, data.user.id, "signup", { payload: { username, email, role } });
+        // Track signup — internal analytics + paid-ad pixels
+        const utm = readUtm();
+        track(supabase, data.user.id, "signup", {
+          payload: { username, email, role, ...utm },
+        });
+        trackConversion("Lead", { contentName: role });
         toast.success("Welcome to PathForge");
         // Parents go straight to /parent. Kids go to setup.
         window.location.href = isParent ? "/parent" : "/learn/setup";
