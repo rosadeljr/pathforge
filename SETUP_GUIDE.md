@@ -12,7 +12,8 @@ Complete guide to set up, develop, and deploy PathForge locally or to production
 - **GitHub** account (for deployment)
 - **Supabase** account (for database)
 - **OpenAI** API key (for AI mentor)
-- **Stripe** account (optional, for payments)
+- **PayMongo** account (for automated GCash + Maya payments)
+- **Resend** account (for transactional email)
 
 ---
 
@@ -50,9 +51,13 @@ AI_PROVIDER=openai
 # OpenAI (for AI Mentor)
 OPENAI_API_KEY=sk-your-key-here
 
-# Stripe (optional for payments)
-STRIPE_SECRET_KEY=sk_test_your-stripe-key-here
-STRIPE_WEBHOOK_SECRET=whsec_your-webhook-secret-here
+# PayMongo (GCash + Maya, automated)
+PAYMONGO_SECRET_KEY=sk_test_your-paymongo-key-here
+PAYMONGO_WEBHOOK_SECRET=whsec_your-paymongo-webhook-secret-here
+
+# Resend (transactional email)
+RESEND_API_KEY=re_your-resend-key-here
+EMAIL_FROM=PathForge <noreply@your-verified-domain.com>
 
 # Node Environment
 NODE_ENV=development
@@ -232,20 +237,22 @@ Get AI mentor response
 }
 ```
 
-### POST /api/checkout
-Create Stripe checkout session
+### POST /api/paymongo/create-source
+Create a PayMongo Source (hosted checkout for GCash / Maya)
 
 **Request:**
 ```json
 {
-  "tier": "pro"
+  "tier": "pro" | "family",
+  "method": "gcash" | "paymaya"
 }
 ```
 
 **Response:**
 ```json
 {
-  "url": "https://checkout.stripe.com/..."
+  "checkoutUrl": "https://...",
+  "paymentRequestId": "uuid"
 }
 ```
 
@@ -263,8 +270,9 @@ Get user stats
 }
 ```
 
-### POST /api/webhooks/stripe
-Stripe webhook handler (internal)
+### POST /api/paymongo/webhook
+PayMongo signed webhook (internal — handles source.chargeable,
+payment.paid, payment.failed)
 
 ---
 
@@ -324,8 +332,10 @@ vercel deploy --prod
    - NEXT_PUBLIC_SUPABASE_ANON_KEY
    - SUPABASE_SERVICE_ROLE_KEY
    - OPENAI_API_KEY
-   - STRIPE_SECRET_KEY
-   - STRIPE_WEBHOOK_SECRET
+   - PAYMONGO_SECRET_KEY
+   - PAYMONGO_WEBHOOK_SECRET
+   - RESEND_API_KEY
+   - EMAIL_FROM
 
 ---
 
@@ -479,7 +489,7 @@ npm run format # Format with Prettier
 ## Security Best Practices
 
 1. **Environment Variables**: Never commit `.env.local`
-2. **API Keys**: Rotate OpenAI/Stripe keys regularly
+2. **API Keys**: Rotate OpenAI/PayMongo/Resend keys regularly
 3. **RLS Policies**: Always enable RLS on user tables
 4. **HTTPS**: Use HTTPS in production
 5. **CORS**: Configure CORS headers properly
@@ -493,7 +503,8 @@ npm run format # Format with Prettier
 - **Supabase Docs**: https://supabase.com/docs
 - **Tailwind CSS**: https://tailwindcss.com/docs
 - **OpenAI API**: https://platform.openai.com/docs
-- **Stripe Docs**: https://stripe.com/docs
+- **PayMongo Docs**: https://developers.paymongo.com/
+- **Resend Docs**: https://resend.com/docs
 
 ---
 

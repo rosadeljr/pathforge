@@ -73,7 +73,7 @@ Total setup time: 30-40 minutes to production!
 
 NEXT FEATURES:
 • OpenAI integration (code ready)
-• Payment processing (Stripe)
+• Payment processing (PayMongo — automated GCash + Maya)
 • Email notifications
 • Image uploads
 • Real-time updates

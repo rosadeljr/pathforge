@@ -27,8 +27,8 @@ Complete technical architecture and component relationships.
 │  └──────────────────────────────────────────────────┘   │
 └─────────────────────────────────────────────────────────┘
         ↓                    ↓                    ↓
-   Supabase          OpenAI API           Stripe API
-   (Database)      (AI Mentor)          (Payments)
+   Supabase          OpenAI API          PayMongo API
+   (Database)      (AI Mentor)          (GCash + Maya)
 ```
 
 ---
@@ -215,31 +215,35 @@ Send message to AI mentor
 }
 ```
 
-### POST /api/checkout
-Create Stripe session
+### POST /api/paymongo/create-source
+Create a PayMongo Source (GCash or Maya hosted checkout)
 
 **Request:**
 ```json
 {
-  "tier": "pro" | "elite"
+  "tier": "pro" | "family",
+  "method": "gcash" | "paymaya"
 }
 ```
 
 **Response:**
 ```json
 {
-  "sessionId": "string",
-  "url": "string"
+  "checkoutUrl": "string",
+  "paymentRequestId": "string"
 }
 ```
 
-### POST /api/webhooks/stripe
-Handle Stripe events
+### POST /api/paymongo/webhook
+Handle PayMongo signed events
 
 **Handled Events:**
-- `customer.subscription.created`
-- `customer.subscription.updated`
-- `customer.subscription.deleted`
+- `source.chargeable` — capture the source by creating a Payment
+- `payment.paid` — mark approved, upgrade `profiles.subscription_tier`
+- `payment.failed` — mark rejected
+
+Signature verified via HMAC-SHA256 of `${ts}.${rawBody}` with 5-minute
+replay window.
 
 ---
 
@@ -255,7 +259,6 @@ CREATE TABLE profiles (
   xp INTEGER DEFAULT 0,
   current_streak INTEGER DEFAULT 0,
   subscription_tier TEXT DEFAULT 'free',
-  stripe_customer_id TEXT,
   created_at TIMESTAMP DEFAULT now(),
   updated_at TIMESTAMP DEFAULT now()
 );
@@ -325,7 +328,7 @@ CREATE TABLE ai_messages (
 - CORS configured properly
 - Sensitive env vars not exposed to client
 - API keys stored on server only
-- Stripe PCI compliance
+- PayMongo handles all wallet/card PCI scope — we never see PINs or card details
 
 ---
 
@@ -491,22 +494,27 @@ Available at pathforge-zeta.vercel.app
 
 ### External Services
 1. **Supabase**: PostgreSQL database, auth, storage
-2. **OpenAI**: GPT-3.5-turbo for AI mentor
-3. **Stripe**: Payment processing
-4. **Vercel**: Hosting & deployment
-5. **GitHub**: Version control
+2. **OpenAI**: gpt-4o + omni-moderation for AI mentor (kid-safe)
+3. **PayMongo**: Automated GCash + Maya payments (hosted checkout + webhooks)
+4. **Resend**: Transactional email (weekly parent reports, payment notifications)
+5. **Vercel**: Hosting, serverless functions, cron jobs
+6. **GitHub**: Version control
 
 ### Webhook Endpoints
-- `/api/webhooks/stripe` - Stripe payment events
-- Future: Auth events, Analytics events
+- `/api/paymongo/webhook` — PayMongo `source.chargeable`, `payment.paid`,
+  `payment.failed` (signed; auto-upgrades tier on payment.paid)
+- `/api/cron/reengagement` — daily re-engagement emails (Vercel Cron)
+- `/api/cron/weekly-progress` — Sunday parent progress digest (Vercel Cron)
 
 ### SDKs Used
-- `@supabase/supabase-js` - Database & auth
-- `openai` - AI API
-- `stripe` - Payments
-- `zod` - Validation
-- `framer-motion` - Animations
-- `recharts` - Charts
+- `@supabase/supabase-js` + `@supabase/ssr` — Database & auth
+- `openai` — AI API
+- `resend` — Transactional email
+- `zod` — Validation
+- `framer-motion` — Animations
+- `recharts` — Charts
+
+(Payments use the PayMongo REST API directly via fetch — no SDK.)
 
 ---
 

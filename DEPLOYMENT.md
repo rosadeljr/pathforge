@@ -139,9 +139,10 @@ To add more features:
    - Use OPENAI_API_KEY env var
 
 2. **Payments**
-   - npm install stripe
-   - Create /app/api/checkout route
-   - Add Stripe webhook handling
+   - Configure PAYMONGO_SECRET_KEY and PAYMONGO_WEBHOOK_SECRET on Vercel
+   - Register webhook in PayMongo dashboard pointing at
+     /api/paymongo/webhook (events: source.chargeable, payment.paid,
+     payment.failed)
 
 3. **Image Uploads**
    - Use Supabase Storage

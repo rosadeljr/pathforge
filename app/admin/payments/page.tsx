@@ -90,8 +90,7 @@ export default function AdminPaymentsPage() {
         .eq("id", req.user_id);
       if (e2) throw e2;
 
-      // 3) create subscription record (non-fatal — base columns only,
-      //    so it works whether or not the Stripe migration ran)
+      // 3) create subscription record (non-fatal — best-effort log)
       try {
         await supabase.from("subscriptions").insert({
           user_id: req.user_id,

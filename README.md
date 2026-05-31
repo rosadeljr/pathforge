@@ -48,7 +48,7 @@ Filipino families spend on tutoring, modules, and review centres because schools
 | Database / Auth | Supabase (Postgres + RLS) |
 | AI tutor | OpenAI (gpt-4o + omni-moderation) |
 | Email | Resend |
-| Payments | Manual GCash/Maya now; Stripe wired for later |
+| Payments | PayMongo (automated GCash + Maya) with manual proof-upload fallback |
 | PWA | Manifest + iOS install prompt + safe-area handling |
 | Hosting | Vercel |
 
@@ -66,7 +66,7 @@ app/
     leaderboard/    age-tier leaderboard
   (auth)/           login + signup
   (marketing)/      pricing, privacy, terms, cookies
-  api/              ai-mentor, webhooks/stripe, cron, etc.
+  api/              ai-mentor, paymongo (create-source/webhook/return), cron, etc.
   admin/            staff-only admin pages
 components/         UI primitives, landing widgets, mascot, PWA install prompt
 lib/

@@ -4,7 +4,7 @@
 - GitHub account (https://github.com)
 - Vercel account (sign up with GitHub at https://vercel.com)
 - OpenAI API key (optional but recommended)
-- Stripe account (optional but for payments)
+- PayMongo account (for automated GCash + Maya payments)
 
 ## Step 1: Push Code to GitHub
 
@@ -58,8 +58,8 @@ SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhY
 NEXT_PUBLIC_APP_URL=https://your-project.vercel.app
 AI_PROVIDER=openai
 OPENAI_API_KEY=sk_your_openai_key_here
-STRIPE_SECRET_KEY=sk_test_your_stripe_key_here
-STRIPE_WEBHOOK_SECRET=whsec_your_webhook_secret_here
+PAYMONGO_SECRET_KEY=sk_test_your_paymongo_key_here
+PAYMONGO_WEBHOOK_SECRET=whsec_your_paymongo_webhook_secret_here
 ```
 
 8. Click "Deploy"
@@ -84,19 +84,19 @@ After deployment:
 
 Now your AI Mentor will have real OpenAI responses!
 
-## Step 5: Setup Stripe (Optional for Payments)
+## Step 5: Setup PayMongo (for Payments)
 
-1. Create Stripe account at https://stripe.com
-2. Get your API keys: https://dashboard.stripe.com/apikeys
+1. Create PayMongo account at https://paymongo.com
+2. Get your API keys: Dashboard → Settings → Developers → API keys
 3. Copy:
-   - Secret key → `STRIPE_SECRET_KEY`
-   - Publishable key → `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`
-4. Setup webhook: https://dashboard.stripe.com/webhooks
-   - Endpoint: `https://your-domain.vercel.app/api/webhooks/stripe`
-   - Events: `customer.subscription.created`, `customer.subscription.updated`, `customer.subscription.deleted`
-   - Copy webhook secret → `STRIPE_WEBHOOK_SECRET`
-5. Add all to Vercel environment variables
-6. Redeploy
+   - Secret key → `PAYMONGO_SECRET_KEY`
+4. Create a webhook endpoint (Dashboard → Developers → Webhooks):
+   - URL: `https://your-domain.vercel.app/api/paymongo/webhook`
+   - Events: `source.chargeable`, `payment.paid`, `payment.failed`
+   - Copy the signing secret → `PAYMONGO_WEBHOOK_SECRET`
+5. Add both to Vercel environment variables (server-side; do not prefix
+   with `NEXT_PUBLIC_`).
+6. Redeploy.
 
 ## Step 6: Test on Production
 
@@ -105,7 +105,8 @@ Now your AI Mentor will have real OpenAI responses!
 3. Go through onboarding
 4. Complete a quest
 5. Check AI Mentor (if OpenAI key added)
-6. Check Pricing page (if Stripe added)
+6. Check Pricing page → upgrade with PayMongo test keys (sandbox
+   GCash / Maya simulators run the full flow without real money)
 
 ## Troubleshooting
 
@@ -125,9 +126,11 @@ Now your AI Mentor will have real OpenAI responses!
 - Check Vercel logs for errors
 
 ### "Payment button not working"
-- Verify STRIPE_SECRET_KEY is set
-- Check webhook is configured correctly
-- Test in Stripe test mode first
+- Verify PAYMONGO_SECRET_KEY and PAYMONGO_WEBHOOK_SECRET are set
+- Check the webhook endpoint is registered in PayMongo dashboard
+  with events: source.chargeable, payment.paid, payment.failed
+- Test with PayMongo sandbox keys first (sk_test_… + the simulated
+  GCash/Maya checkout)
 
 ## Automatic Deployments
 

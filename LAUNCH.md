@@ -56,14 +56,16 @@ RESEND_API_KEY                        — Resend API key
 EMAIL_FROM                            — e.g. "PathForge <noreply@pathforger.app>"
 ```
 
-**Payments — RENAME these from the old career-mode setup:**
+**Payments (PayMongo — automated GCash + Maya):**
 
 ```
-STRIPE_PRICE_PRO                      — Pro plan ₱149/mo Stripe price id
-STRIPE_PRICE_FAMILY                   — Family plan ₱299/mo Stripe price id  (was STRIPE_PRICE_ELITE)
-STRIPE_SECRET_KEY
-STRIPE_WEBHOOK_SECRET
+PAYMONGO_SECRET_KEY                   — sk_test_… (then sk_live_… for prod)
+PAYMONGO_WEBHOOK_SECRET               — whsec_… (from webhook endpoint detail in PayMongo dashboard)
 ```
+
+Register the webhook in the PayMongo dashboard pointing at
+`https://your-domain/api/paymongo/webhook` and subscribe to:
+`source.chargeable`, `payment.paid`, `payment.failed`.
 
 **Cron + admin:**
 
@@ -78,16 +80,23 @@ CRON_SECRET                           — random 32-byte hex string, used by /ap
 
 ---
 
-## 3. Stripe price setup
+## 3. PayMongo setup
 
-In the Stripe dashboard (Products):
+Prices are hard-coded in `app/api/paymongo/create-source/route.ts`
+(Pro ₱149, Family ₱299). No product setup required in the PayMongo
+dashboard — Sources are created on-demand with the correct amount.
 
-| Product | Price | Recurrence | Env var |
-|---|---|---|---|
-| PathForge Pro | ₱149 PHP | monthly | `STRIPE_PRICE_PRO` |
-| PathForge Family | ₱299 PHP | monthly | `STRIPE_PRICE_FAMILY` |
+Required dashboard work:
 
-(GCash/Maya is the primary payment method — Stripe is for international card customers if you add that later.)
+1. Get your API keys (Settings → Developers → API keys).
+2. Create a webhook endpoint pointing at
+   `https://your-domain/api/paymongo/webhook`.
+3. Subscribe the webhook to `source.chargeable`, `payment.paid`,
+   `payment.failed`. Copy the signing secret into `PAYMONGO_WEBHOOK_SECRET`.
+
+A manual GCash/Maya proof-upload flow is also available as a fallback
+from inside the PayMongo sheet — no extra setup needed; payments land
+in `payment_requests` for admin review at `/admin/payments`.
 
 ---
 
@@ -183,7 +192,7 @@ Use a fresh incognito browser. Test as a **kid** first, then as a **parent**.
 - [ ] Supabase logs for slow queries / RLS denials
 - [ ] OpenAI usage dashboard for tutor costs
 - [ ] Resend dashboard for email delivery
-- [ ] Stripe / GCash for paid signups
+- [ ] PayMongo dashboard for paid signups
 - [ ] User feedback channel (Discord / email / form)
 
 ---
