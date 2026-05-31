@@ -26,6 +26,11 @@ import {
   getStages,
   currentStageIndex,
 } from "@/lib/data/careers";
+import {
+  guildForCareer,
+  currentRank,
+  unlockedRewards,
+} from "@/lib/data/guilds";
 import { SUBJECTS, ageTierForGrade } from "@/lib/data/learner";
 import { getLessonsBySubject } from "@/lib/data/learner-lessons";
 import { PageShimmer } from "@/components/ui/Shimmer";
@@ -248,6 +253,217 @@ export default function CareerDetailPage() {
             )}
           </div>
         </motion.div>
+
+        {/* ─── GUILD HALL ─── only when this career has a guild ladder ─── */}
+        {unlocked && (() => {
+          const guild = guildForCareer(career.id);
+          if (!guild) return null;
+          const { idx: rankIdx, rank } = currentRank(guild, totalXp);
+          const unlocked_rewards = unlockedRewards(guild, totalXp);
+          const unlockedSet = new Set(unlocked_rewards.map((r) => r.id));
+          return (
+            <motion.div
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.03 }}
+              className="relative overflow-hidden rounded-3xl border p-5 sm:p-6"
+              style={{
+                borderColor: `${career.accentColor}50`,
+                background: `linear-gradient(135deg, ${career.accentColor}1F, transparent 70%)`,
+              }}
+            >
+              <div
+                className="absolute -bottom-24 -right-24 w-64 h-64 rounded-full opacity-25 pointer-events-none"
+                style={{
+                  background: `radial-gradient(circle, ${career.accentColor}, transparent 70%)`,
+                }}
+              />
+              <div className="relative">
+                {/* Guild header */}
+                <div className="flex items-baseline justify-between mb-3 flex-wrap gap-2">
+                  <div className="inline-flex items-center gap-1.5">
+                    <span
+                      className="text-[10px] font-bold uppercase tracking-wider"
+                      style={{ color: career.accentColor }}
+                    >
+                      🏛️ Guild Hall
+                    </span>
+                  </div>
+                  <span className="text-[10px] text-slate-400 tabular-nums">
+                    Rank {rankIdx + 1} of {guild.ranks.length}
+                  </span>
+                </div>
+                <h2 className="text-lg sm:text-xl font-bold tracking-tight mb-1">
+                  {guild.name}
+                </h2>
+                <p className="text-xs text-slate-300 leading-relaxed mb-3">
+                  {guild.description}
+                </p>
+
+                {/* Master quote */}
+                <div
+                  className="text-xs italic text-slate-200 leading-relaxed mb-4 pl-3 border-l-2"
+                  style={{ borderColor: career.accentColor }}
+                >
+                  "{guild.masterQuote}"
+                  <div className="not-italic text-[10px] text-slate-400 mt-0.5">
+                    — {guild.masterTitle}
+                  </div>
+                </div>
+
+                {/* Current rank pill */}
+                <div className="flex items-center gap-2 mb-4 flex-wrap">
+                  <motion.div
+                    animate={{ scale: [1, 1.05, 1] }}
+                    transition={{ duration: 2, repeat: Infinity }}
+                    className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold"
+                    style={{
+                      backgroundColor: `${career.accentColor}25`,
+                      color: career.accentColor,
+                      border: `1px solid ${career.accentColor}55`,
+                    }}
+                  >
+                    <span className="text-base">{rank.emoji}</span>
+                    Your rank: {rank.title}
+                  </motion.div>
+                </div>
+
+                {/* Rank ladder — horizontal pills */}
+                <div className="text-[10px] uppercase tracking-wider text-slate-500 font-semibold mb-2">
+                  Rank ladder
+                </div>
+                <div className="grid grid-cols-5 gap-1.5 mb-5">
+                  {guild.ranks.map((r, i) => {
+                    const reached = i <= rankIdx;
+                    const isCurrent = i === rankIdx;
+                    return (
+                      <div
+                        key={i}
+                        className={`relative p-2 rounded-lg text-center transition-all ${
+                          reached
+                            ? "bg-white/[0.04] border border-white/[0.10]"
+                            : "bg-white/[0.02] border border-white/[0.04]"
+                        }`}
+                        title={`${r.title} · ${r.xpThreshold.toLocaleString()} XP`}
+                      >
+                        <div
+                          className={`text-lg leading-none ${
+                            reached ? "" : "opacity-30 grayscale"
+                          }`}
+                        >
+                          {r.emoji}
+                        </div>
+                        <div
+                          className={`text-[8px] font-semibold leading-tight mt-1 ${
+                            reached ? "text-white" : "text-slate-600"
+                          }`}
+                        >
+                          {r.title}
+                        </div>
+                        {isCurrent && (
+                          <motion.div
+                            animate={{ opacity: [0.4, 1, 0.4] }}
+                            transition={{ duration: 2, repeat: Infinity }}
+                            className="absolute inset-0 rounded-lg pointer-events-none"
+                            style={{
+                              boxShadow: `inset 0 0 0 1px ${career.accentColor}`,
+                            }}
+                          />
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* Progress to next rank */}
+                {rankIdx < guild.ranks.length - 1 && (
+                  <>
+                    <div className="flex items-baseline justify-between text-[10px] mb-1">
+                      <span className="text-slate-400">
+                        Next: {guild.ranks[rankIdx + 1].emoji}{" "}
+                        {guild.ranks[rankIdx + 1].title}
+                      </span>
+                      <span className="text-slate-300 tabular-nums font-semibold">
+                        {totalXp.toLocaleString()} /{" "}
+                        {guild.ranks[rankIdx + 1].xpThreshold.toLocaleString()} XP
+                      </span>
+                    </div>
+                    <div className="h-1.5 rounded-full bg-white/[0.06] overflow-hidden mb-5">
+                      <motion.div
+                        initial={{ width: 0 }}
+                        animate={{
+                          width: `${Math.min(
+                            100,
+                            ((totalXp - rank.xpThreshold) /
+                              Math.max(
+                                1,
+                                guild.ranks[rankIdx + 1].xpThreshold -
+                                  rank.xpThreshold
+                              )) *
+                              100
+                          )}%`,
+                        }}
+                        transition={{ duration: 0.8, delay: 0.2 }}
+                        className="h-full rounded-full"
+                        style={{
+                          background: `linear-gradient(90deg, ${career.accentColor}, ${career.accentColor}dd)`,
+                          boxShadow: `0 0 8px ${career.accentColor}80`,
+                        }}
+                      />
+                    </div>
+                  </>
+                )}
+
+                {/* Cosmetic rewards */}
+                <div className="text-[10px] uppercase tracking-wider text-slate-500 font-semibold mb-2 inline-flex items-center gap-1.5">
+                  <span>🎖️</span>
+                  Cosmetic rewards
+                </div>
+                <div className="grid grid-cols-3 gap-2">
+                  {guild.rewards.map((r) => {
+                    const isUnlocked = unlockedSet.has(r.id);
+                    return (
+                      <div
+                        key={r.id}
+                        className={`relative p-2.5 rounded-xl border text-center transition-all ${
+                          isUnlocked
+                            ? "border-white/[0.16] bg-white/[0.04]"
+                            : "border-white/[0.06] bg-white/[0.02]"
+                        }`}
+                        title={r.earnedBy}
+                      >
+                        <div
+                          className={`text-xl leading-none ${
+                            isUnlocked ? "" : "opacity-30 grayscale"
+                          }`}
+                        >
+                          {r.emoji}
+                        </div>
+                        <div
+                          className={`text-[10px] font-semibold leading-tight mt-1 ${
+                            isUnlocked ? "text-white" : "text-slate-500"
+                          }`}
+                        >
+                          {r.name}
+                        </div>
+                        <div
+                          className={`text-[8px] mt-0.5 ${
+                            isUnlocked ? "text-emerald-300" : "text-slate-600"
+                          }`}
+                        >
+                          {isUnlocked ? "✓ Earned" : r.earnedBy}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+                <p className="text-[10px] text-slate-500 mt-3 italic">
+                  Cosmetic only · earned through learning · no shortcut purchase
+                </p>
+              </div>
+            </motion.div>
+          );
+        })()}
 
         {/* ─── ADVENTURE JOURNEY ─── always shown so kids see the path */}
         <motion.div
@@ -521,7 +737,7 @@ export default function CareerDetailPage() {
             <div className="grid grid-cols-2 gap-2.5">
               <div className="p-3 rounded-xl bg-white/[0.02] border border-white/[0.06]">
                 <div className="text-[10px] uppercase tracking-wider text-slate-500 font-semibold mb-1">
-                  Senior High track
+                  Senior High strand (after Grade 10)
                 </div>
                 <div className="text-sm font-semibold">{career.collegeTrack}</div>
               </div>

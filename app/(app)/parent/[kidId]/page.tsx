@@ -8,7 +8,6 @@ import {
   ArrowLeft,
   Flame,
   Sparkles,
-  BookOpen,
   Heart,
   Star,
   Trophy,
@@ -37,12 +36,25 @@ interface Kid {
   last_quest_completed_at: string | null;
 }
 
+interface LessonEventPayload {
+  lesson_id?: string;
+  subject?: string;
+  grade?: number;
+  first_try_pct?: number;
+  mastery_passed?: boolean;
+  is_boss?: boolean;
+  boss_cleared?: boolean;
+  hints_used?: number;
+  flawless?: boolean;
+}
+
 export default function KidDetailPage() {
   const params = useParams();
   const supabase = createClient();
   const kidId = (params?.kidId as string) || "";
   const [kid, setKid] = useState<Kid | null>(null);
   const [completedLessonIds, setCompletedLessonIds] = useState<Set<string>>(new Set());
+  const [eventPayloads, setEventPayloads] = useState<LessonEventPayload[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -63,8 +75,12 @@ export default function KidDetailPage() {
             .eq("event_type", "lesson_completed"),
         ]);
         setKid((kidData as Kid) || null);
+        const payloads = (events || [])
+          .map((e: any) => e?.event_payload)
+          .filter(Boolean) as LessonEventPayload[];
+        setEventPayloads(payloads);
         setCompletedLessonIds(
-          new Set((events || []).map((e: any) => e?.event_payload?.lesson_id).filter(Boolean))
+          new Set(payloads.map((p) => p.lesson_id).filter(Boolean) as string[])
         );
       } catch (e) {
         console.error("Kid detail load error:", e);
@@ -81,9 +97,115 @@ export default function KidDetailPage() {
       const done = LESSONS.filter(
         (l) => l.subject === s.id && completedLessonIds.has(l.id)
       ).length;
-      return { subject: s, total, done };
+      // Mastery score for this subject = mean first_try_pct across all
+      // completed lessons of that subject. Null when no completions yet.
+      const subjectEvents = eventPayloads.filter((p) => p.subject === s.id);
+      const masteryAvg = subjectEvents.length
+        ? Math.round(
+            subjectEvents.reduce((sum, p) => sum + (p.first_try_pct ?? 0), 0) /
+              subjectEvents.length
+          )
+        : null;
+      const masteryWins = subjectEvents.filter((p) => p.mastery_passed).length;
+      return { subject: s, total, done, masteryAvg, masteryWins };
     });
-  }, [completedLessonIds]);
+  }, [completedLessonIds, eventPayloads]);
+
+  /** Strongest = highest masteryAvg with at least 2 completions. */
+  const strongestSubject = useMemo(() => {
+    const eligible = subjectProgress.filter(
+      (sp) => sp.masteryAvg !== null && sp.done >= 2
+    );
+    if (!eligible.length) return null;
+    return eligible.reduce((a, b) =>
+      (a.masteryAvg ?? 0) >= (b.masteryAvg ?? 0) ? a : b
+    );
+  }, [subjectProgress]);
+
+  /** Growth = picked subject with lowest masteryAvg (or 0 completions). */
+  const growthSubject = useMemo(() => {
+    const picked = kid?.learner_subjects || [];
+    const inPicked = subjectProgress.filter(
+      (sp) => picked.length === 0 || picked.includes(sp.subject.id)
+    );
+    if (!inPicked.length) return null;
+    // Prefer a picked subject with the LOWEST mastery (real gap) over one
+    // they've never tried (no signal yet). Tie-break by fewest completions.
+    const withSignal = inPicked.filter((sp) => sp.masteryAvg !== null);
+    if (withSignal.length) {
+      return withSignal.reduce((a, b) =>
+        (a.masteryAvg ?? 100) <= (b.masteryAvg ?? 100) ? a : b
+      );
+    }
+    return inPicked.reduce((a, b) => (a.done <= b.done ? a : b));
+  }, [subjectProgress, kid?.learner_subjects]);
+
+  /** Recommended next action — single human-voice sentence for parents. */
+  const recommendedNext = useMemo(() => {
+    if (!kid) return null;
+    const totalDone = completedLessonIds.size;
+    if (totalDone === 0) {
+      return {
+        emoji: "🌱",
+        title: "Help them start their first quest",
+        detail:
+          "Sit with them for 3 minutes. Cheer when they finish — first-lesson confidence sets the habit.",
+      };
+    }
+    const recentEvents = eventPayloads.slice(-5);
+    const recentMastery =
+      recentEvents.length > 0
+        ? recentEvents.reduce((sum, p) => sum + (p.first_try_pct ?? 0), 0) /
+          recentEvents.length
+        : 0;
+    if (recentMastery < 60 && growthSubject) {
+      return {
+        emoji: "📖",
+        title: `Review ${growthSubject.subject.title} together`,
+        detail: `Recent first-try scores are around ${Math.round(recentMastery)}%. Replaying lessons builds mastery — not failure, just repetition.`,
+      };
+    }
+    if ((kid.streak_count || 0) === 0 && totalDone > 0) {
+      return {
+        emoji: "🔥",
+        title: "Bring back the streak",
+        detail:
+          "It's been a quiet day. One short lesson tonight keeps the daily habit alive.",
+      };
+    }
+    if (!kid.dream_career_id) {
+      return {
+        emoji: "🧭",
+        title: "Pick a Dream Guild",
+        detail:
+          "Choosing a dream career gives every lesson a 'why'. Ask: 'What do you want to be?'",
+      };
+    }
+    if (strongestSubject) {
+      return {
+        emoji: "🏆",
+        title: `Celebrate progress in ${strongestSubject.subject.title}`,
+        detail: `Mastery average is ${strongestSubject.masteryAvg}% — tell them specifically what they're getting good at.`,
+      };
+    }
+    return {
+      emoji: "✨",
+      title: "Keep the rhythm",
+      detail: "Daily play + weekly celebration. That's the loop.",
+    };
+  }, [
+    kid,
+    completedLessonIds.size,
+    eventPayloads,
+    growthSubject,
+    strongestSubject,
+  ]);
+
+  /** Boss crowns earned — surfaced as a parent-facing mastery signal. */
+  const bossCrowns = useMemo(
+    () => eventPayloads.filter((p) => p.boss_cleared).length,
+    [eventPayloads]
+  );
 
   if (loading) return <PageShimmer />;
   if (!kid) {
@@ -167,12 +289,101 @@ export default function KidDetailPage() {
             accent="#f59e0b"
           />
           <Stat
-            label="Lessons"
-            value={completedLessonIds.size}
-            icon={BookOpen}
-            accent="#10b981"
+            label="Crowns"
+            value={bossCrowns}
+            icon={Trophy}
+            accent="#fbbf24"
           />
         </motion.div>
+
+        {/* Recommended next action — the most actionable card for a parent. */}
+        {recommendedNext && (
+          <motion.div
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.07 }}
+            className="relative overflow-hidden rounded-3xl border border-indigo-400/25 bg-gradient-to-br from-indigo-500/[0.10] via-purple-500/[0.05] to-transparent p-5"
+          >
+            <div
+              className="absolute -top-16 -right-16 w-48 h-48 rounded-full opacity-25 pointer-events-none"
+              style={{
+                background:
+                  "radial-gradient(circle, rgba(99,102,241,0.5), transparent 70%)",
+              }}
+            />
+            <div className="relative flex items-start gap-3.5">
+              <div className="text-3xl flex-shrink-0">{recommendedNext.emoji}</div>
+              <div className="flex-1 min-w-0">
+                <div className="text-[10px] uppercase tracking-wider text-indigo-300 font-bold mb-1">
+                  Recommended next
+                </div>
+                <div className="text-base sm:text-lg font-semibold tracking-tight mb-1 leading-tight">
+                  {recommendedNext.title}
+                </div>
+                <div className="text-xs text-slate-300 leading-relaxed">
+                  {recommendedNext.detail}
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        )}
+
+        {/* Strongest + Growth — narrative parent-friendly summary */}
+        {(strongestSubject || growthSubject) && (
+          <motion.div
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.09 }}
+            className="grid sm:grid-cols-2 gap-3"
+          >
+            {strongestSubject && (
+              <div className="rounded-2xl border border-emerald-400/25 bg-gradient-to-br from-emerald-500/[0.08] to-transparent p-4">
+                <div className="text-[10px] uppercase tracking-wider text-emerald-300 font-bold mb-1 inline-flex items-center gap-1.5">
+                  <span>💪</span> Strongest subject
+                </div>
+                <div className="flex items-center gap-2.5 mt-2">
+                  <div
+                    className={`w-9 h-9 rounded-xl bg-gradient-to-br ${strongestSubject.subject.gradient} flex items-center justify-center text-lg`}
+                  >
+                    {strongestSubject.subject.emoji}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="text-sm font-semibold truncate">
+                      {strongestSubject.subject.title}
+                    </div>
+                    <div className="text-[11px] text-emerald-300 font-semibold tabular-nums">
+                      {strongestSubject.masteryAvg}% first-try mastery
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+            {growthSubject && growthSubject !== strongestSubject && (
+              <div className="rounded-2xl border border-amber-400/25 bg-gradient-to-br from-amber-500/[0.08] to-transparent p-4">
+                <div className="text-[10px] uppercase tracking-wider text-amber-300 font-bold mb-1 inline-flex items-center gap-1.5">
+                  <span>🌱</span> Growth opportunity
+                </div>
+                <div className="flex items-center gap-2.5 mt-2">
+                  <div
+                    className={`w-9 h-9 rounded-xl bg-gradient-to-br ${growthSubject.subject.gradient} flex items-center justify-center text-lg`}
+                  >
+                    {growthSubject.subject.emoji}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="text-sm font-semibold truncate">
+                      {growthSubject.subject.title}
+                    </div>
+                    <div className="text-[11px] text-amber-300 font-semibold tabular-nums">
+                      {growthSubject.masteryAvg !== null
+                        ? `${growthSubject.masteryAvg}% — replay helps`
+                        : "Not started yet"}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+          </motion.div>
+        )}
 
         {/* Subject progress */}
         <motion.div
@@ -184,7 +395,7 @@ export default function KidDetailPage() {
             Subjects
           </h2>
           <div className="space-y-2">
-            {subjectProgress.map(({ subject, total, done }) => {
+            {subjectProgress.map(({ subject, total, done, masteryAvg, masteryWins }) => {
               const pct = total ? Math.round((done / total) * 100) : 0;
               return (
                 <div
@@ -201,7 +412,17 @@ export default function KidDetailPage() {
                     <div className="flex items-baseline justify-between mb-1 gap-2 flex-wrap">
                       <div className="text-sm font-semibold">{subject.title}</div>
                       <div className="text-[10px] text-slate-500 tabular-nums">
-                        {done} / {total} lessons · {pct}%
+                        {done} / {total} · {pct}%
+                        {masteryAvg !== null && (
+                          <span className="ml-1.5 text-emerald-300/80">
+                            · {masteryAvg}% mastery
+                          </span>
+                        )}
+                        {masteryWins > 0 && (
+                          <span className="ml-1.5 text-amber-300/80">
+                            · {masteryWins} 🏆
+                          </span>
+                        )}
                       </div>
                     </div>
                     <div className="h-1.5 rounded-full bg-white/[0.06] overflow-hidden">

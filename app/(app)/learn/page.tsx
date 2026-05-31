@@ -314,6 +314,81 @@ export default function LearnPage() {
           <p className="text-sm text-slate-400 mt-1">{tierCopy.tagline}</p>
         </motion.div>
 
+        {/* ─── FIRST-QUEST HERO ───
+            Only when the kid has 0 completions. It's the single most
+            important card on the page during the first session — the
+            "first 3 minutes" CTA. Bigger than the daily goal, anchored
+            at the top so the eye lands here immediately after the
+            greeting. Hidden as soon as they complete their first lesson. */}
+        {completions.length === 0 && todaysMission && (
+          <motion.div
+            initial={{ opacity: 0, y: 12, scale: 0.97 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            transition={{ type: "spring", stiffness: 200, damping: 20, delay: 0.05 }}
+          >
+            <Link
+              href={`/learn/${todaysMission.subject}/${todaysMission.id}`}
+              className="group relative overflow-hidden block rounded-3xl border-2 border-amber-400/50 bg-gradient-to-br from-amber-500/[0.18] via-orange-500/[0.10] to-transparent p-5 sm:p-6 hover:border-amber-400/80 transition-all"
+            >
+              <motion.div
+                animate={{
+                  background: [
+                    "radial-gradient(circle at 80% 20%, rgba(245,158,11,0.5), transparent 70%)",
+                    "radial-gradient(circle at 80% 20%, rgba(245,158,11,0.75), transparent 70%)",
+                    "radial-gradient(circle at 80% 20%, rgba(245,158,11,0.5), transparent 70%)",
+                  ],
+                }}
+                transition={{ duration: 4, repeat: Infinity }}
+                className="absolute inset-0 opacity-40 pointer-events-none"
+              />
+              <div className="relative flex items-center gap-4 sm:gap-5">
+                <motion.div
+                  animate={{ rotate: [0, -6, 6, 0], scale: [1, 1.08, 1] }}
+                  transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+                  className="flex-shrink-0 text-5xl sm:text-6xl"
+                >
+                  {todaysMission.emoji}
+                </motion.div>
+                <div className="flex-1 min-w-0">
+                  <div className="text-[10px] uppercase tracking-wider text-amber-300 font-bold mb-1 inline-flex items-center gap-1.5">
+                    <motion.span
+                      animate={{ scale: [1, 1.3, 1] }}
+                      transition={{ duration: 1.2, repeat: Infinity }}
+                      className="w-1.5 h-1.5 rounded-full bg-amber-400"
+                    />
+                    Your first quest
+                  </div>
+                  <div className="text-lg sm:text-2xl font-bold tracking-tight leading-tight mb-1">
+                    {todaysMission.title}
+                  </div>
+                  <div className="text-xs sm:text-sm text-amber-100/90 leading-relaxed mb-2 line-clamp-2">
+                    {todaysMission.description}
+                  </div>
+                  <div className="flex items-center gap-3 text-xs flex-wrap">
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-amber-500/20 text-amber-200 border border-amber-500/40 font-semibold">
+                      <Sparkles size={11} />
+                      +{todaysMission.xpReward} XP
+                    </span>
+                    <span className="text-amber-100/70">
+                      ~{todaysMission.questions.length * 0.5 | 0}–{todaysMission.questions.length} min
+                    </span>
+                  </div>
+                </div>
+                <motion.div
+                  animate={{ x: [0, 4, 0] }}
+                  transition={{ duration: 1.5, repeat: Infinity }}
+                  className="hidden sm:flex flex-shrink-0 w-12 h-12 rounded-2xl bg-gradient-to-br from-amber-400 to-orange-500 items-center justify-center shadow-xl shadow-amber-500/40 group-hover:scale-110 transition-transform"
+                >
+                  <ArrowRight size={20} className="text-white" />
+                </motion.div>
+              </div>
+            </Link>
+            <p className="text-[11px] text-slate-500 text-center mt-2 italic">
+              Tap to start your first quest — earn your first XP in under 3 minutes.
+            </p>
+          </motion.div>
+        )}
+
         {/* Daily goal — the most important hook on this page */}
         <motion.div
           initial={{ opacity: 0, y: 8 }}

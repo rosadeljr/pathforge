@@ -257,20 +257,84 @@ export default function LessonPlayerPage() {
       const bonusXp = !alreadyDone && isFlawless ? Math.round(lesson!.xpReward * 0.25) : 0;
       const awardXp = baseXp + bonusXp;
 
+      // ── Mastery scoring ──
+      // First-try-correct percent is the truest signal of mastery — beats
+      // raw "score" because score counts retries. masteryThreshold defaults
+      // to 0.8 if the lesson hasn't set one yet.
+      const firstTryCount = firstTryCorrect.filter(Boolean).length;
+      const firstTryPct = total > 0 ? firstTryCount / total : 0;
+      const masteryThreshold = lesson!.masteryThreshold ?? 0.8;
+      const masteryPassed = firstTryPct >= masteryThreshold;
+      const isBossLesson = lessonIsBoss(lesson!);
+      // A Boss is only "cleared" if mastery passes — not just completion.
+      const bossCleared = isBossLesson && masteryPassed;
+
       await supabase.from("analytics_events").insert({
         user_id: uid,
         event_type: "lesson_completed",
         event_payload: {
           lesson_id: lesson!.id,
           subject: lesson!.subject,
+          grade: lesson!.grade,
+          competency: lesson!.competency ?? null,
+          melc_code: lesson!.melcCode ?? null,
           score: correctCount,
           total,
+          first_try_correct: firstTryCount,
+          first_try_pct: Math.round(firstTryPct * 100),
+          mastery_threshold_pct: Math.round(masteryThreshold * 100),
+          mastery_passed: masteryPassed,
+          hints_used: usedHintOn.size,
           best_streak: bestStreak,
           flawless: isFlawless,
           replay: alreadyDone,
+          is_boss: isBossLesson,
+          boss_cleared: bossCleared,
         },
         xp_delta: awardXp,
       });
+
+      // ── Ad-funnel + mastery signals ──
+      // first_lesson_complete fires once-ever (when there are no prior
+      // completions); used as the activation event for ad attribution.
+      if ((completedCount ?? 0) === 0) {
+        await supabase.from("analytics_events").insert({
+          user_id: uid,
+          event_type: "first_lesson_complete",
+          event_payload: {
+            lesson_id: lesson!.id,
+            subject: lesson!.subject,
+            grade: lesson!.grade,
+          },
+          xp_delta: 0,
+        });
+      }
+      if (bossCleared) {
+        await supabase.from("analytics_events").insert({
+          user_id: uid,
+          event_type: "boss_cleared",
+          event_payload: {
+            lesson_id: lesson!.id,
+            subject: lesson!.subject,
+            first_try_pct: Math.round(firstTryPct * 100),
+          },
+          xp_delta: 0,
+        });
+      } else if (!masteryPassed && !alreadyDone) {
+        // Signal to spaced-review / parent recs that this lesson needs
+        // another pass. Not a "fail" — just a flag for follow-up.
+        await supabase.from("analytics_events").insert({
+          user_id: uid,
+          event_type: "mastery_review_needed",
+          event_payload: {
+            lesson_id: lesson!.id,
+            subject: lesson!.subject,
+            competency: lesson!.competency ?? null,
+            first_try_pct: Math.round(firstTryPct * 100),
+          },
+          xp_delta: 0,
+        });
+      }
 
       if (awardXp > 0) {
         const { data: prof } = await supabase
@@ -374,6 +438,11 @@ export default function LessonPlayerPage() {
     const score = correctCount;
     const pct = Math.round((score / total) * 100);
     const isFlawless = score === total && usedHintOn.size === 0;
+    // Mastery gate — see also persistCompletion(). Bosses ONLY count as
+    // cleared when first-try-correct >= masteryThreshold (default 0.8).
+    const masteryThresholdPct = Math.round((lesson.masteryThreshold ?? 0.8) * 100);
+    const masteryPassed = pct >= masteryThresholdPct;
+    const isBossLesson = lessonIsBoss(lesson);
     const tone = pct >= 80 ? "emerald" : pct >= 50 ? "amber" : "rose";
     const toneText: Record<string, string> = {
       emerald: "text-emerald-300",
@@ -523,6 +592,82 @@ export default function LessonPlayerPage() {
             </p>
           </motion.div>
 
+          {/* Boss mastery banner — only on boss lessons. Pass shows
+              CROWN earned; fail says "review needed, try again". This is
+              what gates Boss "cleared" state in analytics. */}
+          {isBossLesson && (
+            <motion.div
+              initial={{ opacity: 0, y: 16, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              transition={{ type: "spring", stiffness: 200, damping: 18, delay: 0.1 }}
+              className={`relative overflow-hidden rounded-3xl border-2 p-5 mb-6 text-center ${
+                masteryPassed
+                  ? "border-amber-400/60 bg-gradient-to-br from-amber-500/[0.18] via-orange-500/[0.10] to-transparent"
+                  : "border-rose-400/40 bg-gradient-to-br from-rose-500/[0.10] to-transparent"
+              }`}
+            >
+              <div className="relative">
+                <motion.div
+                  animate={masteryPassed ? { rotate: [0, -10, 10, 0], scale: [1, 1.15, 1] } : {}}
+                  transition={{ duration: 1.2, repeat: Infinity, repeatDelay: 1 }}
+                  className="text-5xl mb-2 inline-block"
+                >
+                  {masteryPassed ? "👑" : "⚔️"}
+                </motion.div>
+                <div
+                  className={`text-[10px] uppercase tracking-wider font-bold mb-1 ${
+                    masteryPassed ? "text-amber-300" : "text-rose-300"
+                  }`}
+                >
+                  {masteryPassed ? "Boss cleared!" : "Boss not cleared yet"}
+                </div>
+                <div
+                  className={`text-base sm:text-lg font-bold mb-2 ${
+                    masteryPassed ? "text-amber-50" : "text-rose-50"
+                  }`}
+                >
+                  {masteryPassed
+                    ? tier === "little"
+                      ? "You proved your mastery! 🌟"
+                      : "Mastery proven — you earned the crown."
+                    : tier === "little"
+                    ? "Don't worry — try again to beat this boss!"
+                    : `Need ${masteryThresholdPct}% on first try to clear. Try again.`}
+                </div>
+                <div className={`text-xs ${masteryPassed ? "text-amber-200/80" : "text-rose-200/80"}`}>
+                  First-try mastery: <span className="font-semibold tabular-nums">{pct}%</span>
+                  <span className="opacity-70"> · need {masteryThresholdPct}%+</span>
+                </div>
+              </div>
+            </motion.div>
+          )}
+
+          {/* Mastery-needed nudge for non-boss lessons — gentle, only shown
+              when first-try-pct missed the threshold. Frames it as "review"
+              rather than "fail" to keep it kid-safe. */}
+          {!isBossLesson && !masteryPassed && (
+            <motion.div
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.18 }}
+              className="rounded-2xl border border-amber-400/25 bg-amber-500/[0.06] p-4 mb-6"
+            >
+              <div className="flex items-start gap-3">
+                <div className="text-2xl">📖</div>
+                <div className="flex-1">
+                  <div className="text-xs font-bold uppercase tracking-wider text-amber-300 mb-1">
+                    Review suggested
+                  </div>
+                  <div className="text-sm text-amber-100 leading-relaxed">
+                    {tier === "little"
+                      ? "Try this lesson again — you'll get even better!"
+                      : `Your first-try was ${pct}%. Replay to lock it in (target ${masteryThresholdPct}%+).`}
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          )}
+
           {/* Stats card */}
           <motion.div
             initial={{ opacity: 0, y: 16 }}
@@ -532,7 +677,7 @@ export default function LessonPlayerPage() {
           >
             <div className="grid grid-cols-3 gap-3 mb-5">
               <StatBox label="Score" value={`${score}/${total}`} tone={toneText[tone]} />
-              <StatBox label="First try" value={`${pct}%`} tone="text-white" />
+              <StatBox label="First try" value={`${pct}%`} tone={masteryPassed ? "text-emerald-300" : "text-white"} />
               <StatBox label="XP earned" value={`+${lesson.xpReward + bonusXp}`} tone="text-indigo-300" />
             </div>
             <div className="h-2 rounded-full bg-white/[0.06] overflow-hidden mb-2">
