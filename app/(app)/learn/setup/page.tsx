@@ -198,7 +198,7 @@ export default function LearnerSetupPage() {
                           </div>
                           <div className="text-2xl font-bold tabular-nums">{g}</div>
                           <div className="text-[10px] text-slate-500 mt-1 capitalize">
-                            {t === "little" ? "Ages 6–9" : t === "junior" ? "Ages 10–13" : "Senior High"}
+                            {t === "little" ? "Ages 6–9" : t === "junior" ? "Ages 10–13" : "Ages 14–15"}
                           </div>
                           {isPicked && (
                             <motion.div

@@ -354,7 +354,7 @@ export const CAREERS: Career[] = [
     xpToUnlock: 0,
     pathToBecome: "Education degree (4 yrs) → Licensure Exam for Teachers (LET) → School.",
     collegeTrack: "HUMSS",
-    phContext: "K-12 teachers, college professors, or tutors — many paths to teach.",
+    phContext: "K-10 + Senior High teachers, college professors, or tutors — many paths to teach.",
   },
   {
     id: "lawyer",

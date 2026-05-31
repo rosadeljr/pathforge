@@ -28,6 +28,7 @@ import { LESSONS, type Lesson } from "@/lib/data/learner-lessons";
 import { CAREERS, isCareerUnlocked, getCareer } from "@/lib/data/careers";
 import { REALMS } from "@/lib/data/realms";
 import { guildForCareer, currentRank } from "@/lib/data/guilds";
+import { todaysSalita } from "@/lib/data/salita-ng-araw";
 import {
   todaysQuests,
   progressForQuest,
@@ -183,6 +184,7 @@ export default function LearnPage() {
     (tier === "little" ? 100 : tier === "junior" ? 200 : 300);
   const goalHitForHooks = todayXp >= dailyGoalForHooks;
   const quests = useMemo(() => todaysQuests(), []);
+  const salita = useMemo(() => todaysSalita(), []);
   const todayStats: TodayStats = useMemo(() => {
     const subjects = new Set<SubjectId>();
     let perfect = 0;
@@ -455,6 +457,49 @@ export default function LearnPage() {
             )}
           </div>
         )}
+
+        {/* Salita ng Araw — a daily Filipino culture nugget. Stays the same
+            for the whole UTC day so every kid sees the same word. */}
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.13 }}
+          className="relative overflow-hidden rounded-2xl border border-amber-400/20 bg-gradient-to-br from-amber-500/[0.08] via-orange-500/[0.04] to-transparent p-4"
+        >
+          <div
+            className="absolute -top-12 -right-12 w-32 h-32 rounded-full opacity-30 pointer-events-none"
+            style={{
+              background:
+                "radial-gradient(circle, rgba(245,158,11,0.55), transparent 70%)",
+            }}
+          />
+          <div className="relative flex items-start gap-3">
+            <div className="flex-shrink-0 text-3xl">{salita.emoji}</div>
+            <div className="flex-1 min-w-0">
+              <div className="text-[10px] uppercase tracking-wider text-amber-300 font-bold mb-1 inline-flex items-center gap-2">
+                <span>🇵🇭</span>
+                <span>
+                  {salita.category === "salita"
+                    ? "Salita ng Araw"
+                    : salita.category === "bayani"
+                    ? "Bayani ng Araw"
+                    : "Kultura ng Araw"}
+                </span>
+              </div>
+              <div className="text-base sm:text-lg font-bold tracking-tight">
+                {salita.word}
+              </div>
+              <div className="text-xs text-slate-300 leading-relaxed mt-0.5">
+                {salita.meaning}
+              </div>
+              {salita.example && (
+                <div className="text-[11px] text-amber-100/80 italic mt-1.5 leading-relaxed">
+                  {salita.example}
+                </div>
+              )}
+            </div>
+          </div>
+        </motion.div>
 
         {/* Career spotlight — show dream career progress OR encourage exploring */}
         <motion.div
