@@ -231,6 +231,12 @@ export default function SignUp() {
         track(supabase, data.user.id, "signup", {
           payload: { username, email, role, ...utm },
         });
+        // Ad-funnel event — clean canonical "signup_complete" used by all
+        // downstream attribution dashboards. Kept separately from the
+        // legacy "signup" event so dashboards built on either still work.
+        track(supabase, data.user.id, "signup_complete", {
+          payload: { role, ...utm },
+        });
         trackConversion("Lead", { contentName: role });
         toast.success("Welcome to PathForge");
         // Parents go straight to /parent. Kids go to setup.

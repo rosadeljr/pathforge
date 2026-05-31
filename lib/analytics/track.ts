@@ -18,7 +18,21 @@ export type AnalyticsEvent =
   | "subscription_upgraded"
   | "subscription_canceled"
   | "page_view"
-  | "mentor_message_sent";
+  | "mentor_message_sent"
+  // ── Ad-funnel events (for Meta/Google attribution + retention math) ──
+  | "landing_view"
+  | "signup_start"
+  | "signup_complete"
+  | "setup_complete"
+  | "first_lesson_complete"
+  | "parent_linked"
+  | "pricing_viewed"
+  | "payment_submitted"
+  | "payment_approved"
+  // ── Mastery/learning ──
+  | "lesson_completed"
+  | "boss_cleared"
+  | "mastery_review_needed";
 
 interface TrackOptions {
   payload?: Record<string, any>;

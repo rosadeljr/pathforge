@@ -15,6 +15,7 @@ import {
   TIER_COPY,
 } from "@/lib/data/learner";
 import { AVATAR_CLASSES, type AvatarClassId } from "@/lib/data/avatar-classes";
+import { track } from "@/lib/analytics/track";
 
 /**
  * Learner setup — pick your grade + which subjects you want to focus on.
@@ -132,6 +133,22 @@ export default function LearnerSetupPage() {
         error = retry.error;
       }
       if (error) throw error;
+
+      // Ad-funnel: setup_complete (and parent_linked when we matched one).
+      track(supabase, session.user.id, "setup_complete", {
+        payload: {
+          grade,
+          subjects: subjects.length,
+          avatar_class: avatarClass,
+          had_parent_email: cleanedParentEmail.length > 0,
+        },
+      });
+      if (parentProfileId) {
+        track(supabase, session.user.id, "parent_linked", {
+          payload: { parent_profile_id: parentProfileId },
+        });
+      }
+
       router.replace("/learn");
     } catch (e: any) {
       toast.error(e?.message || "Couldn't save. Try again.");

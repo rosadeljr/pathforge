@@ -19,6 +19,7 @@ import toast from "react-hot-toast";
 import { Logo } from "@/components/brand/Logo";
 import { PrimaryLinkButton } from "@/components/ui/PrimaryButton";
 import { GCashPaymentModal } from "@/components/payments/GCashPaymentModal";
+import { track } from "@/lib/analytics/track";
 
 const PLANS = [
   {
@@ -124,7 +125,17 @@ export default function PricingPage() {
   useEffect(() => {
     let mounted = true;
     supabase.auth.getSession().then(({ data: { session } }) => {
-      if (mounted) setAuthenticated(!!session?.user);
+      if (mounted) {
+        setAuthenticated(!!session?.user);
+        // Ad-funnel: pricing_viewed. Only logs authenticated viewers (we
+        // can't write analytics rows for anon viewers). Anon viewers are
+        // captured by the marketing pixel in the layout.
+        if (session?.user?.id) {
+          track(supabase, session.user.id, "pricing_viewed", {
+            payload: { source: "pricing_page" },
+          });
+        }
+      }
     });
 
     // Surface errors returned by Stripe checkout (?error=...)

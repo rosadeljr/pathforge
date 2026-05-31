@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import toast from "react-hot-toast";
 import { createClient } from "@/lib/supabase/client";
+import { track } from "@/lib/analytics/track";
 import {
   CreditCard,
   Check,
@@ -107,6 +108,16 @@ export default function AdminPaymentsPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ type: "approved", paymentRequestId: req.id }),
       }).catch(() => {});
+
+      // Ad-funnel: payment_approved (server-side conversion event).
+      // Logged against the kid/parent user_id, not the admin, so it
+      // appears in their funnel correctly.
+      track(supabase, req.user_id, "payment_approved", {
+        payload: {
+          tier: req.tier,
+          payment_request_id: req.id,
+        },
+      });
 
       toast.success(`Approved · user upgraded to ${req.tier.toUpperCase()}`);
       load();

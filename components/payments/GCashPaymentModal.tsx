@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import toast from "react-hot-toast";
 import { createClient } from "@/lib/supabase/client";
+import { track } from "@/lib/analytics/track";
 
 interface Props {
   tier: "pro" | "family";
@@ -93,6 +94,16 @@ export function GCashPaymentModal({ tier, amount, onClose }: Props) {
           /* email is best-effort — never block the user */
         });
       }
+
+      // Ad-funnel: payment_submitted (key conversion event for Meta/Google).
+      track(supabase, session.user.id, "payment_submitted", {
+        payload: {
+          tier,
+          amount_php: amount,
+          payment_method: method,
+          payment_request_id: inserted?.id ?? null,
+        },
+      });
 
       setStep("success");
     } catch (e: any) {

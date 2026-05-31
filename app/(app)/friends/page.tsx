@@ -95,15 +95,39 @@ export default function FriendsPage() {
     const timer = setTimeout(async () => {
       setSearching(true);
       try {
-        const { data } = await supabase
+        // Privacy-aware: only surface kids who explicitly allow leaderboard
+        // visibility AND haven't switched to pseudonymous mode. If a kid
+        // opted out of public visibility, they aren't searchable either.
+        // Falls back to legacy search if the privacy columns aren't there
+        // (PRIVACY_CONTROLS_MIGRATION not yet applied) so the page still
+        // works pre-migration.
+        let data: ProfileLite[] | null = null;
+        const primary = await supabase
           .from("profiles")
-          .select("id, username, full_name, current_level, total_xp, streak_count, user_mode")
+          .select(
+            "id, username, full_name, current_level, total_xp, streak_count, user_mode"
+          )
           .ilike("username", `%${query.trim()}%`)
           .neq("id", me.id)
-          // Only show same-mode users (kids can only friend kids etc.)
           .eq("user_mode", me.mode || "career")
+          .eq("show_on_leaderboard", true)
+          .neq("display_mode", "pseudonymous")
           .limit(10);
-        setResults((data as ProfileLite[]) || []);
+        if (primary.error) {
+          const fallback = await supabase
+            .from("profiles")
+            .select(
+              "id, username, full_name, current_level, total_xp, streak_count, user_mode"
+            )
+            .ilike("username", `%${query.trim()}%`)
+            .neq("id", me.id)
+            .eq("user_mode", me.mode || "career")
+            .limit(10);
+          data = (fallback.data as ProfileLite[]) || null;
+        } else {
+          data = (primary.data as ProfileLite[]) || null;
+        }
+        setResults(data || []);
       } catch {
         setResults([]);
       } finally {
