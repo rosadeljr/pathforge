@@ -254,3 +254,122 @@ export async function sendReengagementEmail(
     return false;
   }
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Weekly parent progress email
+// ─────────────────────────────────────────────────────────────────────────────
+
+export interface WeeklyKidSummary {
+  /** Display name (username preferred, else "your kid"). */
+  name: string;
+  /** Grade label e.g. "Grade 3". */
+  gradeLabel: string;
+  /** Tier emoji + label e.g. "🌟 Little Forger". */
+  tierLabel: string;
+  /** Lessons completed in the last 7 days. */
+  lessonsWeek: number;
+  /** XP earned in the last 7 days. */
+  xpWeek: number;
+  /** Best in-week streak day count. */
+  streakDays: number;
+  /** Strongest subject (most XP this week). */
+  strongestSubject?: string;
+  /** Subject that needs love (fewest lessons in the last 7d, picked subjects only). */
+  growthSubject?: string;
+  /** Dream career, if picked. */
+  dreamCareer?: string;
+}
+
+/**
+ * Send a parent a Sunday-evening recap of the last 7 days for each
+ * linked kid. Best-effort: returns false on any failure, never throws.
+ */
+export async function sendWeeklyProgressEmail(
+  parentEmail: string,
+  parentName: string,
+  kids: WeeklyKidSummary[]
+): Promise<boolean> {
+  const resend = getResend();
+  if (!resend) return false;
+  if (kids.length === 0) return false;
+
+  try {
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://pathforger.app";
+
+    const kidCard = (k: WeeklyKidSummary) => `
+      <div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:14px;margin-bottom:10px;">
+        <div style="font-size:14px;font-weight:600;color:#fff;">
+          ${k.name}
+          <span style="font-size:11px;font-weight:400;color:#94a3b8;margin-left:6px;">
+            · ${k.tierLabel} · ${k.gradeLabel}
+          </span>
+        </div>
+        <div style="margin:10px 0 6px;display:table;width:100%;table-layout:fixed;">
+          <div style="display:table-cell;text-align:center;padding:0 4px;">
+            <div style="font-size:18px;font-weight:700;color:#a5b4fc;">${k.lessonsWeek}</div>
+            <div style="font-size:9px;color:#64748b;text-transform:uppercase;letter-spacing:0.05em;">Lessons</div>
+          </div>
+          <div style="display:table-cell;text-align:center;padding:0 4px;">
+            <div style="font-size:18px;font-weight:700;color:#6366f1;">${k.xpWeek.toLocaleString()}</div>
+            <div style="font-size:9px;color:#64748b;text-transform:uppercase;letter-spacing:0.05em;">XP</div>
+          </div>
+          <div style="display:table-cell;text-align:center;padding:0 4px;">
+            <div style="font-size:18px;font-weight:700;color:#f59e0b;">${k.streakDays}d</div>
+            <div style="font-size:9px;color:#64748b;text-transform:uppercase;letter-spacing:0.05em;">Streak</div>
+          </div>
+        </div>
+        ${
+          k.strongestSubject || k.growthSubject || k.dreamCareer
+            ? `
+        <div style="margin-top:10px;padding-top:10px;border-top:1px solid rgba(255,255,255,0.04);font-size:11px;color:#cbd5e1;line-height:1.5;">
+          ${k.strongestSubject ? `<div>🌟 Strongest this week: <span style="color:#fff;">${k.strongestSubject}</span></div>` : ""}
+          ${k.growthSubject ? `<div>📈 Try more: <span style="color:#fff;">${k.growthSubject}</span></div>` : ""}
+          ${k.dreamCareer ? `<div>❤️ Working toward: <span style="color:#fff;">${k.dreamCareer}</span></div>` : ""}
+        </div>`
+            : ""
+        }
+      </div>`;
+
+    const allInactive = kids.every((k) => k.lessonsWeek === 0);
+
+    const headline = allInactive
+      ? `${parentName}, ${kids.length === 1 ? kids[0].name : "your kids"} took a quiet week 🌱`
+      : `${parentName}, here's how your kids did this week`;
+
+    const subline = allInactive
+      ? "That's okay — every Forger has slow weeks. One short lesson tonight resets the rhythm."
+      : "Here's a recap of the last 7 days. Click through to see more.";
+
+    const inner = `
+      <h1 style="margin:0 0 6px;font-size:18px;font-weight:600;color:#fff;">${headline}</h1>
+      <p style="margin:0 0 16px;font-size:13px;color:#94a3b8;line-height:1.6;">
+        ${subline}
+      </p>
+      ${kids.map(kidCard).join("")}
+      <a href="${appUrl}/parent"
+         style="display:inline-block;background:linear-gradient(135deg,#6366f1,#a855f7);color:#fff;font-size:13px;font-weight:600;text-decoration:none;padding:10px 18px;border-radius:8px;margin-top:8px;">
+        Open Parent Dashboard →
+      </a>
+      <p style="margin:18px 0 0;font-size:11px;color:#64748b;line-height:1.5;">
+        Every kid learns at their own pace. This is a celebration, not a report card.
+        — PathForge
+      </p>`;
+
+    const { error } = await resend.emails.send({
+      from: EMAIL_FROM,
+      to: parentEmail,
+      subject: allInactive
+        ? `${parentName}, quiet week for your Forger${kids.length > 1 ? "s" : ""}`
+        : `${parentName}, this week's progress for ${kids.length === 1 ? kids[0].name : "your kids"}`,
+      html: DARK_WRAP(inner),
+    });
+    if (error) {
+      console.warn("[email] weekly progress email failed:", error);
+      return false;
+    }
+    return true;
+  } catch (err) {
+    console.warn("[email] weekly progress email threw:", err);
+    return false;
+  }
+}

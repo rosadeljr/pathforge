@@ -370,6 +370,19 @@ function LessonCard({
               ? `Realm checkpoint. Prove mastery to clear ${lesson.title.toLowerCase()}.`
               : lesson.description}
           </p>
+          {lesson.melcCode && !isBoss && (
+            <div className="mb-3">
+              <span
+                className="inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-md bg-emerald-500/10 text-emerald-300 border border-emerald-500/25"
+                title={`DepEd MELC code: ${lesson.melcCode}`}
+              >
+                ✓ MELC-aligned
+                <span className="text-emerald-400/80 normal-case tracking-normal font-normal">
+                  · {lesson.melcCode}
+                </span>
+              </span>
+            </div>
+          )}
           <div className="flex items-center gap-3 text-xs">
             <span className="inline-flex items-center gap-1 text-slate-400">
               <Sparkles size={11} />

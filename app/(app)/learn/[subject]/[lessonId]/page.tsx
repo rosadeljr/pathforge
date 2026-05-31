@@ -143,7 +143,7 @@ export default function LessonPlayerPage() {
   // Mascot mood reflects the moment
   const mascotMood = (() => {
     if (!revealed) return pickedIdx == null ? "neutral" : wrongCount > 0 ? "thinking" : "neutral";
-    if (pickedIdx === q.correctIndex) return streak >= 3 ? "fire" : "happy";
+    if (pickedIdx === correctIndexFor(q)) return streak >= 3 ? "fire" : "happy";
     return "encouraging";
   })();
 
@@ -158,10 +158,22 @@ export default function LessonPlayerPage() {
     setTimeout(() => setBurst(null), 1200);
   }
 
+  /**
+   * Resolve the correct answer index for the current question.
+   * - MC: q.correctIndex.
+   * - TF: 0 = "True", 1 = "False" (display order in the player).
+   */
+  function correctIndexFor(question: typeof q): number {
+    if (question.kind === "tf") {
+      return question.correctAnswer ? 0 : 1;
+    }
+    return question.correctIndex ?? 0;
+  }
+
   function pick(i: number, e?: React.MouseEvent<HTMLButtonElement>) {
     if (revealed) return;
     setPickedIdx(i);
-    if (i === q.correctIndex) {
+    if (i === correctIndexFor(q)) {
       const fresh = [...firstTryCorrect];
       fresh[currentIdx] = wrongCount === 0;
       setFirstTryCorrect(fresh);
@@ -681,6 +693,14 @@ export default function LessonPlayerPage() {
               <span className="truncate">
                 {lesson.emoji} {lesson.title}
               </span>
+              {lesson.melcCode && !lessonIsBoss(lesson) && (
+                <span
+                  className="hidden sm:inline-flex items-center gap-1 text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-md bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 flex-shrink-0"
+                  title={`DepEd MELC code: ${lesson.melcCode}`}
+                >
+                  ✓ MELC {lesson.melcCode}
+                </span>
+              )}
             </span>
             <span className="text-slate-300 tabular-nums font-semibold flex-shrink-0">
               {currentIdx + 1} / {total}
@@ -751,10 +771,20 @@ export default function LessonPlayerPage() {
               {q.prompt}
             </p>
 
-            <div className="grid sm:grid-cols-2 gap-3">
-              {q.options.map((opt, i) => {
+            {(() => {
+              // Build the list of options to render. For "tf" questions we
+              // synthesize ["True", "False"] so the existing button code
+              // continues to render identically — the data layer decides
+              // which is correct via correctIndexFor().
+              const isTF = q.kind === "tf";
+              const renderOptions = isTF
+                ? ["True ✓", "False ✗"]
+                : q.options ?? [];
+              return (
+            <div className={`grid ${isTF ? "grid-cols-2" : "sm:grid-cols-2"} gap-3`}>
+              {renderOptions.map((opt, i) => {
                 const isPicked = pickedIdx === i;
-                const isCorrect = i === q.correctIndex;
+                const isCorrect = i === correctIndexFor(q);
                 let cls =
                   "p-4 rounded-2xl border text-sm sm:text-base font-semibold transition-all text-left min-h-[56px]";
                 if (revealed) {
@@ -766,7 +796,7 @@ export default function LessonPlayerPage() {
                   } else {
                     cls += " border-white/[0.06] bg-white/[0.02] text-slate-400";
                   }
-                } else if (isPicked && pickedIdx !== q.correctIndex) {
+                } else if (isPicked && pickedIdx !== correctIndexFor(q)) {
                   cls +=
                     " border-rose-500/60 bg-rose-500/15 text-rose-200 animate-pulse";
                 } else {
@@ -800,6 +830,8 @@ export default function LessonPlayerPage() {
                 );
               })}
             </div>
+              );
+            })()}
 
             {/* Hint inline */}
             {!revealed && q.explanation && (
@@ -834,13 +866,13 @@ export default function LessonPlayerPage() {
                   exit={{ opacity: 0, y: -6 }}
                   transition={{ type: "spring", stiffness: 220, damping: 20 }}
                   className={`mt-5 p-4 rounded-2xl border ${
-                    pickedIdx === q.correctIndex
+                    pickedIdx === correctIndexFor(q)
                       ? "bg-emerald-500/[0.10] border-emerald-500/40"
                       : "bg-amber-500/[0.10] border-amber-500/40"
                   }`}
                 >
                   <div className="flex items-start gap-2.5">
-                    {pickedIdx === q.correctIndex ? (
+                    {pickedIdx === correctIndexFor(q) ? (
                       <div className="w-7 h-7 rounded-full bg-emerald-500/25 flex items-center justify-center flex-shrink-0">
                         <Check size={14} className="text-emerald-300" strokeWidth={3} />
                       </div>
@@ -851,11 +883,18 @@ export default function LessonPlayerPage() {
                     )}
                     <div className="flex-1 text-sm">
                       <div className="font-semibold mb-0.5">
-                        {pickedIdx === q.correctIndex
+                        {pickedIdx === correctIndexFor(q)
                           ? wrongCount === 0
                             ? feedbackMsg
                             : "Got it — onwards."
-                          : `The answer is ${q.options[q.correctIndex]}.`}
+                          : (() => {
+                              if (q.kind === "tf") {
+                                return `The answer is ${q.correctAnswer ? "True" : "False"}.`;
+                              }
+                              const opts = q.options ?? [];
+                              const idx = q.correctIndex ?? 0;
+                              return `The answer is ${opts[idx] ?? ""}.`;
+                            })()}
                       </div>
                       {q.explanation && !hintOpen && (
                         <div className="text-xs text-slate-300 leading-relaxed">

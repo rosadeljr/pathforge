@@ -12,11 +12,27 @@ import type { SubjectId } from "./learner";
  * old lessons keep working while we backfill curriculum metadata.
  */
 
+export type QuestionKind = "mc" | "tf";
+
+/**
+ * A single question inside a lesson.
+ *
+ * Default kind is "mc" (multiple choice) — every existing lesson uses
+ * `options` + `correctIndex`. For `kind: "tf"` the question is a
+ * True/False prompt; `correctAnswer` is the boolean answer and
+ * options/correctIndex are ignored by the player.
+ */
 export interface LessonQuestion {
   id: string;
   prompt: string;
-  options: string[];
-  correctIndex: number;
+  /** Defaults to "mc" when omitted (back-compat with existing content). */
+  kind?: QuestionKind;
+  /** Multiple-choice options. Required when kind is undefined or "mc". */
+  options?: string[];
+  /** Index of the correct option. Required when kind is undefined or "mc". */
+  correctIndex?: number;
+  /** True/False answer. Required when kind === "tf". */
+  correctAnswer?: boolean;
   explanation?: string;
   /** Tags the misconception this question is designed to surface. */
   misconceptionTag?: string;
@@ -45,6 +61,13 @@ export interface Lesson {
   // ── Curriculum metadata (optional, additive — backfill over time) ──
   /** Slug for the K-10 competency (e.g. "math-3-add-2digit-no-regroup"). */
   competency?: string;
+  /**
+   * DepEd MELC (Most Essential Learning Competencies) code where applicable.
+   * Format example: "M3NS-IIIa-21.1" (Math, Grade 3, Number Sense, Quarter 3,
+   * Week a, Competency 21.1). Surfaced on the lesson card so parents know
+   * the lesson is real curriculum, not invented filler.
+   */
+  melcCode?: string;
   /** Bayanihan-style human description of the skill being trained. */
   competencyTitle?: string;
   /** Approximate school quarter this content lives in. */
@@ -111,6 +134,8 @@ export const LESSONS: Lesson[] = [
     description: "Practice adding two numbers between 10 and 99 — no regrouping yet.",
     emoji: "➕",
     xpReward: 100,
+    melcCode: "M3NS-Ie-25.4",
+    competency: "math-3-add-2digit-no-regroup",
     questions: [
       {
         id: "q1",
@@ -143,6 +168,22 @@ export const LESSONS: Lesson[] = [
         options: ["69", "79", "80", "89"],
         correctIndex: 1,
       },
+      // ── True/False demo — same lesson, different style for variety ──
+      {
+        id: "q6",
+        kind: "tf",
+        prompt: "When adding 23 + 14, you can add the tens first and the ones after.",
+        correctAnswer: true,
+        explanation:
+          "Either way works. Tens first or ones first, the sum is the same.",
+      },
+      {
+        id: "q7",
+        kind: "tf",
+        prompt: "10 + 10 + 10 is the same as 30.",
+        correctAnswer: true,
+        explanation: "Three tens together equal thirty.",
+      },
     ],
   },
   {
@@ -153,6 +194,8 @@ export const LESSONS: Lesson[] = [
     description: "When the ones add up past 9, carry the 1 to the tens place.",
     emoji: "🧮",
     xpReward: 120,
+    melcCode: "M3NS-Ie-26.4",
+    competency: "math-3-add-2digit-regrouping",
     questions: [
       {
         id: "q1",
@@ -192,6 +235,8 @@ export const LESSONS: Lesson[] = [
     subject: "math",
     grade: 3,
     title: "Subtracting 2-digit numbers",
+    melcCode: "M3NS-Ie-27.4",
+    competency: "math-3-subtract-2digit",
     description: "Practice taking away — the opposite of adding.",
     emoji: "➖",
     xpReward: 100,
@@ -546,12 +591,21 @@ export const LESSONS: Lesson[] = [
     description: "Different words, same meaning — your vocabulary toolkit.",
     emoji: "🔁",
     xpReward: 100,
+    melcCode: "EN3V-IIIa-12.1",
+    competency: "english-3-vocabulary-synonyms",
     questions: [
       { id: "q1", prompt: "Which word means almost the same as 'happy'?", options: ["sad", "joyful", "angry", "tired"], correctIndex: 1 },
       { id: "q2", prompt: "Synonym for 'big'?", options: ["small", "tiny", "huge", "short"], correctIndex: 2 },
       { id: "q3", prompt: "Synonym for 'fast'?", options: ["slow", "quick", "lazy", "late"], correctIndex: 1 },
       { id: "q4", prompt: "Synonym for 'smart'?", options: ["silly", "clever", "weak", "loud"], correctIndex: 1 },
       { id: "q5", prompt: "Synonym for 'scared'?", options: ["brave", "calm", "afraid", "proud"], correctIndex: 2 },
+      {
+        id: "q6",
+        kind: "tf",
+        prompt: "'Tired' and 'sleepy' mean almost the same thing.",
+        correctAnswer: true,
+        explanation: "Yes — both describe needing rest. They're synonyms.",
+      },
     ],
   },
   {
@@ -562,6 +616,8 @@ export const LESSONS: Lesson[] = [
     description: "Find the opposite — sharpen your vocabulary.",
     emoji: "↔️",
     xpReward: 100,
+    melcCode: "EN3V-IIIa-12.2",
+    competency: "english-3-vocabulary-antonyms",
     questions: [
       { id: "q1", prompt: "What's the opposite of 'hot'?", options: ["warm", "cool", "cold", "mild"], correctIndex: 2 },
       { id: "q2", prompt: "Opposite of 'tall'?", options: ["thin", "short", "long", "high"], correctIndex: 1 },
@@ -1093,6 +1149,8 @@ export const LESSONS: Lesson[] = [
     description: "What makes something alive? Spot the difference.",
     emoji: "🌱",
     xpReward: 100,
+    melcCode: "S3LT-Ia-b-1",
+    competency: "science-3-classify-living-nonliving",
     questions: [
       { id: "q1", prompt: "Which is LIVING?", options: ["A rock", "A tree", "A pencil", "A chair"], correctIndex: 1 },
       { id: "q2", prompt: "Living things can...", options: ["grow", "stay forever the same", "be plugged in", "be melted"], correctIndex: 0 },
@@ -1109,12 +1167,22 @@ export const LESSONS: Lesson[] = [
     description: "Evaporation, condensation, precipitation — the planet's loop.",
     emoji: "💧",
     xpReward: 130,
+    melcCode: "S4ES-IVf-7",
+    competency: "science-4-water-cycle",
     questions: [
       { id: "q1", prompt: "When water turns into vapor in the sky, it is called...", options: ["condensation", "evaporation", "precipitation", "collection"], correctIndex: 1 },
       { id: "q2", prompt: "Clouds are formed by...", options: ["evaporation", "condensation", "rain", "rocks"], correctIndex: 1 },
       { id: "q3", prompt: "Rain is an example of...", options: ["evaporation", "precipitation", "freezing", "melting"], correctIndex: 1 },
       { id: "q4", prompt: "The sun powers the cycle by...", options: ["cooling water", "heating water", "freezing oceans", "blowing wind"], correctIndex: 1 },
       { id: "q5", prompt: "Most of Earth's water is in the...", options: ["clouds", "rivers", "oceans", "underground"], correctIndex: 2 },
+      {
+        id: "q6",
+        kind: "tf",
+        prompt: "Water can change from liquid to gas without ever becoming ice.",
+        correctAnswer: true,
+        explanation:
+          "Yes! Heat from the sun turns liquid water straight into vapor — that's evaporation. Ice isn't required.",
+      },
     ],
   },
   {
@@ -1125,6 +1193,8 @@ export const LESSONS: Lesson[] = [
     description: "How plants make food from sunlight, water, and CO₂.",
     emoji: "🌿",
     xpReward: 150,
+    melcCode: "S7LT-IIc-3",
+    competency: "science-7-photosynthesis",
     questions: [
       { id: "q1", prompt: "Plants need ___ from the air for photosynthesis.", options: ["oxygen", "carbon dioxide", "nitrogen", "helium"], correctIndex: 1 },
       { id: "q2", prompt: "Photosynthesis releases ___ into the air.", options: ["oxygen", "carbon dioxide", "smoke", "nothing"], correctIndex: 0 },
