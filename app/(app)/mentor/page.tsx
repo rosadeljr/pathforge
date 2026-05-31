@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { createClient } from "@/lib/supabase/client";
 import toast from "react-hot-toast";
@@ -46,6 +47,23 @@ export default function Mentor() {
   const supabase = createClient();
   const messagesEnd = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+  const searchParams = useSearchParams();
+
+  // Honour `?seed=` — the ForgeBot floating companion deep-links here
+  // with a starter prompt. Prefill the input and focus so the kid just
+  // taps Send. Only fires once per mount.
+  useEffect(() => {
+    const seed = searchParams?.get("seed");
+    if (seed && seed.length > 0 && seed.length < 500) {
+      setInput(seed);
+      // Defer focus until the textarea exists.
+      requestAnimationFrame(() => {
+        inputRef.current?.focus();
+      });
+    }
+    // We intentionally only seed once on mount.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     async function load() {

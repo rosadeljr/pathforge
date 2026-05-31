@@ -30,6 +30,7 @@ import { isSoundEnabled, setSoundEnabled } from "@/lib/effects/celebration";
 import { useTheme } from "@/components/theme/ThemeProvider";
 import { ShareButtons } from "@/components/share/ShareButtons";
 import { GCashPaymentModal } from "@/components/payments/GCashPaymentModal";
+import { AVATAR_CLASSES, type AvatarClassId } from "@/lib/data/avatar-classes";
 
 interface Profile {
   id: string;
@@ -39,15 +40,24 @@ interface Profile {
   learner_grade: number | null;
   learner_subjects: string[] | null;
   subscription_tier: string | null;
+  /** Avatar class — cosmetic only. Added by AVATAR_CLASS_MIGRATION. */
+  learner_avatar_class?: string | null;
+  /** Privacy toggles — added by PRIVACY_CONTROLS_MIGRATION. */
+  show_on_leaderboard?: boolean | null;
+  display_mode?: "username" | "pseudonymous" | null;
 }
 
 export default function Settings() {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [savingPrivacy, setSavingPrivacy] = useState(false);
   const [username, setUsername] = useState("");
   const [fullName, setFullName] = useState("");
   const [soundOn, setSoundOn] = useState(true);
+  const [avatarClass, setAvatarClass] = useState<AvatarClassId | null>(null);
+  const [showOnLeaderboard, setShowOnLeaderboard] = useState(true);
+  const [pseudonymous, setPseudonymous] = useState(false);
   const [payModal, setPayModal] = useState<{ tier: "pro" | "family"; amount: number } | null>(null);
   const { theme, toggle: toggleTheme } = useTheme();
 
@@ -81,6 +91,12 @@ export default function Settings() {
           setProfile(data);
           setUsername(data.username || "");
           setFullName(data.full_name || "");
+          setAvatarClass(((data.learner_avatar_class as AvatarClassId) || null));
+          // Privacy defaults are TRUE / "username" (matches the migration
+          // defaults). Treat null/undefined as default so pre-migration
+          // accounts see the right initial state.
+          setShowOnLeaderboard(data.show_on_leaderboard !== false);
+          setPseudonymous(data.display_mode === "pseudonymous");
         }
       } catch (e) {
         toast.error("Failed to load settings");
@@ -109,6 +125,58 @@ export default function Settings() {
       toast.error(e?.message || "Save failed");
     } finally {
       setSaving(false);
+    }
+  };
+
+  /**
+   * Save the identity + privacy panel. Graceful fallback: if the
+   * column doesn't exist yet (migration not applied), we drop that
+   * field and retry so the rest of the save still works.
+   */
+  const savePrivacy = async (overrides?: {
+    avatarClass?: AvatarClassId | null;
+    showOnLeaderboard?: boolean;
+    pseudonymous?: boolean;
+  }) => {
+    if (!profile) return;
+    setSavingPrivacy(true);
+    try {
+      const nextAvatar = overrides?.avatarClass !== undefined ? overrides.avatarClass : avatarClass;
+      const nextShow =
+        overrides?.showOnLeaderboard !== undefined
+          ? overrides.showOnLeaderboard
+          : showOnLeaderboard;
+      const nextPseudo =
+        overrides?.pseudonymous !== undefined ? overrides.pseudonymous : pseudonymous;
+      const full = {
+        learner_avatar_class: nextAvatar,
+        show_on_leaderboard: nextShow,
+        display_mode: nextPseudo ? "pseudonymous" : "username",
+      } as Record<string, unknown>;
+      let { error } = await supabase
+        .from("profiles")
+        .update(full)
+        .eq("id", profile.id);
+      // Retry without unknown columns if the migration hasn't run yet.
+      if (error && /column.*does not exist/i.test(error.message)) {
+        // Strip the offending columns one by one based on error message.
+        const fallback: Record<string, unknown> = { ...full };
+        if (/learner_avatar_class/i.test(error.message)) delete fallback.learner_avatar_class;
+        if (/show_on_leaderboard/i.test(error.message)) delete fallback.show_on_leaderboard;
+        if (/display_mode/i.test(error.message)) delete fallback.display_mode;
+        if (Object.keys(fallback).length === 0) throw error;
+        const retry = await supabase
+          .from("profiles")
+          .update(fallback)
+          .eq("id", profile.id);
+        error = retry.error;
+      }
+      if (error) throw error;
+      toast.success("Privacy settings saved");
+    } catch (e: any) {
+      toast.error(e?.message || "Couldn't save");
+    } finally {
+      setSavingPrivacy(false);
     }
   };
 
@@ -278,6 +346,133 @@ export default function Settings() {
                 Change grade or subjects
                 <ArrowRight size={11} />
               </Link>
+            </div>
+          </div>
+        </motion.section>
+
+        {/* Identity & Privacy — avatar class + leaderboard visibility +
+            pseudonymous mode. Saves immediately on toggle so parents see
+            the change reflected without hunting for a save button. */}
+        <motion.section
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.12 }}
+          className="rounded-2xl border border-white/[0.06] bg-white/[0.02] overflow-hidden"
+        >
+          <div className="px-6 py-4 border-b border-white/[0.06] flex items-center gap-2 justify-between">
+            <div className="flex items-center gap-2">
+              <Sparkles size={14} className="text-slate-400" />
+              <h2 className="text-sm font-semibold uppercase tracking-wider text-slate-300">
+                Identity & Privacy
+              </h2>
+            </div>
+            {savingPrivacy && (
+              <span className="inline-flex items-center gap-1 text-[10px] text-slate-500">
+                <Loader2 size={10} className="animate-spin" />
+                Saving
+              </span>
+            )}
+          </div>
+          <div className="p-6 space-y-5">
+            {/* Avatar class picker */}
+            <div>
+              <div className="text-[10px] uppercase tracking-wider text-slate-500 mb-2 font-semibold">
+                Avatar class
+              </div>
+              <p className="text-xs text-slate-400 mb-3">
+                Cosmetic only — no buffs, no shortcut purchases.
+              </p>
+              <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
+                {AVATAR_CLASSES.map((c) => {
+                  const isPicked = avatarClass === c.id;
+                  return (
+                    <button
+                      key={c.id}
+                      onClick={() => {
+                        const next = isPicked ? null : c.id;
+                        setAvatarClass(next);
+                        savePrivacy({ avatarClass: next });
+                      }}
+                      className={`relative text-center p-2.5 rounded-xl border transition-all ${
+                        isPicked
+                          ? "border-amber-400/60 bg-amber-500/[0.10]"
+                          : "border-white/[0.08] bg-white/[0.03] hover:bg-white/[0.06]"
+                      }`}
+                      style={isPicked ? { boxShadow: `0 6px 18px ${c.accent}30` } : undefined}
+                      title={c.vibe}
+                    >
+                      <div className="text-xl mb-1">{c.emoji}</div>
+                      <div
+                        className="text-[10px] font-semibold leading-tight"
+                        style={isPicked ? { color: c.accent } : undefined}
+                      >
+                        {c.name.replace(/^The /, "")}
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Show on leaderboard toggle */}
+            <div className="flex items-start gap-3 p-3 rounded-xl border border-white/[0.06] bg-white/[0.02]">
+              <div className="flex-1 min-w-0">
+                <div className="text-sm font-semibold mb-0.5">
+                  Show on leaderboard
+                </div>
+                <div className="text-xs text-slate-400 leading-relaxed">
+                  Off = your name never appears on public rankings or friend
+                  search. Parent-recommended for younger kids.
+                </div>
+              </div>
+              <button
+                onClick={() => {
+                  const next = !showOnLeaderboard;
+                  setShowOnLeaderboard(next);
+                  savePrivacy({ showOnLeaderboard: next });
+                }}
+                aria-pressed={showOnLeaderboard}
+                className={`relative flex-shrink-0 w-11 h-6 rounded-full transition-colors ${
+                  showOnLeaderboard ? "bg-emerald-500" : "bg-slate-700"
+                }`}
+              >
+                <motion.span
+                  animate={{ x: showOnLeaderboard ? 22 : 2 }}
+                  transition={{ type: "spring", stiffness: 400, damping: 28 }}
+                  className="absolute top-0.5 w-5 h-5 rounded-full bg-white shadow"
+                />
+              </button>
+            </div>
+
+            {/* Pseudonymous mode toggle */}
+            <div className="flex items-start gap-3 p-3 rounded-xl border border-white/[0.06] bg-white/[0.02]">
+              <div className="flex-1 min-w-0">
+                <div className="text-sm font-semibold mb-0.5">
+                  Pseudonymous mode
+                </div>
+                <div className="text-xs text-slate-400 leading-relaxed">
+                  On = peers see "Junior Forger · Lv N" instead of your
+                  username. Best for kids who don't want their real name on
+                  any public surface.
+                </div>
+              </div>
+              <button
+                onClick={() => {
+                  const next = !pseudonymous;
+                  setPseudonymous(next);
+                  savePrivacy({ pseudonymous: next });
+                }}
+                aria-pressed={pseudonymous}
+                className={`relative flex-shrink-0 w-11 h-6 rounded-full transition-colors ${
+                  pseudonymous ? "bg-indigo-500" : "bg-slate-700"
+                }`}
+              >
+                <motion.span
+                  animate={{ x: pseudonymous ? 22 : 2 }}
+                  transition={{ type: "spring", stiffness: 400, damping: 28 }}
+                  className="absolute top-0.5 w-5 h-5 rounded-full bg-white shadow"
+                />
+              </button>
             </div>
           </div>
         </motion.section>

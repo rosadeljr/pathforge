@@ -112,6 +112,32 @@ export default function SubjectLessonsPage() {
   }
 
   const allLessons = getLessonsBySubject(subject.id as SubjectId);
+
+  // ─── Realm map regions ───
+  // Each subject has a realm with sub-regions tied to grade bands. We
+  // group lessons by REGION first (region → grades inside it → lessons),
+  // so the page reads like a regional map of the realm rather than a
+  // flat grade list. Regions with no lessons are hidden.
+  const realm = realmForSubject(subject.id as SubjectId);
+  // Assign each lesson to the first region whose range contains its
+  // grade (so overlapping bands don't duplicate).
+  const lessonsByRegion = new Map<string, Lesson[]>();
+  const ungrouped: Lesson[] = [];
+  if (realm) {
+    for (const l of allLessons) {
+      const region = realm.regions.find(
+        (r) => l.grade >= r.gradeRange[0] && l.grade <= r.gradeRange[1]
+      );
+      if (region) {
+        const arr = lessonsByRegion.get(region.id) || [];
+        arr.push(l);
+        lessonsByRegion.set(region.id, arr);
+      } else {
+        ungrouped.push(l);
+      }
+    }
+  }
+
   // Group by grade. If we know the learner's grade, surface their grade
   // first, then nearby grades (above + below) as "explore further".
   const lessonsByGrade = allLessons.reduce<Record<number, Lesson[]>>((acc, l) => {
@@ -230,14 +256,169 @@ export default function SubjectLessonsPage() {
           </motion.div>
         )}
 
-        {/* Lessons — grouped by grade so a 1st grader doesn't see calculus */}
+        {/* Lessons — grouped into regional realm map. Each region banner
+            sets the kid's "where am I in the world" mental model, then
+            grade sub-rows keep parents' eye-scan working. Falls back to
+            the legacy grade-only layout when no realm is defined yet. */}
         {lessons.length === 0 ? (
           <div className="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-12 text-center">
             <p className="text-sm text-slate-400">
               First lessons for this subject are coming soon.
             </p>
           </div>
+        ) : realm && lessonsByRegion.size > 0 ? (
+          <div className="space-y-10">
+            {realm.regions
+              .filter((region) => (lessonsByRegion.get(region.id) || []).length > 0)
+              .map((region, ri) => {
+                const regionLessons = lessonsByRegion.get(region.id) || [];
+                const regionDone = regionLessons.filter((l) =>
+                  completedIds.has(l.id)
+                ).length;
+                const isUserRegion =
+                  userGrade !== null &&
+                  userGrade >= region.gradeRange[0] &&
+                  userGrade <= region.gradeRange[1];
+                // Sub-group region lessons by grade so the eye-scan stays
+                // intact ("Grade 3 · 5/8 done").
+                const byGradeInside = regionLessons.reduce<Record<number, Lesson[]>>(
+                  (acc, l) => {
+                    (acc[l.grade] ||= []).push(l);
+                    return acc;
+                  },
+                  {}
+                );
+                const gradesInRegion = Object.keys(byGradeInside)
+                  .map((n) => parseInt(n))
+                  .sort((a, b) => a - b);
+
+                return (
+                  <motion.div
+                    key={region.id}
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5, delay: 0.04 + ri * 0.04 }}
+                    className="relative overflow-hidden rounded-3xl border border-white/[0.08] bg-gradient-to-br from-white/[0.03] to-transparent p-5 sm:p-6"
+                  >
+                    <div
+                      className="absolute -bottom-24 -right-24 w-64 h-64 rounded-full opacity-15 pointer-events-none"
+                      style={{
+                        background: `radial-gradient(circle, ${realm.accentColor}, transparent 70%)`,
+                      }}
+                    />
+                    <div className="relative">
+                      {/* Region banner */}
+                      <div className="flex items-start gap-3 mb-4 flex-wrap">
+                        <div className="text-3xl flex-shrink-0">
+                          {region.emoji}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap mb-0.5">
+                            <span
+                              className="text-[10px] uppercase tracking-wider font-bold"
+                              style={{ color: realm.accentColor }}
+                            >
+                              Region · Grades {region.gradeRange[0]}–
+                              {region.gradeRange[1]}
+                            </span>
+                            {isUserRegion && (
+                              <span className="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-md bg-indigo-500/15 text-indigo-300 border border-indigo-500/30">
+                                You're here
+                              </span>
+                            )}
+                          </div>
+                          <div className="text-base sm:text-lg font-bold tracking-tight">
+                            {region.name}
+                          </div>
+                          <div className="text-xs text-slate-400 italic leading-relaxed mt-0.5">
+                            {region.blurb}
+                          </div>
+                        </div>
+                        <div className="text-[10px] text-slate-500 tabular-nums whitespace-nowrap pt-1">
+                          {regionDone}/{regionLessons.length} done
+                        </div>
+                      </div>
+
+                      {/* Region progress bar */}
+                      <div className="h-1 rounded-full bg-white/[0.06] overflow-hidden mb-5">
+                        <motion.div
+                          initial={{ width: 0 }}
+                          animate={{
+                            width: `${(regionDone / Math.max(1, regionLessons.length)) * 100}%`,
+                          }}
+                          transition={{ duration: 0.8, delay: 0.2 }}
+                          className="h-full"
+                          style={{
+                            background: `linear-gradient(90deg, ${realm.accentColor}, ${realm.accentColor}dd)`,
+                          }}
+                        />
+                      </div>
+
+                      {/* Grades inside this region */}
+                      <div className="space-y-5">
+                        {gradesInRegion.map((g) => {
+                          const gradeLessons = byGradeInside[g];
+                          const isUserGrade = userGrade === g;
+                          return (
+                            <div key={g}>
+                              <div className="flex items-baseline justify-between mb-2.5">
+                                <div className="flex items-center gap-2">
+                                  <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                                    Grade {g}
+                                  </h3>
+                                  {isUserGrade && (
+                                    <span className="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-md bg-indigo-500/15 text-indigo-300 border border-indigo-500/30">
+                                      Your grade
+                                    </span>
+                                  )}
+                                </div>
+                                <span className="text-[10px] text-slate-500 tabular-nums">
+                                  {gradeLessons.filter((l) => completedIds.has(l.id)).length}/
+                                  {gradeLessons.length} done
+                                </span>
+                              </div>
+                              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                                {gradeLessons.map((lesson, i) => (
+                                  <LessonCard
+                                    key={lesson.id}
+                                    lesson={lesson}
+                                    subjectId={subject.id as SubjectId}
+                                    isDone={completedIds.has(lesson.id)}
+                                    index={i}
+                                  />
+                                ))}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  </motion.div>
+                );
+              })}
+
+            {/* Any lessons whose grade didn't land in a region (safety net) */}
+            {ungrouped.length > 0 && (
+              <div>
+                <h2 className="text-sm font-semibold text-slate-300 uppercase tracking-wider mb-3">
+                  More
+                </h2>
+                <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                  {ungrouped.map((lesson, i) => (
+                    <LessonCard
+                      key={lesson.id}
+                      lesson={lesson}
+                      subjectId={subject.id as SubjectId}
+                      isDone={completedIds.has(lesson.id)}
+                      index={i}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
         ) : (
+          // Legacy fallback — flat grade list when no realm is mapped.
           <div className="space-y-8">
             {orderedGrades.map((g, gi) => {
               const gradeLessons = lessonsByGrade[g] || [];

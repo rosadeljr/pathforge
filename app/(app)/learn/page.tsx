@@ -37,6 +37,7 @@ import {
   type TodayStats,
 } from "@/lib/data/daily-quests";
 import { PageShimmer } from "@/components/ui/Shimmer";
+import { ForgeBotCompanion } from "@/components/learn/ForgeBotCompanion";
 
 interface LearnerProfile {
   username: string | null;
@@ -53,6 +54,16 @@ interface LearnerProfile {
 interface CompletionEvent {
   lesson_id: string;
   ts: string;
+  /** Latest mastery_passed flag for that lesson (newest occurrence wins). */
+  mastery_passed?: boolean;
+  /** First-try-correct %, used for review queue copy. */
+  first_try_pct?: number;
+}
+
+interface ReviewNeededEvent {
+  lesson_id: string;
+  ts: string;
+  first_try_pct?: number;
 }
 
 /**
@@ -63,6 +74,7 @@ interface CompletionEvent {
 export default function LearnPage() {
   const [profile, setProfile] = useState<LearnerProfile | null>(null);
   const [completions, setCompletions] = useState<CompletionEvent[]>([]);
+  const [reviewNeeded, setReviewNeeded] = useState<ReviewNeededEvent[]>([]);
   const [todayXp, setTodayXp] = useState(0);
   const [todayLessonEvents, setTodayLessonEvents] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -86,7 +98,12 @@ export default function LearnPage() {
         // page still works pre-migration.
         const profileFields =
           "username, learner_grade, learner_subjects, current_level, total_xp, streak_count, longest_streak, dream_career_id";
-        const [profPrimary, { data: events }, { data: todayEvents }] = await Promise.all([
+        const [
+          profPrimary,
+          { data: events },
+          { data: todayEvents },
+          { data: reviewEvents },
+        ] = await Promise.all([
           supabase
             .from("profiles")
             .select(`${profileFields}, learner_avatar_class`)
@@ -104,6 +121,13 @@ export default function LearnPage() {
             .select("xp_delta, event_type, event_payload")
             .eq("user_id", uid)
             .gte("created_at", startOfDay.toISOString()),
+          supabase
+            .from("analytics_events")
+            .select("event_payload, created_at")
+            .eq("user_id", uid)
+            .eq("event_type", "mastery_review_needed")
+            .order("created_at", { ascending: false })
+            .limit(25),
         ]);
 
         let prof: Record<string, unknown> | null = profPrimary.data as
@@ -124,8 +148,19 @@ export default function LearnPage() {
             .map((e: any) => ({
               lesson_id: e?.event_payload?.lesson_id,
               ts: e?.created_at,
+              mastery_passed: e?.event_payload?.mastery_passed,
+              first_try_pct: e?.event_payload?.first_try_pct,
             }))
             .filter((c: any) => c.lesson_id)
+        );
+        setReviewNeeded(
+          (reviewEvents || [])
+            .map((e: any) => ({
+              lesson_id: e?.event_payload?.lesson_id,
+              ts: e?.created_at,
+              first_try_pct: e?.event_payload?.first_try_pct,
+            }))
+            .filter((r: any) => r.lesson_id)
         );
         setTodayXp(
           (todayEvents || []).reduce(
@@ -176,6 +211,39 @@ export default function LearnPage() {
     );
     return nearby[0] || null;
   }, [grade, picked, completedIds]);
+
+  // Spaced review queue — surfaces up to 3 lessons that need another pass.
+  // A lesson stays in the queue ONLY if there's a mastery_review_needed
+  // event AND no subsequent mastery_passed lesson_completed for the same
+  // lesson. Newest mastery_review_needed wins (dedupe by lesson_id).
+  const reviewQueue = useMemo(() => {
+    if (!reviewNeeded.length) return [] as { lesson: Lesson; firstTryPct: number }[];
+    // Build map of latest mastery_passed timestamp per lesson_id.
+    const lastPassedAt = new Map<string, number>();
+    for (const c of completions) {
+      if (c.mastery_passed) {
+        const t = new Date(c.ts).getTime();
+        if (t > (lastPassedAt.get(c.lesson_id) || 0)) {
+          lastPassedAt.set(c.lesson_id, t);
+        }
+      }
+    }
+    // Dedupe review events by lesson_id (keep newest).
+    const seen = new Set<string>();
+    const out: { lesson: Lesson; firstTryPct: number }[] = [];
+    for (const r of reviewNeeded) {
+      if (seen.has(r.lesson_id)) continue;
+      seen.add(r.lesson_id);
+      const reviewedAt = new Date(r.ts).getTime();
+      // If kid already re-passed it after this review event, skip.
+      if ((lastPassedAt.get(r.lesson_id) || 0) >= reviewedAt) continue;
+      const lesson = LESSONS.find((l) => l.id === r.lesson_id);
+      if (!lesson) continue;
+      out.push({ lesson, firstTryPct: r.first_try_pct ?? 0 });
+      if (out.length >= 3) break;
+    }
+    return out;
+  }, [reviewNeeded, completions]);
 
   // Resume: most recent lesson if it has more lessons in its subject left
   const resumeLesson = useMemo<Lesson | null>(() => {
@@ -565,6 +633,68 @@ export default function LearnPage() {
           </div>
         )}
 
+        {/* ── REVIEW QUEUE ── lessons where first-try-mastery missed
+            the threshold AND haven't been re-passed since. Soft, kid-safe
+            framing ("Polish these skills") to avoid feeling like failure. */}
+        {reviewQueue.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.11 }}
+          >
+            <div className="flex items-baseline justify-between mb-3 flex-wrap gap-2">
+              <h2 className="text-sm font-semibold text-slate-300 uppercase tracking-wider inline-flex items-center gap-1.5">
+                <span>📖</span>
+                {tier === "little" ? "Practice again" : "Polish these skills"}
+              </h2>
+              <span className="text-xs text-slate-500">
+                {reviewQueue.length} lesson{reviewQueue.length > 1 ? "s" : ""} to lock in
+              </span>
+            </div>
+            <div className="grid sm:grid-cols-3 gap-2.5">
+              {reviewQueue.map(({ lesson, firstTryPct }, i) => (
+                <motion.div
+                  key={lesson.id}
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.4, delay: 0.12 + i * 0.05 }}
+                >
+                  <Link
+                    href={`/learn/${lesson.subject}/${lesson.id}`}
+                    className="group relative overflow-hidden block rounded-2xl border border-amber-400/25 bg-gradient-to-br from-amber-500/[0.08] to-transparent p-3.5 hover:border-amber-400/50 transition-all h-full"
+                  >
+                    <div
+                      className="absolute -top-10 -right-10 w-28 h-28 rounded-full opacity-25 pointer-events-none"
+                      style={{
+                        background:
+                          "radial-gradient(circle, rgba(245,158,11,0.55), transparent 70%)",
+                      }}
+                    />
+                    <div className="relative">
+                      <div className="flex items-center justify-between mb-1.5">
+                        <div className="text-2xl">{lesson.emoji}</div>
+                        <span className="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-md bg-amber-500/20 text-amber-200 border border-amber-500/40">
+                          {firstTryPct}% first try
+                        </span>
+                      </div>
+                      <div className="text-xs font-bold tracking-tight mb-0.5 line-clamp-2">
+                        {lesson.title}
+                      </div>
+                      <div className="text-[10px] text-amber-200/80 mt-1.5 inline-flex items-center gap-1 group-hover:text-amber-100 transition-colors">
+                        Replay to lock it in
+                        <ArrowRight
+                          size={10}
+                          className="group-hover:translate-x-0.5 transition-transform"
+                        />
+                      </div>
+                    </div>
+                  </Link>
+                </motion.div>
+              ))}
+            </div>
+          </motion.div>
+        )}
+
         {/* Salita ng Araw — a daily Filipino culture nugget. Stays the same
             for the whole UTC day so every kid sees the same word. */}
         <motion.div
@@ -732,6 +862,9 @@ export default function LearnPage() {
           </div>
         </motion.div>
       </div>
+
+      {/* Floating ForgeBot — companion-style entry to the AI tutor */}
+      <ForgeBotCompanion />
     </div>
   );
 }
