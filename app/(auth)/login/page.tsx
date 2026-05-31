@@ -118,7 +118,26 @@ export default function Login() {
       toast.success("Welcome back");
       // Hard navigation ensures cookies are fully established before
       // the next page's auth check runs. router.push can race.
-      window.location.href = "/learn";
+      // Pick the right home for the account type so parents don't land
+      // on the kid dashboard. Profile read is best-effort — on any
+      // failure we fall back to /learn (the broken-state guard there
+      // will bounce to /learn/setup if onboarding isn't done).
+      let dest = "/learn";
+      try {
+        const { data: prof } = await supabase
+          .from("profiles")
+          .select("is_parent_account, learner_grade")
+          .eq("id", data.user.id)
+          .maybeSingle();
+        if (prof?.is_parent_account) {
+          dest = "/parent";
+        } else if (prof && prof.learner_grade == null) {
+          dest = "/learn/setup";
+        }
+      } catch {
+        /* non-fatal — /learn's own guard handles broken state */
+      }
+      window.location.href = dest;
     } catch (error: any) {
       console.error("Login error:", error);
       toast.error(error?.message || "Sign in failed");

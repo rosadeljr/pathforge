@@ -9,6 +9,10 @@ import { Loader2 } from "lucide-react";
  * One-click Google sign-in. Requires the Google provider to be enabled in
  * the Supabase dashboard (Auth → Providers → Google) and the site's
  * /api/auth/callback URL added to the allowed Redirect URLs.
+ *
+ * Forwards the current page's `?returnTo=` param to the callback as `next`
+ * so paid-tier flows (e.g. /signup?returnTo=/pricing?upgrade=pro) land
+ * back on the right page after the OAuth round-trip.
  */
 export function GoogleButton({ label = "Continue with Google" }: { label?: string }) {
   const [loading, setLoading] = useState(false);
@@ -17,9 +21,22 @@ export function GoogleButton({ label = "Continue with Google" }: { label?: strin
   const handleGoogle = async () => {
     setLoading(true);
     try {
+      // Read returnTo from the *current* URL. Only forward it if it's a
+      // same-origin path (prevents open-redirect abuse via OAuth flow).
+      let nextParam = "";
+      if (typeof window !== "undefined") {
+        const here = new URL(window.location.href);
+        const raw = here.searchParams.get("returnTo");
+        if (raw && raw.startsWith("/") && !raw.startsWith("//")) {
+          nextParam = `?next=${encodeURIComponent(raw)}`;
+        }
+      }
+
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",
-        options: { redirectTo: `${window.location.origin}/api/auth/callback` },
+        options: {
+          redirectTo: `${window.location.origin}/api/auth/callback${nextParam}`,
+        },
       });
       if (error) throw error;
       // On success the browser redirects to Google — nothing else to do.

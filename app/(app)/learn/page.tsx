@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import {
@@ -79,6 +80,7 @@ export default function LearnPage() {
   const [todayLessonEvents, setTodayLessonEvents] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const supabase = createClient();
+  const router = useRouter();
 
   useEffect(() => {
     async function load() {
@@ -140,6 +142,19 @@ export default function LearnPage() {
             .eq("id", uid)
             .maybeSingle();
           prof = fallback.data as Record<string, unknown> | null;
+        }
+
+        // ── Broken-state guard ──
+        // If the user has a session but no profile row OR no learner_grade
+        // set, they never finished onboarding (typical for Google sign-ins
+        // where the OAuth provider created the auth user but the kid
+        // closed the tab before setup, or migrated accounts pre-fix).
+        // Send them to setup so the rest of the app has the data it needs.
+        const learnerGrade = (prof as { learner_grade?: number | null } | null)
+          ?.learner_grade;
+        if (!prof || learnerGrade == null) {
+          router.replace("/learn/setup");
+          return;
         }
 
         if (prof) setProfile(prof as unknown as LearnerProfile);
