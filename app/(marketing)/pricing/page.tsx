@@ -19,6 +19,7 @@ import toast from "react-hot-toast";
 import { Logo } from "@/components/brand/Logo";
 import { PrimaryLinkButton } from "@/components/ui/PrimaryButton";
 import { GCashPaymentModal } from "@/components/payments/GCashPaymentModal";
+import { PayMongoPaymentSheet } from "@/components/payments/PayMongoPaymentSheet";
 import { track } from "@/lib/analytics/track";
 
 const PLANS = [
@@ -102,7 +103,7 @@ const FAQS = [
   },
   {
     q: "What payment methods do you accept?",
-    a: "We accept GCash and Maya. After signup, click Upgrade — you'll see the mobile number and amount to send. Submit your reference number, and we'll verify within 4 hours (PH business hours).",
+    a: "GCash and Maya — automated via PayMongo (the BSP-regulated payments network). After signup, tap Upgrade, pick your wallet, confirm in the app — your subscription activates within a minute. A manual proof-upload fallback is also available if you prefer.",
   },
   {
     q: "Is there a refund policy?",
@@ -118,6 +119,12 @@ const PRICE_BY_TIER: Record<"pro" | "family", number> = {
 export default function PricingPage() {
   const [authenticated, setAuthenticated] = useState<boolean | null>(null);
   const [errorBanner, setErrorBanner] = useState<string | null>(null);
+  // Two payment surfaces:
+  //   paymongoSheet → automated GCash/Maya via PayMongo (instant)
+  //   paymentModal  → manual proof-upload (legacy fallback)
+  // We default to the PayMongo sheet for every authenticated upgrade,
+  // and let the user opt into manual from inside the sheet.
+  const [paymongoSheet, setPaymongoSheet] = useState<{ tier: "pro" | "family"; amount: number } | null>(null);
   const [paymentModal, setPaymentModal] = useState<{ tier: "pro" | "family"; amount: number } | null>(null);
   const router = useRouter();
   const supabase = createClient();
@@ -138,14 +145,24 @@ export default function PricingPage() {
       }
     });
 
-    // Surface errors returned by Stripe checkout (?error=...)
+    // Surface errors returned by checkout (?error=...) and PayMongo
+    // return-flow status (?upgrade=processing|failed|cancelled).
     if (typeof window !== "undefined") {
       const params = new URLSearchParams(window.location.search);
       const err = params.get("error");
-      const cancelled = params.get("upgrade") === "cancelled";
+      const upgrade = params.get("upgrade");
       if (err) setErrorBanner(decodeURIComponent(err));
-      if (cancelled) {
+      if (upgrade === "cancelled") {
         toast("Checkout cancelled. No charge was made.", { icon: "ℹ️" });
+      } else if (upgrade === "failed") {
+        toast.error(
+          "Payment failed at the provider. Try again or use the manual method."
+        );
+      } else if (upgrade === "processing") {
+        toast.success(
+          "Payment received — we're confirming with the provider. Your tier will update in a moment.",
+          { duration: 7000 }
+        );
       }
     }
 
@@ -167,9 +184,10 @@ export default function PricingPage() {
       return;
     }
 
-    // Authenticated: open GCash / Maya payment modal
+    // Authenticated: open the PayMongo sheet (automated GCash/Maya).
+    // Manual is reachable from inside the sheet as a fallback.
     const tier = planName.toLowerCase() as "pro" | "family";
-    setPaymentModal({ tier, amount: PRICE_BY_TIER[tier] });
+    setPaymongoSheet({ tier, amount: PRICE_BY_TIER[tier] });
   };
 
   // CTA label changes based on auth state
@@ -447,7 +465,21 @@ export default function PricingPage() {
         </motion.div>
       </div>
 
-      {/* GCash / Maya payment modal */}
+      {/* PayMongo automated checkout — primary path */}
+      {paymongoSheet && (
+        <PayMongoPaymentSheet
+          tier={paymongoSheet.tier}
+          amount={paymongoSheet.amount}
+          onClose={() => setPaymongoSheet(null)}
+          onManualFallback={() => {
+            const next = paymongoSheet;
+            setPaymongoSheet(null);
+            if (next) setPaymentModal(next);
+          }}
+        />
+      )}
+
+      {/* GCash / Maya manual proof-upload modal — fallback path */}
       {paymentModal && (
         <GCashPaymentModal
           tier={paymentModal.tier}
