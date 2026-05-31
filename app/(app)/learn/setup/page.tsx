@@ -14,6 +14,7 @@ import {
   ageRangeForTier,
   TIER_COPY,
 } from "@/lib/data/learner";
+import { AVATAR_CLASSES, type AvatarClassId } from "@/lib/data/avatar-classes";
 
 /**
  * Learner setup — pick your grade + which subjects you want to focus on.
@@ -23,9 +24,12 @@ import {
 export default function LearnerSetupPage() {
   const router = useRouter();
   const supabase = createClient();
-  const [step, setStep] = useState<"grade" | "subjects" | "parent">("grade");
+  const [step, setStep] = useState<"grade" | "subjects" | "class" | "parent">(
+    "grade"
+  );
   const [grade, setGrade] = useState<number | null>(null);
   const [subjects, setSubjects] = useState<string[]>([]);
+  const [avatarClass, setAvatarClass] = useState<AvatarClassId | null>(null);
   const [parentEmail, setParentEmail] = useState("");
   const [saving, setSaving] = useState(false);
   const [redirecting, setRedirecting] = useState(true);
@@ -96,15 +100,37 @@ export default function LearnerSetupPage() {
         if (parentProfile?.id) parentProfileId = parentProfile.id;
       }
 
-      const { error } = await supabase
+      // learner_avatar_class is sent only when picked — column was added in
+      // AVATAR_CLASS_MIGRATION. If the migration hasn't run yet, the update
+      // will fail with "column does not exist"; we fall back to retrying
+      // without that field so existing deploys don't break.
+      const baseUpdate = {
+        learner_grade: grade,
+        learner_subjects: subjects.length ? subjects : null,
+        parent_email: cleanedParentEmail || null,
+        parent_profile_id: parentProfileId,
+      };
+      const updatePayload: Record<string, unknown> = avatarClass
+        ? { ...baseUpdate, learner_avatar_class: avatarClass }
+        : baseUpdate;
+
+      let { error } = await supabase
         .from("profiles")
-        .update({
-          learner_grade: grade,
-          learner_subjects: subjects.length ? subjects : null,
-          parent_email: cleanedParentEmail || null,
-          parent_profile_id: parentProfileId,
-        })
+        .update(updatePayload)
         .eq("id", session.user.id);
+
+      // Graceful fallback: schema not yet migrated → drop avatar field & retry.
+      if (
+        error &&
+        avatarClass &&
+        /column.*learner_avatar_class/i.test(error.message)
+      ) {
+        const retry = await supabase
+          .from("profiles")
+          .update(baseUpdate)
+          .eq("id", session.user.id);
+        error = retry.error;
+      }
       if (error) throw error;
       router.replace("/learn");
     } catch (e: any) {
@@ -147,10 +173,12 @@ export default function LearnerSetupPage() {
             <span className={step === "grade" ? "text-white font-medium" : ""}>1. Grade</span>
             <span className="text-slate-700">·</span>
             <span className={step === "subjects" ? "text-white font-medium" : ""}>2. Subjects</span>
+            <span className="text-slate-700">·</span>
+            <span className={step === "class" ? "text-white font-medium" : ""}>3. Class</span>
             {requiresParentConsent && (
               <>
                 <span className="text-slate-700">·</span>
-                <span className={step === "parent" ? "text-white font-medium" : ""}>3. Parent</span>
+                <span className={step === "parent" ? "text-white font-medium" : ""}>4. Parent</span>
               </>
             )}
           </div>
@@ -306,6 +334,105 @@ export default function LearnerSetupPage() {
                       ← Back
                     </button>
                     <button
+                      onClick={() => setStep("class")}
+                      className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-amber-400 to-orange-500 text-slate-900 font-semibold text-sm hover:opacity-90 disabled:opacity-50 transition-opacity"
+                    >
+                      Next
+                      <ArrowRight size={14} />
+                    </button>
+                  </div>
+                </motion.div>
+              )}
+
+              {step === "class" && (
+                <motion.div
+                  key="class"
+                  initial={{ opacity: 0, y: 12 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -12 }}
+                  transition={{ duration: 0.4 }}
+                >
+                  <div className="text-center mb-8">
+                    <div className="text-5xl mb-3">🎒</div>
+                    <h1 className="text-3xl sm:text-4xl font-semibold tracking-tight mb-2">
+                      Pick your class
+                    </h1>
+                    <p className="text-sm text-slate-400 max-w-md mx-auto">
+                      Choose the one that feels most like you. It's just for fun
+                      — no advantage, just style. You can change later.
+                    </p>
+                  </div>
+
+                  <div className="grid sm:grid-cols-2 gap-3">
+                    {AVATAR_CLASSES.map((c) => {
+                      const isPicked = avatarClass === c.id;
+                      return (
+                        <button
+                          key={c.id}
+                          onClick={() => setAvatarClass(c.id)}
+                          className={`relative text-left p-4 rounded-xl border transition-all ${
+                            isPicked
+                              ? "border-amber-400/60 bg-amber-500/[0.08]"
+                              : "border-white/[0.08] bg-white/[0.03] hover:bg-white/[0.06] hover:border-white/[0.16]"
+                          }`}
+                          style={
+                            isPicked
+                              ? { boxShadow: `0 6px 24px ${c.accent}30` }
+                              : undefined
+                          }
+                        >
+                          <div className="flex items-start gap-3">
+                            <div
+                              className="flex-shrink-0 w-12 h-12 rounded-xl flex items-center justify-center text-2xl"
+                              style={{
+                                background: `linear-gradient(135deg, ${c.accent}33, ${c.accent}11)`,
+                                border: `1px solid ${c.accent}55`,
+                              }}
+                            >
+                              {c.emoji}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <div className="text-sm font-semibold">
+                                {c.name}
+                              </div>
+                              <div
+                                className="text-[11px] mt-0.5"
+                                style={{ color: c.accent }}
+                              >
+                                {c.tagline}
+                              </div>
+                              <div className="text-[11px] text-slate-400 mt-1.5 leading-relaxed">
+                                {c.vibe}
+                              </div>
+                            </div>
+                            {isPicked && (
+                              <div className="w-5 h-5 rounded-full bg-amber-400 flex items-center justify-center flex-shrink-0">
+                                <Check
+                                  size={11}
+                                  strokeWidth={3}
+                                  className="text-slate-900"
+                                />
+                              </div>
+                            )}
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  <p className="text-xs text-slate-500 text-center mt-5">
+                    Skip if you can't decide — you can pick one anytime from your
+                    profile.
+                  </p>
+
+                  <div className="mt-7 flex items-center justify-between">
+                    <button
+                      onClick={() => setStep("subjects")}
+                      className="text-sm text-slate-400 hover:text-white transition-colors"
+                    >
+                      ← Back
+                    </button>
+                    <button
                       onClick={() => {
                         if (requiresParentConsent) {
                           setStep("parent");
@@ -369,7 +496,7 @@ export default function LearnerSetupPage() {
 
                   <div className="mt-7 flex items-center justify-between">
                     <button
-                      onClick={() => setStep("subjects")}
+                      onClick={() => setStep("class")}
                       className="text-sm text-slate-400 hover:text-white transition-colors"
                     >
                       ← Back

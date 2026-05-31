@@ -26,6 +26,7 @@ import {
 } from "@/lib/data/learner";
 import { LESSONS, type Lesson } from "@/lib/data/learner-lessons";
 import { CAREERS, isCareerUnlocked, getCareer } from "@/lib/data/careers";
+import { getAvatarClass } from "@/lib/data/avatar-classes";
 import { REALMS } from "@/lib/data/realms";
 import { guildForCareer, currentRank } from "@/lib/data/guilds";
 import { todaysSalita } from "@/lib/data/salita-ng-araw";
@@ -41,6 +42,7 @@ interface LearnerProfile {
   username: string | null;
   learner_grade: number | null;
   learner_subjects: string[] | null;
+  learner_avatar_class?: string | null;
   current_level: number;
   total_xp: number;
   streak_count: number;
@@ -78,12 +80,16 @@ export default function LearnPage() {
         const startOfDay = new Date();
         startOfDay.setHours(0, 0, 0, 0);
 
-        const [{ data: prof }, { data: events }, { data: todayEvents }] = await Promise.all([
+        // Profile fields include learner_avatar_class which may not exist
+        // until AVATAR_CLASS_MIGRATION has been applied. Try with it first;
+        // if the column is missing, fall back to the legacy select so the
+        // page still works pre-migration.
+        const profileFields =
+          "username, learner_grade, learner_subjects, current_level, total_xp, streak_count, longest_streak, dream_career_id";
+        const [profPrimary, { data: events }, { data: todayEvents }] = await Promise.all([
           supabase
             .from("profiles")
-            .select(
-              "username, learner_grade, learner_subjects, current_level, total_xp, streak_count, longest_streak, dream_career_id"
-            )
+            .select(`${profileFields}, learner_avatar_class`)
             .eq("id", uid)
             .maybeSingle(),
           supabase
@@ -100,7 +106,19 @@ export default function LearnPage() {
             .gte("created_at", startOfDay.toISOString()),
         ]);
 
-        if (prof) setProfile(prof as LearnerProfile);
+        let prof: Record<string, unknown> | null = profPrimary.data as
+          | Record<string, unknown>
+          | null;
+        if (profPrimary.error) {
+          const fallback = await supabase
+            .from("profiles")
+            .select(profileFields)
+            .eq("id", uid)
+            .maybeSingle();
+          prof = fallback.data as Record<string, unknown> | null;
+        }
+
+        if (prof) setProfile(prof as unknown as LearnerProfile);
         setCompletions(
           (events || [])
             .map((e: any) => ({
@@ -214,6 +232,7 @@ export default function LearnPage() {
 
   const dreamCareer = profile?.dream_career_id ? getCareer(profile.dream_career_id) : null;
   const unlockedCareers = CAREERS.filter((c) => isCareerUnlocked(c, totalXp)).length;
+  const avatarClass = getAvatarClass(profile?.learner_avatar_class);
 
   // Daily XP goal scales by tier — kids get smaller wins, teens earn more per lesson
   const dailyGoal = dailyGoalForHooks;
@@ -272,6 +291,19 @@ export default function LearnPage() {
                 <span className="text-slate-600">·</span>
                 <span className="inline-flex items-center gap-1 text-indigo-300 font-medium">
                   Grade {grade}
+                </span>
+              </>
+            )}
+            {avatarClass && (
+              <>
+                <span className="text-slate-600">·</span>
+                <span
+                  className="inline-flex items-center gap-1 font-medium"
+                  style={{ color: avatarClass.accent }}
+                  title={avatarClass.vibe}
+                >
+                  <span>{avatarClass.emoji}</span>
+                  {avatarClass.name}
                 </span>
               </>
             )}
