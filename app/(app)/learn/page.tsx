@@ -174,24 +174,14 @@ export default function LearnPage() {
     return next || null;
   }, [completions, completedIds, todaysMission]);
 
-  if (loading) return <PageShimmer />;
-
-  const name = profile?.username || "friend";
-  const streak = profile?.streak_count || 0;
-  const totalXp = profile?.total_xp || 0;
-  const level = profile?.current_level || 1;
-  const tierCopy = TIER_COPY[tier];
-  const heading = tierGreeting(tier, name);
-
-  const dreamCareer = profile?.dream_career_id ? getCareer(profile.dream_career_id) : null;
-  const unlockedCareers = CAREERS.filter((c) => isCareerUnlocked(c, totalXp)).length;
-
-  // Daily XP goal scales by tier — kids get smaller wins, teens earn more per lesson
-  const dailyGoal = tier === "little" ? 100 : tier === "junior" ? 200 : 300;
-  const goalPct = Math.min((todayXp / dailyGoal) * 100, 100);
-  const goalHit = todayXp >= dailyGoal;
-
-  // Daily Quests — rotate by date, compute progress from today's events
+  // ── All hooks must come BEFORE any early returns (Rules of Hooks) ──
+  // Daily Quests — rotate by date, compute progress from today's events.
+  // These useMemo calls must run on every render even when still loading,
+  // otherwise React throws "Rendered more hooks than during the previous
+  // render" the instant `loading` flips to false.
+  const dailyGoalForHooks =
+    (tier === "little" ? 100 : tier === "junior" ? 200 : 300);
+  const goalHitForHooks = todayXp >= dailyGoalForHooks;
   const quests = useMemo(() => todaysQuests(), []);
   const todayStats: TodayStats = useMemo(() => {
     const subjects = new Set<SubjectId>();
@@ -206,10 +196,27 @@ export default function LearnPage() {
       lessonsToday: todayLessonEvents.length,
       subjectsToday: subjects,
       perfectLessonsToday: perfect,
-      dailyGoalHit: goalHit,
+      dailyGoalHit: goalHitForHooks,
       streakKept: todayLessonEvents.length > 0,
     };
-  }, [todayXp, todayLessonEvents, goalHit]);
+  }, [todayXp, todayLessonEvents, goalHitForHooks]);
+
+  if (loading) return <PageShimmer />;
+
+  const name = profile?.username || "friend";
+  const streak = profile?.streak_count || 0;
+  const totalXp = profile?.total_xp || 0;
+  const level = profile?.current_level || 1;
+  const tierCopy = TIER_COPY[tier];
+  const heading = tierGreeting(tier, name);
+
+  const dreamCareer = profile?.dream_career_id ? getCareer(profile.dream_career_id) : null;
+  const unlockedCareers = CAREERS.filter((c) => isCareerUnlocked(c, totalXp)).length;
+
+  // Daily XP goal scales by tier — kids get smaller wins, teens earn more per lesson
+  const dailyGoal = dailyGoalForHooks;
+  const goalPct = Math.min((todayXp / dailyGoal) * 100, 100);
+  const goalHit = goalHitForHooks;
 
   // Highlight subjects the user picked; show the rest as discoverable.
   const pickedSet = new Set(picked);
