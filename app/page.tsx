@@ -19,7 +19,7 @@ import { Logo } from "@/components/brand/Logo";
 import { PrimaryLinkButton } from "@/components/ui/PrimaryButton";
 import { StickyCTA } from "@/components/landing/StickyCTA";
 import { FloatingParticles } from "@/components/landing/FloatingParticles";
-import { ConstellationEagle } from "@/components/landing/ConstellationEagle";
+import { HeroEagle } from "@/components/landing/HeroEagle";
 import { HeroPreview } from "@/components/landing/HeroPreview";
 import { UtmCapture } from "@/components/marketing/UtmCapture";
 
@@ -118,8 +118,9 @@ export default function Landing() {
             transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
             className="flex justify-center mb-2"
           >
-            {/* Constellation eagle mascot — futuristic star-map bird in flight. */}
-            <ConstellationEagle size={520} />
+            {/* Eagle mascot with a premium hero treatment (glow, orbit rings,
+                embers, pedestal, float + cursor parallax). */}
+            <HeroEagle size={620} />
           </motion.div>
 
           {/* Eyebrow */}
