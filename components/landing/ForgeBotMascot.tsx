@@ -1,28 +1,30 @@
 "use client";
 
 /**
- * ForgeBot Mascot v15 — "Haribon Mecha" (futuristic armored eagle emblem).
+ * ForgeBot Mascot v16 — "Haribon Mecha" (sleek futuristic armored eagle).
  *
- * Full scrap of the soft feathered-bird lineage (v9–v14), which kept reading
- * as a cute robot-owl. This is a bold, geometric, ROBUST mecha-eagle crest:
+ * A bold, geometric mecha-eagle crest — premium, robust, stylish:
  *
- *   - ARMORED HELMET HEAD — faceted steel skull, center ridge, panel seams,
- *     top specular. Reads as machined metal, not a soft egg.
- *   - DARK HUD VISOR — angular goggle band with two glowing cyan blade-eyes
- *     and a center brow notch (the raptor scowl). Eyes blink + track cursor.
- *   - BOLD SWEPT WINGS — five large angular armor blades per side fanning up
- *     and out over a solid membrane, gold-tipped outer "primary." Sharp and
- *     geometric, not spiky feathers. Wings flex on a gentle soar.
- *   - GOLD CREST + HOOKED BEAK — three swept crest blades and a sharp gold
- *     beak: the eagle silhouette anchors.
- *   - CHEST SHIELD — a faceted V breastplate with a glowing cyan core seam
- *     and a small PH gold star.
- *   - FX — energy ring halo, hover disc, floating sparkles. Premium + clean.
+ *   - ARMORED HELMET HEAD — cool brushed blue-steel skull with a center
+ *     ridge, jaw/cheek panel plates, top specular, and neon rim-light
+ *     (cyan right, violet left).
+ *   - ANGULAR HUD VISOR — dark faceted goggle with two FIERCE cyan blade-
+ *     eyes (raptor scowl), a center brow notch, and a glowing HUD under-rim.
+ *     Eyes blink + track the cursor.
+ *   - BOLD SWEPT WINGS — five sharp armor blades per side over a solid
+ *     membrane, panel-lined, with a glowing cyan leading edge and a gold-
+ *     tipped outer primary. Wings flex on a gentle soar.
+ *   - CROWN CREST + HOOKED BEAK — a steel crown band with three swept gold
+ *     crest blades, and a sharp gold beak.
+ *   - CHEST SHIELD — a faceted V breastplate with a glowing cyan hex core
+ *     and a PH gold star, plus cyan shoulder light-nodes.
+ *   - FX — hex energy backdrop, dashed scan ring, HUD corner brackets,
+ *     pulsing hover disc, floating sparkles.
  *
- * Palette: brushed steel/gunmetal, cyan glow (HUD/eyes/core), PH gold accents.
+ * Palette: cool blue-steel armor, cyan glow (HUD/eyes/core/edges), PH gold.
  *
- * Motion: float, mouse-track tilt, eye blink, gentle wing flex, ring/disc
- * pulse, prefers-reduced-motion. Public API unchanged (size, className).
+ * Motion: float, cursor tilt, eye blink, wing flex, ring/disc pulse,
+ * prefers-reduced-motion. Public API unchanged (size, className).
  */
 
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -55,7 +57,7 @@ function blade(cx: number, cy: number, angleDeg: number, length: number, baseW: 
   const tx = cx + dx * length, ty = cy + dy * length;
   return {
     d: `M ${f1(blx)} ${f1(bly)} L ${f1(tx)} ${f1(ty)} L ${f1(brx)} ${f1(bry)} Z`,
-    spine: `M ${f1(blx + (tx - blx) * 0.1)} ${f1(bly + (ty - bly) * 0.1)} L ${f1(tx)} ${f1(ty)}`,
+    spine: `M ${f1(blx + (tx - blx) * 0.12)} ${f1(bly + (ty - bly) * 0.12)} L ${f1(tx)} ${f1(ty)}`,
     tip: [tx, ty],
     baseL: [blx, bly],
     baseR: [brx, bry],
@@ -63,28 +65,29 @@ function blade(cx: number, cy: number, angleDeg: number, length: number, baseW: 
   };
 }
 
-/** One bold wing: stacked angular blades fanning up & out from a shoulder. */
+/** One bold wing: angular blades fanning up & out over a solid membrane. */
 function buildWing(sx: number, sy: number, dir: 1 | -1) {
   const N = 5;
   const blades: Blade[] = [];
   const tips: [number, number][] = [];
   for (let i = 0; i < N; i++) {
     const t = i / (N - 1);
-    const angle = dir * (24 + t * 50);
-    const length = 158 - t * 30;
-    const baseW = 34 - t * 12;
-    const bx = sx + dir * t * 12;
-    const by = sy - t * 10;
+    const angle = dir * (22 + t * 52);
+    const length = 168 - t * 34;
+    const baseW = 30 - t * 11;
+    const bx = sx + dir * t * 13;
+    const by = sy - t * 11;
     const b = blade(bx, by, angle, length, baseW, i === N - 1);
     blades.push(b);
     tips.push(b.tip);
   }
   const membrane =
-    `M ${f1(sx)} ${f1(sy + 14)} ` +
-    `L ${f1(blades[0].baseL[0])} ${f1(blades[0].baseL[1])} ` +
+    `M ${f1(sx)} ${f1(sy + 14)} L ${f1(blades[0].baseL[0])} ${f1(blades[0].baseL[1])} ` +
     tips.map((p) => `L ${f1(p[0])} ${f1(p[1])}`).join(" ") +
     ` L ${f1(blades[N - 1].baseR[0])} ${f1(blades[N - 1].baseR[1])} Z`;
-  return { blades, membrane };
+  const leading =
+    `M ${f1(tips[0][0])} ${f1(tips[0][1])} ` + tips.slice(1).map((p) => `L ${f1(p[0])} ${f1(p[1])}`).join(" ");
+  return { blades, membrane, leading };
 }
 
 export function ForgeBotMascot({ size = 380, className = "" }: ForgeBotMascotProps) {
@@ -133,8 +136,8 @@ export function ForgeBotMascot({ size = 380, className = "" }: ForgeBotMascotPro
     mouseY.set(0);
   }
 
-  const R = { x: 236, y: 214 };
-  const L = { x: 164, y: 214 };
+  const R = { x: 238, y: 214 };
+  const L = { x: 162, y: 214 };
   const wingR = useMemo(() => buildWing(R.x, R.y, 1), [R.x, R.y]);
   const wingL = useMemo(() => buildWing(L.x, L.y, -1), [L.x, L.y]);
 
@@ -196,35 +199,41 @@ export function ForgeBotMascot({ size = 380, className = "" }: ForgeBotMascotPro
             style={{ display: "block", filter: "drop-shadow(0 30px 60px rgba(34,211,238,0.4))" }}
           >
             <defs>
-              <linearGradient id="steel" x1="20%" y1="0%" x2="80%" y2="100%">
-                <stop offset="0%" stopColor="#dbe3ee" />
-                <stop offset="35%" stopColor="#9aa7b9" />
-                <stop offset="70%" stopColor="#5c6979" />
-                <stop offset="100%" stopColor="#3a4453" />
+              <linearGradient id="steel" x1="25%" y1="0%" x2="75%" y2="100%">
+                <stop offset="0%" stopColor="#e6edf6" />
+                <stop offset="30%" stopColor="#aab8cb" />
+                <stop offset="62%" stopColor="#5b6a80" />
+                <stop offset="100%" stopColor="#2f3a4b" />
               </linearGradient>
               <linearGradient id="steelDark" x1="50%" y1="0%" x2="50%" y2="100%">
-                <stop offset="0%" stopColor="#3d4756" />
-                <stop offset="100%" stopColor="#161d28" />
+                <stop offset="0%" stopColor="#364254" />
+                <stop offset="100%" stopColor="#10161f" />
               </linearGradient>
               <linearGradient id="plate" x1="50%" y1="0%" x2="50%" y2="100%">
-                <stop offset="0%" stopColor="#aeb9c8" />
-                <stop offset="50%" stopColor="#6c7889" />
-                <stop offset="100%" stopColor="#2c3542" />
+                <stop offset="0%" stopColor="#c2cedd" />
+                <stop offset="45%" stopColor="#73829a" />
+                <stop offset="100%" stopColor="#28313f" />
               </linearGradient>
               <linearGradient id="gold" x1="20%" y1="0%" x2="80%" y2="100%">
-                <stop offset="0%" stopColor="#fde68a" />
-                <stop offset="45%" stopColor="#f59e0b" />
-                <stop offset="100%" stopColor="#b45309" />
+                <stop offset="0%" stopColor="#fff0c2" />
+                <stop offset="45%" stopColor="#f5a814" />
+                <stop offset="100%" stopColor="#a4560a" />
               </linearGradient>
               <radialGradient id="eye" cx="50%" cy="40%" r="60%">
                 <stop offset="0%" stopColor="#ffffff" />
-                <stop offset="40%" stopColor="#a5f3fc" />
+                <stop offset="35%" stopColor="#bdf6fd" />
                 <stop offset="100%" stopColor="#22d3ee" />
+              </radialGradient>
+              <radialGradient id="core" cx="50%" cy="50%" r="50%">
+                <stop offset="0%" stopColor="#ffffff" />
+                <stop offset="35%" stopColor="#a5f3fc" />
+                <stop offset="75%" stopColor="#22d3ee" />
+                <stop offset="100%" stopColor="#0e7490" stopOpacity="0" />
               </radialGradient>
               <radialGradient id="ring" cx="50%" cy="50%" r="50%">
                 <stop offset="0%" stopColor="#22d3ee" stopOpacity="0" />
-                <stop offset="78%" stopColor="#22d3ee" stopOpacity="0.10" />
-                <stop offset="92%" stopColor="#22d3ee" stopOpacity="0.30" />
+                <stop offset="74%" stopColor="#22d3ee" stopOpacity="0.08" />
+                <stop offset="90%" stopColor="#22d3ee" stopOpacity="0.28" />
                 <stop offset="100%" stopColor="#22d3ee" stopOpacity="0" />
               </radialGradient>
               <filter id="eyeBloom" x="-150%" y="-150%" width="400%" height="400%">
@@ -236,99 +245,135 @@ export function ForgeBotMascot({ size = 380, className = "" }: ForgeBotMascotPro
               </filter>
             </defs>
 
-            {/* energy ring backdrop */}
+            {/* ════ TECH BACKDROP ════ */}
             <motion.circle
               cx="200"
-              cy="210"
-              r="180"
+              cy="208"
+              r="184"
               fill="url(#ring)"
               animate={reducedMotion ? { opacity: 0.8 } : { opacity: [0.6, 1, 0.6], scale: [1, 1.03, 1] }}
               transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
-              style={{ transformOrigin: "200px 210px" }}
+              style={{ transformOrigin: "200px 208px" }}
             />
+            <polygon points="200,44 360,140 360,300 200,396 40,300 40,140" fill="none" stroke="rgba(34,211,238,0.12)" strokeWidth="1" />
+            <motion.circle
+              cx="200"
+              cy="208"
+              r="150"
+              fill="none"
+              stroke="rgba(34,211,238,0.10)"
+              strokeWidth="1"
+              strokeDasharray="2 9"
+              animate={reducedMotion ? {} : { rotate: 360 }}
+              transition={{ duration: 40, repeat: Infinity, ease: "linear" }}
+              style={{ transformOrigin: "200px 208px" }}
+            />
+            <g stroke="rgba(34,211,238,0.35)" strokeWidth="1.4" fill="none">
+              <path d="M 76 90 L 54 90 L 54 112" />
+              <path d="M 324 90 L 346 90 L 346 112" />
+              <path d="M 76 330 L 54 330 L 54 308" />
+              <path d="M 324 330 L 346 330 L 346 308" />
+            </g>
 
             {/* ════ WINGS ════ */}
             <motion.g animate={flexL} transition={flexTransition} style={{ transformOrigin: `${L.x}px ${L.y}px` }}>
-              <path d={wingL.membrane} fill="url(#steelDark)" stroke="rgba(34,211,238,0.25)" strokeWidth="1" style={{ filter: "drop-shadow(0 8px 14px rgba(0,0,0,0.45))" }} />
+              <path d={wingL.membrane} fill="url(#steelDark)" stroke="rgba(34,211,238,0.22)" strokeWidth="1" style={{ filter: "drop-shadow(0 8px 14px rgba(0,0,0,0.45))" }} />
               {wingL.blades.map((b, i) => (
-                <path key={`lb${i}`} d={b.d} fill={b.gold ? "url(#gold)" : "url(#plate)"} stroke="rgba(10,15,25,0.5)" strokeWidth="1" />
+                <path key={`lb${i}`} d={b.d} fill={b.gold ? "url(#gold)" : "url(#plate)"} stroke="rgba(8,12,22,0.55)" strokeWidth="1" />
               ))}
               {wingL.blades.map((b, i) => (
-                <path key={`ls${i}`} d={b.spine} stroke="rgba(190,205,222,0.45)" strokeWidth="0.8" fill="none" />
+                <path key={`ls${i}`} d={b.spine} stroke="rgba(200,215,232,0.5)" strokeWidth="0.8" fill="none" />
               ))}
+              <path d={wingL.leading} stroke="rgba(103,232,249,0.7)" strokeWidth="1.4" fill="none" strokeLinejoin="round" style={{ filter: "drop-shadow(0 0 3px rgba(34,211,238,0.6))" }} />
             </motion.g>
             <motion.g animate={flexR} transition={flexTransition} style={{ transformOrigin: `${R.x}px ${R.y}px` }}>
-              <path d={wingR.membrane} fill="url(#steelDark)" stroke="rgba(34,211,238,0.25)" strokeWidth="1" style={{ filter: "drop-shadow(0 8px 14px rgba(0,0,0,0.45))" }} />
+              <path d={wingR.membrane} fill="url(#steelDark)" stroke="rgba(34,211,238,0.22)" strokeWidth="1" style={{ filter: "drop-shadow(0 8px 14px rgba(0,0,0,0.45))" }} />
               {wingR.blades.map((b, i) => (
-                <path key={`rb${i}`} d={b.d} fill={b.gold ? "url(#gold)" : "url(#plate)"} stroke="rgba(10,15,25,0.5)" strokeWidth="1" />
+                <path key={`rb${i}`} d={b.d} fill={b.gold ? "url(#gold)" : "url(#plate)"} stroke="rgba(8,12,22,0.55)" strokeWidth="1" />
               ))}
               {wingR.blades.map((b, i) => (
-                <path key={`rs${i}`} d={b.spine} stroke="rgba(190,205,222,0.45)" strokeWidth="0.8" fill="none" />
+                <path key={`rs${i}`} d={b.spine} stroke="rgba(200,215,232,0.5)" strokeWidth="0.8" fill="none" />
               ))}
+              <path d={wingR.leading} stroke="rgba(103,232,249,0.7)" strokeWidth="1.4" fill="none" strokeLinejoin="round" style={{ filter: "drop-shadow(0 0 3px rgba(34,211,238,0.6))" }} />
             </motion.g>
 
-            {/* breathing wrapper for head+chest */}
+            {/* shoulder light nodes */}
+            <motion.g animate={reducedMotion ? { opacity: 0.9 } : { opacity: [0.6, 1, 0.6] }} transition={{ duration: 2.4, repeat: Infinity, ease: "easeInOut" }}>
+              <circle cx={L.x} cy={L.y} r="3" fill="#a5f3fc" style={{ filter: "drop-shadow(0 0 4px #22d3ee)" }} />
+              <circle cx={R.x} cy={R.y} r="3" fill="#a5f3fc" style={{ filter: "drop-shadow(0 0 4px #22d3ee)" }} />
+            </motion.g>
+
+            {/* breathing wrapper for head + chest */}
             <motion.g
               animate={reducedMotion ? {} : { scale: [1, 1.012, 1] }}
               transition={{ duration: 4.4, repeat: Infinity, ease: "easeInOut" }}
               style={{ transformOrigin: "200px 200px" }}
             >
               {/* ════ CHEST SHIELD ════ */}
-              <path d="M 176 196 L 224 196 L 232 232 L 200 304 L 168 232 Z" fill="url(#steel)" stroke="rgba(10,15,25,0.5)" strokeWidth="1.2" style={{ filter: "drop-shadow(0 10px 18px rgba(0,0,0,0.45))" }} />
-              <path d="M 200 210 L 200 296" stroke="rgba(34,211,238,0.5)" strokeWidth="1.2" style={{ filter: "drop-shadow(0 0 3px #22d3ee)" }} />
-              <path d="M 178 220 L 200 210 L 222 220" stroke="rgba(10,15,25,0.4)" strokeWidth="1" fill="none" />
-              <path d="M 200 232 L 188 250 M 200 232 L 212 250" stroke="rgba(10,15,25,0.35)" strokeWidth="1" fill="none" />
+              <path d="M 174 196 L 226 196 L 234 234 L 200 306 L 166 234 Z" fill="url(#steel)" stroke="rgba(8,12,22,0.55)" strokeWidth="1.2" style={{ filter: "drop-shadow(0 10px 18px rgba(0,0,0,0.45))" }} />
+              <path d="M 178 220 L 200 210 L 222 220" stroke="rgba(8,12,22,0.4)" strokeWidth="1" fill="none" />
+              <path d="M 184 250 L 200 244 L 216 250 L 200 300 Z" fill="url(#steelDark)" opacity="0.5" />
+              <path d="M 200 210 L 200 300" stroke="rgba(34,211,238,0.45)" strokeWidth="1" />
+              {/* hex core */}
               <motion.g
                 animate={reducedMotion ? { opacity: 0.9 } : { opacity: [0.7, 1, 0.7] }}
                 transition={{ duration: 2.8, repeat: Infinity, ease: "easeInOut" }}
               >
-                <circle cx="200" cy="236" r="6.5" fill="#0b1220" stroke="rgba(34,211,238,0.6)" strokeWidth="1" />
-                <path d="M 200 231.5 L 201.4 235.2 L 205.2 235.2 L 202.1 237.6 L 203.3 241.4 L 200 239.1 L 196.7 241.4 L 197.9 237.6 L 194.8 235.2 L 198.6 235.2 Z" fill="#fde68a" style={{ filter: "drop-shadow(0 0 3px #fbbf24)" }} />
+                <circle cx="200" cy="234" r="14" fill="url(#core)" opacity="0.5" />
+                <polygon points="200,224 209,229 209,239 200,244 191,239 191,229" fill="#0a1019" stroke="rgba(34,211,238,0.7)" strokeWidth="1.2" />
+                <path d="M 200 229.5 L 201.5 233.4 L 205.6 233.4 L 202.3 235.9 L 203.6 239.8 L 200 237.4 L 196.4 239.8 L 197.7 235.9 L 194.4 233.4 L 198.5 233.4 Z" fill="#ffe9a8" style={{ filter: "drop-shadow(0 0 3px #fbbf24)" }} />
               </motion.g>
 
-              {/* ════ CREST BLADES ════ */}
-              <path d="M 184 118 L 176 70 L 196 110 Z" fill="url(#gold)" style={{ filter: "drop-shadow(0 0 4px rgba(251,191,36,0.4))" }} />
-              <path d="M 200 112 L 200 58 L 212 108 Z" fill="url(#gold)" style={{ filter: "drop-shadow(0 0 4px rgba(251,191,36,0.4))" }} />
-              <path d="M 216 118 L 224 70 L 204 110 Z" fill="url(#gold)" style={{ filter: "drop-shadow(0 0 4px rgba(251,191,36,0.4))" }} />
+              {/* ════ CROWN BAND + SWEPT CREST ════ */}
+              <path d="M 176 116 Q 200 104 224 116 L 221 124 Q 200 114 179 124 Z" fill="url(#steel)" stroke="rgba(8,12,22,0.5)" strokeWidth="0.8" />
+              <path d="M 184 116 L 172 64 L 192 112 Z" fill="url(#gold)" style={{ filter: "drop-shadow(0 0 4px rgba(251,191,36,0.4))" }} />
+              <path d="M 197 112 L 201 54 L 209 110 Z" fill="url(#gold)" style={{ filter: "drop-shadow(0 0 4px rgba(251,191,36,0.4))" }} />
+              <path d="M 216 116 L 228 64 L 208 112 Z" fill="url(#gold)" style={{ filter: "drop-shadow(0 0 4px rgba(251,191,36,0.4))" }} />
 
               {/* ════ HELMET HEAD ════ */}
               <path
-                d="M 200 108 C 232 108 254 130 254 160 C 254 180 244 196 226 206 L 220 214 L 200 220 L 180 214 L 174 206 C 156 196 146 180 146 160 C 146 130 168 108 200 108 Z"
+                d="M 200 108 C 233 108 256 131 256 161 C 256 181 246 197 227 207 L 220 216 L 200 222 L 180 216 L 173 207 C 154 197 144 181 144 161 C 144 131 167 108 200 108 Z"
                 fill="url(#steel)"
-                stroke="rgba(10,15,25,0.45)"
+                stroke="rgba(8,12,22,0.5)"
                 strokeWidth="1.2"
                 style={{ filter: "drop-shadow(0 8px 16px rgba(0,0,0,0.5))" }}
               />
-              <path d="M 200 110 L 200 150" stroke="rgba(10,15,25,0.3)" strokeWidth="1" />
-              <path d="M 162 150 Q 200 138 238 150" stroke="rgba(255,255,255,0.35)" strokeWidth="1.2" fill="none" />
-              <ellipse cx="180" cy="138" rx="20" ry="8" fill="rgba(255,255,255,0.5)" style={{ filter: "blur(3px)" }} />
+              <path d="M 200 110 L 200 150" stroke="rgba(8,12,22,0.28)" strokeWidth="1" />
+              <path d="M 158 168 Q 162 192 180 208" stroke="rgba(8,12,22,0.3)" strokeWidth="1" fill="none" />
+              <path d="M 242 168 Q 238 192 220 208" stroke="rgba(8,12,22,0.3)" strokeWidth="1" fill="none" />
+              <path d="M 182 214 Q 200 222 218 214" stroke="rgba(8,12,22,0.3)" strokeWidth="1" fill="none" />
+              <ellipse cx="180" cy="136" rx="20" ry="8" fill="rgba(255,255,255,0.5)" style={{ filter: "blur(3px)" }} />
+              <path d="M 253 140 Q 258 165 246 192" stroke="rgba(103,232,249,0.55)" strokeWidth="2" fill="none" strokeLinecap="round" style={{ filter: "drop-shadow(0 0 3px rgba(34,211,238,0.5))" }} />
+              <path d="M 147 140 Q 142 165 154 192" stroke="rgba(167,139,250,0.45)" strokeWidth="1.8" fill="none" strokeLinecap="round" />
 
-              {/* ════ VISOR ════ */}
-              <path d="M 156 158 C 168 150 184 150 200 156 C 216 150 232 150 244 158 C 248 172 240 184 224 188 C 210 190 200 188 200 188 C 200 188 190 190 176 188 C 160 184 152 172 156 158 Z" fill="#0b1220" />
-              <path d="M 160 162 Q 200 154 240 162" stroke="rgba(34,211,238,0.4)" strokeWidth="1" fill="none" />
+              {/* ════ ANGULAR VISOR ════ */}
+              <path d="M 152 158 L 176 149 L 198 158 L 200 163 L 202 158 L 224 149 L 248 158 L 244 181 L 224 191 L 202 187 L 200 185 L 198 187 L 176 191 L 156 181 Z" fill="#0a1019" stroke="rgba(34,211,238,0.25)" strokeWidth="0.8" />
 
-              {/* ════ EYES ════ */}
+              {/* ════ FIERCE EYES ════ */}
               <motion.g style={{ x: eyeOffsetX, y: eyeOffsetY }}>
                 <motion.g
                   animate={blink ? { scaleY: 0.1 } : { scaleY: 1 }}
                   transition={{ duration: 0.1 }}
-                  style={{ transformOrigin: "200px 171px" }}
+                  style={{ transformOrigin: "200px 172px" }}
                 >
-                  <path d="M 168 168 L 190 164 L 186 176 L 170 178 Z" fill="url(#eye)" filter="url(#eyeBloom)" />
-                  <path d="M 232 168 L 210 164 L 214 176 L 230 178 Z" fill="url(#eye)" filter="url(#eyeBloom)" />
+                  <path d="M 166 164 L 193 171 L 188 180 L 168 177 Z" fill="url(#eye)" filter="url(#eyeBloom)" />
+                  <path d="M 234 164 L 207 171 L 212 180 L 232 177 Z" fill="url(#eye)" filter="url(#eyeBloom)" />
+                  <path d="M 175 173 L 187 175" stroke="#ffffff" strokeWidth="1.2" opacity="0.8" />
+                  <path d="M 225 173 L 213 175" stroke="#ffffff" strokeWidth="1.2" opacity="0.8" />
                 </motion.g>
               </motion.g>
-              <path d="M 194 170 L 200 176 L 206 170" stroke="rgba(34,211,238,0.7)" strokeWidth="1.4" fill="none" strokeLinecap="round" />
+              <path d="M 194 175 L 200 182 L 206 175" stroke="rgba(34,211,238,0.7)" strokeWidth="1.5" fill="none" strokeLinecap="round" />
+              <path d="M 160 186 Q 200 178 240 186" stroke="rgba(34,211,238,0.55)" strokeWidth="1.2" fill="none" strokeLinecap="round" style={{ filter: "drop-shadow(0 0 3px #22d3ee)" }} />
 
               {/* ════ BEAK ════ */}
-              <path d="M 188 196 L 212 196 L 206 214 Q 200 226 200 226 Q 200 226 194 214 Z" fill="url(#gold)" stroke="rgba(120,53,15,0.5)" strokeWidth="0.8" style={{ filter: "drop-shadow(0 3px 5px rgba(0,0,0,0.4))" }} />
-              <path d="M 200 226 Q 196 220 196 212 L 204 212 Q 204 220 200 226 Z" fill="#92400e" />
-              <path d="M 194 200 L 206 200" stroke="rgba(120,53,15,0.5)" strokeWidth="1" />
+              <path d="M 188 197 L 212 197 L 205 215 Q 200 227 200 227 Q 200 227 195 215 Z" fill="url(#gold)" stroke="rgba(120,53,15,0.5)" strokeWidth="0.8" style={{ filter: "drop-shadow(0 3px 5px rgba(0,0,0,0.4))" }} />
+              <path d="M 200 227 Q 196 221 196 213 L 204 213 Q 204 221 200 227 Z" fill="#8a3d0c" />
+              <path d="M 194 201 L 206 201" stroke="rgba(120,53,15,0.5)" strokeWidth="1" />
             </motion.g>
 
             {/* ════ HOVER DISC ════ */}
-            <motion.ellipse cx="200" cy="340" rx="60" ry="8" fill="none" stroke="#22d3ee" strokeWidth="1.4" animate={reducedMotion ? { opacity: 0.6 } : { rx: [54, 66, 54], opacity: [0.45, 0.8, 0.45] }} transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }} style={{ filter: "drop-shadow(0 0 6px #22d3ee)" }} />
-            <motion.ellipse cx="200" cy="340" rx="40" ry="5" fill="none" stroke="#67e8f9" strokeWidth="0.9" animate={reducedMotion ? { opacity: 0.4 } : { rx: [34, 48, 34], opacity: [0.3, 0.7, 0.3] }} transition={{ duration: 3, repeat: Infinity, ease: "easeInOut", delay: 0.5 }} />
+            <motion.ellipse cx="200" cy="344" rx="62" ry="8" fill="none" stroke="#22d3ee" strokeWidth="1.4" animate={reducedMotion ? { opacity: 0.6 } : { rx: [56, 68, 56], opacity: [0.45, 0.8, 0.45] }} transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }} style={{ filter: "drop-shadow(0 0 6px #22d3ee)" }} />
+            <motion.ellipse cx="200" cy="344" rx="42" ry="5" fill="none" stroke="#67e8f9" strokeWidth="0.9" animate={reducedMotion ? { opacity: 0.4 } : { rx: [36, 50, 36], opacity: [0.3, 0.7, 0.3] }} transition={{ duration: 3, repeat: Infinity, ease: "easeInOut", delay: 0.5 }} />
           </svg>
         </motion.div>
       </motion.div>
