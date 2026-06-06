@@ -1,39 +1,36 @@
 "use client";
 
 /**
- * ForgeBot Mascot v12 — "Haribon Mk II" (robust futuristic Philippine Eagle).
+ * ForgeBot Mascot v13 — "Haribon Mk III" (sleek futuristic Philippine Eagle).
  *
- * Full scrap of the EVE-egg lineage. v9–v11 kept the egg body and glued
- * feathers on, so it read as "white blob with a mohawk." This is built
- * from the eagle OUT:
+ * A leaner, more high-tech evolution of the Mk II. Same eagle anatomy, but
+ * every surface is pushed toward a premium mecha read:
  *
- *   - HOOKED BEAK as the silhouette anchor (the single thing that makes a
- *     shape read "eagle"). Large, metallic gold, curved hook + gape line +
- *     nostril. Center of the face.
- *   - HEAVY SWEPT BROW MASK — the fierce eagle scowl rendered as a dark
- *     futuristic visor that sweeps up at the outer corners. Glowing cyan
- *     under-edge. Eyes glow through it.
- *   - FLARED ARMORED CREST — a full crown of 13 swept feather shards
- *     (bronze base → amber → glowing gold tips), widest and tallest in the
- *     middle, fanning wide at the edges. This is the Philippine Eagle's
- *     signature shaggy crest, stylized as a mecha crown.
- *   - FIERCE GLOWING EYES — angular cyan lenses, intense but with a clean
- *     friendly glow (cool, not scary — it's a kids' companion). Blink +
- *     micro-saccade + mouse-track preserved.
- *   - FEATHERED BREASTPLATE — three tapering rows of armored feather
- *     petals forming robust shoulders + chest, with a quiet PH-flag chest
- *     sigil (3 amber stars).
- *   - ANGULAR WINGS — layered flight-feather shards at the shoulders
- *     (replacing the egg-pods). Right wing flares on the wave gesture with
- *     an energy-meridian glow.
+ *   - BRUSHED-TITANIUM HEAD — cool silver-white skull (the bald-eagle white
+ *     head) rendered as faceted metal: a center forehead seam, cheek panel
+ *     lines, a sharp brow ridge, and crisp cyan/violet edge-lighting. No more
+ *     soft "cream blob" — it reads as a machined helmet.
+ *   - TIGHT SWEPT-BACK CREST — 11 thin carbon blades, gunmetal base melting
+ *     into PH-gold tips, each rimmed with a neon edge-line and capped by a
+ *     small bloom orb. Swept and unified rather than fanned and shaggy.
+ *   - ANGULAR HUD VISOR — a deep blue-black wraparound goggle with a flat
+ *     brow, pointed outer corners, corner HUD brackets, tick marks, scan
+ *     lines, and a hot cyan under-rim. Fierce raptor scowl as a clean HUD.
+ *   - FIERCE LENS EYES — angular cyan almonds with a white-hot core.
+ *   - GUNMETAL FLIGHT WINGS — sleeker swept feather blades at the shoulders
+ *     with cyan edge-light, right wing flares on the wave gesture.
+ *   - ARMORED BREASTPLATE — tapering feather petals (silver top → gunmetal
+ *     low, nodding to the dark eagle body) with a quiet 3-star PH sigil.
+ *   - HOOKED GOLD BEAK — the raptor silhouette anchor, machined gold with a
+ *     crisp specular ridge and dark gape.
  *
- * Palette: cream-metal head, bronze→gold crest + beak (PH flag yellow),
- * cyan glowing eyes/HUD, violet halo accent. All three PH flag colors
- * present without being a flag decal.
+ * Palette: silver-white titanium head, gunmetal→gold crest + beak (PH flag
+ * yellow), cyan glowing HUD/eyes, violet rim accent. All three PH flag
+ * colors present without being a flag decal.
  *
- * Motion scaffolding preserved from v11 (breathing, blink, wave,
- * micro-saccades, mouse-track, hover disc, orbit, hue-shift halo,
- * prismatic sheen, prefers-reduced-motion). Public API unchanged.
+ * Motion scaffolding preserved (breathing, blink, wave, micro-saccades,
+ * mouse-track, hover disc, orbit, hue-shift halo, prismatic sheen,
+ * prefers-reduced-motion). Public API unchanged.
  */
 
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -73,6 +70,20 @@ function shard(
   return `M ${f(blx)} ${f(bly)} Q ${f(mLx)} ${f(mLy)} ${f(tipx)} ${f(
     tipy
   )} Q ${f(mRx)} ${f(mRy)} ${f(brx)} ${f(bry)} Z`;
+}
+
+/** Spine line of a shard (base center → tip) — used for neon edge-lighting. */
+function shardSpine(
+  cx: number,
+  cy: number,
+  angleDeg: number,
+  length: number
+): string {
+  const a = (angleDeg * Math.PI) / 180;
+  const tipx = cx + Math.sin(a) * length;
+  const tipy = cy - Math.cos(a) * length;
+  const f = (n: number) => n.toFixed(1);
+  return `M ${f(cx)} ${f(cy)} L ${f(tipx)} ${f(tipy)}`;
 }
 
 /** Tip coordinate of a shard (for glowing tip orbs). */
@@ -173,19 +184,20 @@ export function ForgeBotMascot({ size = 380, className = "" }: ForgeBotMascotPro
     mouseY.set(0);
   }
 
-  // ─── Crest: 13 swept feather shards anchored behind the skull ───
+  // ─── Crest: 11 thin swept-back carbon blades anchored behind the skull ───
   const crest = useMemo(() => {
     const ANCHOR_X = 200;
-    const ANCHOR_Y = 168;
-    return Array.from({ length: 13 }).map((_, i) => {
-      const t = (i / 12) * 2 - 1; // -1..1
-      const angle = t * 86; // degrees from vertical → wide fan
-      const length = 132 - Math.abs(t) * 50; // tallest in the middle
-      const baseW = 17 - Math.abs(t) * 5;
+    const ANCHOR_Y = 166;
+    const N = 11;
+    return Array.from({ length: N }).map((_, i) => {
+      const t = (i / (N - 1)) * 2 - 1; // -1..1
+      const angle = t * 70; // sleeker, tighter fan
+      const length = 150 - Math.abs(t) * 58; // tall + sleek in the middle
+      const baseW = 12 - Math.abs(t) * 3.5; // thinner blades
       const [tx, ty] = shardTip(ANCHOR_X, ANCHOR_Y, angle, length);
       return {
         outer: shard(ANCHOR_X, ANCHOR_Y, angle, length, baseW),
-        inner: shard(ANCHOR_X, ANCHOR_Y, angle, length * 0.78, baseW * 0.5),
+        spine: shardSpine(ANCHOR_X, ANCHOR_Y, angle, length * 0.92),
         tipX: tx,
         tipY: ty,
         delay: Math.abs(t) * 0.5,
@@ -193,15 +205,15 @@ export function ForgeBotMascot({ size = 380, className = "" }: ForgeBotMascotPro
     });
   }, []);
 
-  // ─── Breastplate feather rows (robust shoulders + chest) ───
+  // ─── Breastplate feather rows (silver top → gunmetal low) ───
   const breast = useMemo(() => {
     const rows = [
-      { y: 296, w: 42, h: 50, centers: [146, 173, 200, 227, 254] },
-      { y: 332, w: 38, h: 46, centers: [160, 187, 213, 240] },
-      { y: 364, w: 34, h: 40, centers: [174, 200, 226] },
+      { y: 296, w: 42, h: 50, centers: [146, 173, 200, 227, 254], tone: 0 },
+      { y: 332, w: 38, h: 46, centers: [160, 187, 213, 240], tone: 1 },
+      { y: 364, w: 34, h: 40, centers: [174, 200, 226], tone: 2 },
     ];
     return rows.flatMap((r) =>
-      r.centers.map((cx) => ({ d: petal(cx, r.y, r.w, r.h), cx, topY: r.y }))
+      r.centers.map((cx) => ({ d: petal(cx, r.y, r.w, r.h), cx, topY: r.y, tone: r.tone }))
     );
   }, []);
 
@@ -236,6 +248,9 @@ export function ForgeBotMascot({ size = 380, className = "" }: ForgeBotMascotPro
 
   const breathAnim = reducedMotion ? {} : { scale: [1, 1.013, 1, 1.007, 1] };
   const breathTransition = { duration: 4.4, repeat: Infinity, ease: "easeInOut" } as const;
+
+  const HEAD_PATH =
+    "M 200 120 C 244 120 278 144 290 184 C 297 208 294 232 282 254 C 272 274 254 290 230 302 C 220 307 210 310 200 310 C 190 310 180 307 170 302 C 146 290 128 274 118 254 C 106 232 103 208 110 184 C 122 144 156 120 200 120 Z";
 
   return (
     <div
@@ -288,28 +303,29 @@ export function ForgeBotMascot({ size = 380, className = "" }: ForgeBotMascotPro
             }}
           >
             <defs>
+              {/* Head: cool brushed-titanium (bald-eagle white head) */}
               <radialGradient id="headGrad" cx="34%" cy="16%" r="84%">
                 <stop offset="0%" stopColor="#ffffff" />
-                <stop offset="42%" stopColor="#eef1f5" />
-                <stop offset="76%" stopColor="#d6dce4" />
-                <stop offset="100%" stopColor="#b8c0cc" />
+                <stop offset="40%" stopColor="#eef2f7" />
+                <stop offset="74%" stopColor="#cdd6e2" />
+                <stop offset="100%" stopColor="#a3aebd" />
               </radialGradient>
               <linearGradient id="headShade" x1="20%" y1="0%" x2="100%" y2="80%">
                 <stop offset="0%" stopColor="transparent" />
-                <stop offset="58%" stopColor="transparent" />
-                <stop offset="100%" stopColor="rgba(30,41,59,0.4)" />
+                <stop offset="56%" stopColor="transparent" />
+                <stop offset="100%" stopColor="rgba(15,23,42,0.46)" />
               </linearGradient>
-              {/* Crest: bronze base → amber → gold tip */}
+              {/* Gunmetal panel (lower breast / accents) */}
+              <linearGradient id="gunmetal" x1="50%" y1="0%" x2="50%" y2="100%">
+                <stop offset="0%" stopColor="#64748b" />
+                <stop offset="100%" stopColor="#334155" />
+              </linearGradient>
+              {/* Crest: gunmetal base → steel → PH-gold tip */}
               <linearGradient id="crestGrad" x1="50%" y1="100%" x2="50%" y2="0%">
-                <stop offset="0%" stopColor="#78350f" />
-                <stop offset="38%" stopColor="#b45309" />
-                <stop offset="72%" stopColor="#f59e0b" />
+                <stop offset="0%" stopColor="#1e293b" />
+                <stop offset="34%" stopColor="#475569" />
+                <stop offset="66%" stopColor="#d97706" />
                 <stop offset="100%" stopColor="#fcd34d" />
-              </linearGradient>
-              <linearGradient id="crestInner" x1="50%" y1="100%" x2="50%" y2="0%">
-                <stop offset="0%" stopColor="#b45309" stopOpacity="0" />
-                <stop offset="60%" stopColor="#fbbf24" stopOpacity="0.7" />
-                <stop offset="100%" stopColor="#fef3c7" />
               </linearGradient>
               {/* Beak: gold metal */}
               <linearGradient id="beakGrad" x1="30%" y1="0%" x2="70%" y2="100%">
@@ -318,9 +334,9 @@ export function ForgeBotMascot({ size = 380, className = "" }: ForgeBotMascotPro
                 <stop offset="100%" stopColor="#b45309" />
               </linearGradient>
               {/* Brow visor */}
-              <radialGradient id="visorGrad" cx="38%" cy="22%" r="90%">
-                <stop offset="0%" stopColor="#1e1b4b" />
-                <stop offset="48%" stopColor="#0c0a1f" />
+              <radialGradient id="visorGrad" cx="38%" cy="20%" r="92%">
+                <stop offset="0%" stopColor="#1e293b" />
+                <stop offset="46%" stopColor="#0b1220" />
                 <stop offset="100%" stopColor="#000000" />
               </radialGradient>
               <linearGradient id="prismaticSheen" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -346,9 +362,10 @@ export function ForgeBotMascot({ size = 380, className = "" }: ForgeBotMascotPro
                 <stop offset="70%" stopColor="#a78bfa" stopOpacity="1" />
                 <stop offset="100%" stopColor="#22d3ee" stopOpacity="0" />
               </linearGradient>
+              {/* Wings: gunmetal flight feathers */}
               <linearGradient id="wingGrad" x1="50%" y1="0%" x2="50%" y2="100%">
-                <stop offset="0%" stopColor="#eef1f5" />
-                <stop offset="100%" stopColor="#aab2bf" />
+                <stop offset="0%" stopColor="#94a3b8" />
+                <stop offset="100%" stopColor="#3a465b" />
               </linearGradient>
 
               <filter id="eyeBloom" x="-120%" y="-120%" width="340%" height="340%">
@@ -369,7 +386,10 @@ export function ForgeBotMascot({ size = 380, className = "" }: ForgeBotMascotPro
               </filter>
 
               <clipPath id="visorClip">
-                <path d="M 118 188 C 124 168 150 160 176 168 C 188 172 196 180 200 192 C 204 180 212 172 224 168 C 250 160 276 168 282 188 C 288 208 281 230 262 240 C 238 252 210 254 200 254 C 190 254 162 252 138 240 C 119 230 112 208 118 188 Z" />
+                <path d="M 116 190 L 150 168 Q 176 162 192 186 L 200 196 L 208 186 Q 224 162 250 168 L 284 190 Q 290 214 268 240 L 232 251 Q 200 256 168 251 L 132 240 Q 110 214 116 190 Z" />
+              </clipPath>
+              <clipPath id="headClip">
+                <path d={HEAD_PATH} />
               </clipPath>
             </defs>
 
@@ -410,25 +430,25 @@ export function ForgeBotMascot({ size = 380, className = "" }: ForgeBotMascotPro
             <motion.g animate={breathAnim} transition={breathTransition} style={{ transformOrigin: "200px 230px" }}>
 
               {/* ════ CREST CROWN (behind head) ════ */}
-              <motion.ellipse cx="200" cy="80" rx="118" ry="46" fill="#fcd34d" opacity="0.0" />
               <motion.g
-                animate={reducedMotion ? {} : { rotate: [-1.3, 1.3, -1.3] }}
+                animate={reducedMotion ? {} : { rotate: [-1.1, 1.1, -1.1] }}
                 transition={{ duration: 5.5, repeat: Infinity, ease: "easeInOut" }}
-                style={{ transformOrigin: "200px 168px" }}
+                style={{ transformOrigin: "200px 166px" }}
               >
                 {/* soft amber aura */}
-                <ellipse cx="200" cy="78" rx="112" ry="50" fill="#f59e0b" opacity="0.16" style={{ filter: "blur(14px)" }} />
+                <ellipse cx="200" cy="74" rx="104" ry="52" fill="#f59e0b" opacity="0.14" style={{ filter: "blur(16px)" }} />
                 {crest.map((c, i) => (
-                  <g key={i} style={{ filter: "drop-shadow(0 3px 6px rgba(120,53,15,0.45))" }}>
-                    <path d={c.outer} fill="url(#crestGrad)" stroke="rgba(120,53,15,0.4)" strokeWidth="0.5" />
-                    <path d={c.inner} fill="url(#crestInner)" opacity="0.8" />
+                  <g key={i} style={{ filter: "drop-shadow(0 3px 6px rgba(15,23,42,0.5))" }}>
+                    <path d={c.outer} fill="url(#crestGrad)" stroke="rgba(8,12,24,0.5)" strokeWidth="0.5" />
+                    {/* neon edge-line down the spine */}
+                    <path d={c.spine} stroke="rgba(103,232,249,0.55)" strokeWidth="1" fill="none" strokeLinecap="round" style={{ filter: "drop-shadow(0 0 3px rgba(34,211,238,0.7))" }} />
                     <motion.circle
                       cx={c.tipX}
                       cy={c.tipY}
-                      r="2.6"
+                      r="2.4"
                       fill="#fef3c7"
                       filter="url(#tipBloom)"
-                      animate={reducedMotion ? { opacity: 0.9 } : { opacity: [0.6, 1, 0.6], r: [2.6, 3.4, 2.6] }}
+                      animate={reducedMotion ? { opacity: 0.9 } : { opacity: [0.6, 1, 0.6], r: [2.4, 3.2, 2.4] }}
                       transition={{ duration: 2.2, delay: c.delay, repeat: Infinity, ease: "easeInOut" }}
                       style={{ filter: "drop-shadow(0 0 6px #fbbf24)" }}
                     />
@@ -443,7 +463,9 @@ export function ForgeBotMascot({ size = 380, className = "" }: ForgeBotMascotPro
                 style={{ transformOrigin: "128px 262px" }}
               >
                 {leftWing.map((d, i) => (
-                  <path key={i} d={d} fill="url(#wingGrad)" stroke="rgba(34,211,238,0.25)" strokeWidth="0.7" style={{ filter: "drop-shadow(0 6px 10px rgba(0,0,0,0.4))" }} />
+                  <g key={i}>
+                    <path d={d} fill="url(#wingGrad)" stroke="rgba(34,211,238,0.3)" strokeWidth="0.8" style={{ filter: "drop-shadow(0 6px 10px rgba(0,0,0,0.4))" }} />
+                  </g>
                 ))}
               </motion.g>
               <motion.g
@@ -462,7 +484,7 @@ export function ForgeBotMascot({ size = 380, className = "" }: ForgeBotMascotPro
                 style={{ transformOrigin: "272px 262px" }}
               >
                 {rightWing.map((d, i) => (
-                  <path key={i} d={d} fill="url(#wingGrad)" stroke="rgba(34,211,238,0.25)" strokeWidth="0.7" style={{ filter: "drop-shadow(0 6px 10px rgba(0,0,0,0.4))" }} />
+                  <path key={i} d={d} fill="url(#wingGrad)" stroke="rgba(34,211,238,0.3)" strokeWidth="0.8" style={{ filter: "drop-shadow(0 6px 10px rgba(0,0,0,0.4))" }} />
                 ))}
                 {/* energy meridian flares on wave */}
                 <motion.path
@@ -480,12 +502,12 @@ export function ForgeBotMascot({ size = 380, className = "" }: ForgeBotMascotPro
               <g style={{ filter: "drop-shadow(0 10px 20px rgba(0,0,0,0.45))" }}>
                 {breast.map((b, i) => (
                   <g key={i}>
-                    <path d={b.d} fill="url(#headGrad)" stroke="rgba(120,53,15,0.18)" strokeWidth="0.8" />
+                    <path d={b.d} fill={b.tone === 2 ? "url(#gunmetal)" : "url(#headGrad)"} stroke="rgba(15,23,42,0.22)" strokeWidth="0.8" />
                     {/* cyan tip accent */}
-                    <circle cx={b.cx} cy={b.topY + 2} r="1.1" fill="rgba(34,211,238,0.5)" />
+                    <circle cx={b.cx} cy={b.topY + 2} r="1.1" fill="rgba(34,211,238,0.55)" />
                   </g>
                 ))}
-                {/* PH-flag chest sigil — 3 amber stars + faint rays */}
+                {/* PH-flag chest sigil — 3 amber stars */}
                 <motion.g
                   animate={reducedMotion ? { opacity: 0.75 } : { opacity: [0.5, 0.9, 0.5] }}
                   transition={{ duration: 2.6, repeat: Infinity, ease: "easeInOut" }}
@@ -496,32 +518,29 @@ export function ForgeBotMascot({ size = 380, className = "" }: ForgeBotMascotPro
                 </motion.g>
               </g>
 
-              {/* ════ HEAD / SKULL (cream metal) ════ */}
+              {/* ════ HEAD / SKULL (brushed titanium) ════ */}
               <g style={{ filter: "drop-shadow(0 12px 28px rgba(0,0,0,0.5))" }}>
-                <path
-                  d="M 200 120
-                     C 244 120 278 144 290 184
-                     C 297 208 294 232 282 254
-                     C 272 274 254 290 230 302
-                     C 220 307 210 310 200 310
-                     C 190 310 180 307 170 302
-                     C 146 290 128 274 118 254
-                     C 106 232 103 208 110 184
-                     C 122 144 156 120 200 120 Z"
-                  fill="url(#headGrad)"
-                />
-                <path
-                  d="M 200 120
-                     C 244 120 278 144 290 184
-                     C 297 208 294 232 282 254
-                     C 272 274 254 290 230 302
-                     C 220 307 210 310 200 310
-                     C 190 310 180 307 170 302
-                     C 146 290 128 274 118 254
-                     C 106 232 103 208 110 184
-                     C 122 144 156 120 200 120 Z"
-                  fill="url(#headShade)"
-                />
+                <path d={HEAD_PATH} fill="url(#headGrad)" />
+                <path d={HEAD_PATH} fill="url(#headShade)" />
+              </g>
+
+              {/* faceted panel seams (clipped to head) */}
+              <g clipPath="url(#headClip)" opacity="0.5" stroke="rgba(71,85,105,0.55)" strokeWidth="1" fill="none" strokeLinecap="round">
+                {/* center forehead seam */}
+                <path d="M 200 122 L 200 168" />
+                {/* crown facets */}
+                <path d="M 150 150 Q 200 134 250 150" />
+                {/* cheek panel lines */}
+                <path d="M 124 240 Q 156 262 176 266" />
+                <path d="M 276 240 Q 244 262 224 266" />
+                {/* jaw seam */}
+                <path d="M 168 296 Q 200 308 232 296" />
+              </g>
+              {/* thin cyan circuit seam highlight */}
+              <g clipPath="url(#headClip)" opacity="0.4" stroke="#22d3ee" strokeWidth="0.7" fill="none">
+                <path d="M 200 124 L 200 166" style={{ filter: "drop-shadow(0 0 2px #22d3ee)" }} />
+                <path d="M 132 246 Q 152 258 168 260" />
+                <path d="M 268 246 Q 248 258 232 260" />
               </g>
 
               {/* top-left specular */}
@@ -529,16 +548,10 @@ export function ForgeBotMascot({ size = 380, className = "" }: ForgeBotMascotPro
               <ellipse cx="154" cy="144" rx="16" ry="5" fill="white" style={{ filter: "blur(2px)" }} />
 
               {/* right cyan rim + left violet rim */}
-              <path d="M 289 152 Q 296 200 286 250 Q 276 286 252 304" stroke="#67e8f9" strokeWidth="3.5" fill="none" strokeLinecap="round" opacity="0.55" />
+              <path d="M 289 152 Q 296 200 286 250 Q 276 286 252 304" stroke="#67e8f9" strokeWidth="3.5" fill="none" strokeLinecap="round" opacity="0.6" style={{ filter: "drop-shadow(0 0 4px rgba(34,211,238,0.6))" }} />
               <path d="M 111 152 Q 104 200 114 250 Q 124 286 148 304" stroke="#c4b5fd" strokeWidth="3" fill="none" strokeLinecap="round" opacity="0.45" />
 
-              {/* cheek circuit hints */}
-              <g opacity="0.3" stroke="#22d3ee" strokeWidth="0.7" fill="none">
-                <path d="M 132 244 Q 150 256 168 258" />
-                <path d="M 268 244 Q 250 256 232 258" />
-              </g>
-
-              {/* ════ BROW VISOR MASK ════ */}
+              {/* ════ BROW VISOR MASK (angular HUD) ════ */}
               <motion.g
                 animate={reducedMotion ? {} : { rotate: [-0.5, 0.5, -0.5] }}
                 transition={{ duration: 9, repeat: Infinity, ease: "easeInOut" }}
@@ -546,13 +559,13 @@ export function ForgeBotMascot({ size = 380, className = "" }: ForgeBotMascotPro
               >
                 {/* bezel */}
                 <path
-                  d="M 114 186 C 120 164 148 156 176 164 C 188 168 196 178 200 190 C 204 178 212 168 224 164 C 252 156 280 164 286 186 C 292 208 285 232 264 243 C 239 256 210 258 200 258 C 190 258 161 256 136 243 C 115 232 108 208 114 186 Z"
-                  fill="rgba(15,23,42,0.5)"
+                  d="M 112 188 L 148 164 Q 176 158 192 184 L 200 194 L 208 184 Q 224 158 252 164 L 288 188 Q 294 214 270 242 L 232 254 Q 200 260 168 254 L 130 242 Q 106 214 112 188 Z"
+                  fill="rgba(15,23,42,0.55)"
                   style={{ filter: "blur(2px)" }}
                 />
                 {/* glass */}
                 <path
-                  d="M 118 188 C 124 168 150 160 176 168 C 188 172 196 180 200 192 C 204 180 212 172 224 168 C 250 160 276 168 282 188 C 288 208 281 230 262 240 C 238 252 210 254 200 254 C 190 254 162 252 138 240 C 119 230 112 208 118 188 Z"
+                  d="M 116 190 L 150 168 Q 176 162 192 186 L 200 196 L 208 186 Q 224 162 250 168 L 284 190 Q 290 214 268 240 L 232 251 Q 200 256 168 251 L 132 240 Q 110 214 116 190 Z"
                   fill="url(#visorGrad)"
                 />
 
@@ -560,7 +573,7 @@ export function ForgeBotMascot({ size = 380, className = "" }: ForgeBotMascotPro
                 <g clipPath="url(#visorClip)">
                   <g opacity="0.16">
                     {[0, 1, 2, 3].map((i) => (
-                      <line key={i} x1="118" x2="282" y1={180 + i * 16} y2={180 + i * 16} stroke="#22d3ee" strokeWidth="0.5" />
+                      <line key={i} x1="116" x2="284" y1={180 + i * 16} y2={180 + i * 16} stroke="#22d3ee" strokeWidth="0.5" />
                     ))}
                   </g>
                   <motion.rect
@@ -576,17 +589,29 @@ export function ForgeBotMascot({ size = 380, className = "" }: ForgeBotMascotPro
                 </g>
 
                 {/* glossy top arc */}
-                <path d="M 140 178 Q 200 162 260 178" stroke="rgba(255,255,255,0.28)" strokeWidth="2" strokeLinecap="round" fill="none" />
+                <path d="M 142 176 Q 200 160 258 176" stroke="rgba(255,255,255,0.3)" strokeWidth="2" strokeLinecap="round" fill="none" />
                 {/* cyan glowing under-rim (the HUD edge) */}
-                <path d="M 140 246 Q 200 258 260 246" stroke="rgba(34,211,238,0.6)" strokeWidth="1.6" strokeLinecap="round" fill="none" style={{ filter: "drop-shadow(0 0 5px #22d3ee)" }} />
+                <path d="M 138 247 Q 200 258 262 247" stroke="rgba(34,211,238,0.65)" strokeWidth="1.7" strokeLinecap="round" fill="none" style={{ filter: "drop-shadow(0 0 5px #22d3ee)" }} />
                 {/* center brow notch — the scowl peak */}
-                <path d="M 192 192 L 200 200 L 208 192" stroke="rgba(34,211,238,0.5)" strokeWidth="1.4" fill="none" strokeLinecap="round" />
+                <path d="M 190 194 L 200 202 L 210 194" stroke="rgba(34,211,238,0.6)" strokeWidth="1.5" fill="none" strokeLinecap="round" />
+
+                {/* corner HUD brackets */}
+                <g stroke="rgba(103,232,249,0.7)" strokeWidth="1.2" fill="none" strokeLinecap="round" style={{ filter: "drop-shadow(0 0 3px rgba(34,211,238,0.5))" }}>
+                  <path d="M 124 192 L 124 200 M 124 192 L 132 188" />
+                  <path d="M 276 192 L 276 200 M 276 192 L 268 188" />
+                </g>
+                {/* HUD tick marks */}
+                <g stroke="rgba(34,211,238,0.4)" strokeWidth="0.8">
+                  <line x1="160" y1="245" x2="160" y2="249" />
+                  <line x1="200" y1="248" x2="200" y2="252" />
+                  <line x1="240" y1="245" x2="240" y2="249" />
+                </g>
 
                 {/* HUD micro text */}
-                <text x="246" y="180" fontSize="5" fill="rgba(251,191,36,0.7)" fontFamily="monospace">⚡</text>
-                <text x="132" y="238" fontSize="4.6" fill="rgba(34,211,238,0.5)" fontFamily="monospace">HARIBON</text>
+                <text x="248" y="180" fontSize="5" fill="rgba(251,191,36,0.7)" fontFamily="monospace">⚡</text>
+                <text x="130" y="240" fontSize="4.6" fill="rgba(34,211,238,0.55)" fontFamily="monospace">HARIBON</text>
 
-                {/* ══ FIERCE GLOWING EYES ══ */}
+                {/* ══ FIERCE LENS EYES ══ */}
                 <motion.g
                   style={{ x: eyeOffsetX, y: eyeOffsetY }}
                   animate={{ x: saccade.x, y: saccade.y }}
@@ -631,7 +656,7 @@ export function ForgeBotMascot({ size = 380, className = "" }: ForgeBotMascotPro
                 {/* hook tip — the curl that screams 'raptor' */}
                 <path d="M 200 326 Q 209 320 214 306 Q 214 320 206 330 Q 202 332 200 326 Z" fill="#92400e" />
                 {/* top ridge highlight */}
-                <path d="M 192 266 Q 200 262 208 266 Q 206 290 201 308" stroke="rgba(255,255,255,0.5)" strokeWidth="1.2" fill="none" strokeLinecap="round" />
+                <path d="M 192 266 Q 200 262 208 266 Q 206 290 201 308" stroke="rgba(255,255,255,0.55)" strokeWidth="1.2" fill="none" strokeLinecap="round" />
                 {/* gape line */}
                 <path d="M 184 284 Q 200 290 216 284" stroke="rgba(69,26,3,0.55)" strokeWidth="1.2" fill="none" strokeLinecap="round" />
               </g>
