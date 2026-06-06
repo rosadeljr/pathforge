@@ -957,3 +957,28 @@ textarea:focus-visible {
   font-weight: 600;
   letter-spacing: -0.02em;
 }
+
+/* ============================================================
+   RPG explorable world animations (TownWorld). Disabled under
+   prefers-reduced-motion for accessibility.
+   ============================================================ */
+@keyframes rpgSpin { to { transform: rotate(360deg); } }
+@keyframes rpgSpinR { to { transform: rotate(-360deg); } }
+@keyframes rpgFloat { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-7px); } }
+@keyframes rpgFloatSlow { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-12px); } }
+@keyframes rpgTwinkle { 0%, 100% { opacity: 0.25; } 50% { opacity: 1; } }
+@keyframes rpgPulseRing { 0% { transform: scale(0.7); opacity: 0.75; } 100% { transform: scale(1.7); opacity: 0; } }
+@keyframes rpgBeam { 0%, 100% { opacity: 0.35; transform: scaleY(0.92); } 50% { opacity: 0.85; transform: scaleY(1.06); } }
+@keyframes rpgDrift { 0% { transform: translate(0,0); } 50% { transform: translate(14px,-10px); } 100% { transform: translate(0,0); } }
+@keyframes rpgDash { to { stroke-dashoffset: -40; } }
+.rpg-spin { animation: rpgSpin 24s linear infinite; transform-origin: center; transform-box: fill-box; }
+.rpg-spin-r { animation: rpgSpinR 32s linear infinite; transform-origin: center; transform-box: fill-box; }
+.rpg-float { animation: rpgFloat 4s ease-in-out infinite; }
+.rpg-float-slow { animation: rpgFloatSlow 6.5s ease-in-out infinite; }
+.rpg-twinkle { animation: rpgTwinkle 3s ease-in-out infinite; }
+.rpg-beam { animation: rpgBeam 3.4s ease-in-out infinite; transform-origin: bottom center; }
+.rpg-dash { stroke-dasharray: 6 14; animation: rpgDash 1.4s linear infinite; }
+.rpg-drift { animation: rpgDrift 9s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) {
+  .rpg-spin, .rpg-spin-r, .rpg-float, .rpg-float-slow, .rpg-twinkle, .rpg-beam, .rpg-dash, .rpg-drift { animation: none !important; }
+}

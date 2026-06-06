@@ -236,12 +236,12 @@ export function TownWorld({ ps }: { ps: PlayerState }) {
     <div
       ref={viewportRef}
       onPointerDown={onPointerDown}
-      className="relative h-[68vh] min-h-[460px] w-full touch-none select-none overflow-hidden rounded-2xl"
-      style={{ border: "1px solid rgba(255,255,255,0.10)", cursor: "pointer", boxShadow: "inset 0 1px 0 rgba(255,255,255,0.08), 0 10px 30px -16px #000" }}
+      className="relative h-[70vh] min-h-[480px] w-full touch-none select-none overflow-hidden rounded-2xl"
+      style={{ border: "1px solid rgba(56,189,248,0.25)", cursor: "pointer", boxShadow: "inset 0 0 0 1px rgba(255,255,255,0.05), 0 18px 55px -22px #000" }}
     >
       {/* world */}
       <div ref={worldRef} className="absolute left-0 top-0" style={{ width: WORLD_W, height: WORLD_H, willChange: "transform" }}>
-        <GroundLayer />
+        <GroundLayer reduced={!!reduced} />
 
         {/* portals (drawn on ground, walkable) */}
         {SPOTS.filter((s) => s.kind === "portal").map((s) => (
@@ -250,7 +250,7 @@ export function TownWorld({ ps }: { ps: PlayerState }) {
 
         {/* buildings */}
         {SPOTS.filter((s) => s.kind === "building").map((s) => (
-          <Building key={s.id} spot={s} active={activeId === s.id} />
+          <Building key={s.id} spot={s} active={activeId === s.id} reduced={!!reduced} />
         ))}
 
         {/* avatar */}
@@ -259,12 +259,34 @@ export function TownWorld({ ps }: { ps: PlayerState }) {
         </div>
       </div>
 
-      {/* HUD overlays */}
-      <div className="pointer-events-none absolute left-3 top-3 rounded-xl bg-black/45 px-3 py-1.5 text-[11px] font-semibold text-slate-200 backdrop-blur">
-        🏙️ Forgeheart City
+      {/* ambient floating particles (screen space) */}
+      {!reduced && <Particles />}
+
+      {/* atmosphere glow + vignette */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0"
+        style={{
+          background:
+            "radial-gradient(120% 80% at 50% -10%, rgba(56,189,248,0.12), transparent 45%), radial-gradient(120% 90% at 50% 120%, rgba(167,139,250,0.10), transparent 50%)",
+          boxShadow: "inset 0 0 140px 40px rgba(0,0,0,0.5)",
+        }}
+      />
+
+      {/* top bar label */}
+      <div
+        className="pointer-events-none absolute left-3 top-3 flex items-center gap-2 rounded-xl px-3 py-1.5 text-[11px] font-bold tracking-wide text-cyan-100 backdrop-blur"
+        style={{ background: "rgba(8,15,25,0.6)", border: "1px solid rgba(56,189,248,0.35)", boxShadow: "0 0 18px rgba(56,189,248,0.22)" }}
+      >
+        <span className="inline-block h-2 w-2 rounded-full bg-cyan-400" style={{ boxShadow: "0 0 8px #22d3ee" }} />
+        FORGEHEART CITY
       </div>
+
       {showHint && (
-        <div className="pointer-events-none absolute bottom-3 left-1/2 -translate-x-1/2 rounded-full bg-black/55 px-4 py-1.5 text-[11px] text-slate-200 backdrop-blur">
+        <div
+          className="pointer-events-none absolute bottom-3 left-1/2 -translate-x-1/2 rounded-full px-4 py-1.5 text-[11px] text-cyan-50 backdrop-blur"
+          style={{ background: "rgba(8,15,25,0.6)", border: "1px solid rgba(56,189,248,0.25)" }}
+        >
           Tap to move · WASD / arrows · walk into a place, then press Enter
         </div>
       )}
@@ -274,9 +296,10 @@ export function TownWorld({ ps }: { ps: PlayerState }) {
         <button
           onClick={() => enter(activeSpot.route)}
           className="absolute bottom-4 left-1/2 z-50 -translate-x-1/2 rounded-2xl px-5 py-3 text-sm font-bold text-slate-900 shadow-xl transition active:scale-95"
-          style={{ background: "linear-gradient(180deg,#fcd34d,#f59e0b)", boxShadow: `0 8px 24px -6px ${activeSpot.accent}` }}
+          style={{ background: "linear-gradient(180deg,#fcd34d,#f59e0b)", boxShadow: `0 8px 28px -4px ${activeSpot.accent}, 0 0 0 1px ${activeSpot.accent}66` }}
         >
-          Enter {activeSpot.label}
+          <span className="mr-1.5">Enter</span>
+          {activeSpot.label}
           <span className="ml-2 rounded bg-black/15 px-1.5 py-0.5 text-[10px]">↵</span>
         </button>
       )}
@@ -284,111 +307,219 @@ export function TownWorld({ ps }: { ps: PlayerState }) {
   );
 }
 
-/* ---------------- ground ---------------- */
-function GroundLayer() {
+/* ---------------- ambient particles ---------------- */
+function Particles() {
+  const dots = [];
+  let s = 1234;
+  const colors = ["#67e8f9", "#a78bfa", "#fcd34d", "#34d399"];
+  for (let i = 0; i < 22; i++) {
+    s = (s * 1103515245 + 12345) & 0x7fffffff;
+    dots.push({
+      l: `${s % 100}%`,
+      t: `${(s >> 8) % 100}%`,
+      sz: 2 + (s % 4),
+      c: colors[i % colors.length],
+      d: `${(s % 40) / 10}s`,
+      tw: i % 2 === 0,
+    });
+  }
+  return (
+    <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
+      {dots.map((p, i) => (
+        <span
+          key={i}
+          className={`absolute rounded-full ${p.tw ? "rpg-twinkle" : "rpg-float-slow"}`}
+          style={{ left: p.l, top: p.t, width: p.sz, height: p.sz, background: p.c, boxShadow: `0 0 ${p.sz * 2.5}px ${p.c}`, opacity: 0.55, animationDelay: p.d }}
+        />
+      ))}
+    </div>
+  );
+}
+
+/* ---------------- ground (futuristic) ---------------- */
+function GroundLayer({ reduced }: { reduced: boolean }) {
   return (
     <svg viewBox={`0 0 ${WORLD_W} ${WORLD_H}`} width={WORLD_W} height={WORLD_H} className="absolute inset-0">
       <defs>
-        <radialGradient id="tw-grass" cx="50%" cy="40%" r="75%">
-          <stop offset="0%" stopColor="#1c5a3a" />
-          <stop offset="60%" stopColor="#164a30" />
-          <stop offset="100%" stopColor="#0f3322" />
+        <radialGradient id="tw-ground" cx="50%" cy="42%" r="78%">
+          <stop offset="0%" stopColor="#1b5e57" />
+          <stop offset="45%" stopColor="#123f4a" />
+          <stop offset="100%" stopColor="#0a1f30" />
         </radialGradient>
-        <radialGradient id="tw-plaza" cx="50%" cy="50%" r="50%">
-          <stop offset="0%" stopColor="#33415a" />
-          <stop offset="100%" stopColor="#222b3d" />
+        <radialGradient id="tw-plaza" cx="50%" cy="45%" r="55%">
+          <stop offset="0%" stopColor="#243a5e" />
+          <stop offset="70%" stopColor="#16233c" />
+          <stop offset="100%" stopColor="#0e1830" />
         </radialGradient>
-        <linearGradient id="tw-pond" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#2563eb" />
-          <stop offset="100%" stopColor="#1e3a8a" />
-        </linearGradient>
+        <radialGradient id="tw-pool" cx="50%" cy="40%" r="60%">
+          <stop offset="0%" stopColor="#67e8f9" />
+          <stop offset="55%" stopColor="#22d3ee" />
+          <stop offset="100%" stopColor="#0e7490" />
+        </radialGradient>
+        <pattern id="tw-grid" width="64" height="64" patternUnits="userSpaceOnUse">
+          <path d="M64 0 H0 V64" fill="none" stroke="#5eead4" strokeWidth="1" opacity="0.05" />
+        </pattern>
+        <filter id="tw-glow" x="-60%" y="-60%" width="220%" height="220%">
+          <feGaussianBlur stdDeviation="6" result="b" />
+          <feMerge><feMergeNode in="b" /><feMergeNode in="SourceGraphic" /></feMerge>
+        </filter>
       </defs>
-      <rect width={WORLD_W} height={WORLD_H} fill="url(#tw-grass)" />
 
-      {/* paths from plaza to each landmark */}
-      <g stroke="#3b4458" strokeWidth="34" strokeLinecap="round" opacity="0.85">
+      <rect width={WORLD_W} height={WORLD_H} fill="url(#tw-ground)" />
+      <rect width={WORLD_W} height={WORLD_H} fill="url(#tw-grid)" />
+
+      {/* energy walkways: dark base + glowing animated center line */}
+      <g strokeLinecap="round">
         {SPOTS.filter((s) => s.kind === "building").map((s) => (
-          <line key={s.id} x1={800} y1={640} x2={s.x} y2={s.y + 30} />
+          <line key={`pb${s.id}`} x1={800} y1={640} x2={s.x} y2={s.y + 30} stroke="#0c1c2e" strokeWidth={38} opacity={0.9} />
+        ))}
+        {SPOTS.filter((s) => s.kind === "building").map((s) => (
+          <line key={`pe${s.id}`} x1={800} y1={640} x2={s.x} y2={s.y + 30} stroke="#22d3ee" strokeWidth={26} opacity={0.08} />
+        ))}
+        {SPOTS.filter((s) => s.kind === "building").map((s) => (
+          <line key={`pc${s.id}`} x1={800} y1={640} x2={s.x} y2={s.y + 30} stroke="#7dd3fc" strokeWidth={3} opacity={0.7} className={reduced ? "" : "rpg-dash"} />
         ))}
       </g>
-      {/* central plaza */}
-      <circle cx={800} cy={640} r={150} fill="url(#tw-plaza)" stroke="#475569" strokeWidth="3" />
-      <circle cx={800} cy={640} r={150} fill="none" stroke="#fcd34d" strokeWidth="1.5" opacity="0.25" />
-      <circle cx={800} cy={640} r={60} fill="none" stroke="#64748b" strokeWidth="2" opacity="0.5" />
-      <polygon points="800,612 808,636 832,636 813,651 820,675 800,660 780,675 787,651 768,636 792,636" fill="#fcd34d" opacity="0.7" />
 
-      {/* pond */}
-      <ellipse cx={1180} cy={560} rx={80} ry={54} fill="url(#tw-pond)" opacity="0.9" />
-      <ellipse cx={1180} cy={560} rx={80} ry={54} fill="none" stroke="#60a5fa" strokeWidth="2" opacity="0.4" />
+      {/* holographic plaza */}
+      <circle cx={800} cy={640} r={155} fill="url(#tw-plaza)" stroke="#22d3ee" strokeWidth={2} opacity={0.95} />
+      <circle cx={800} cy={640} r={155} fill="none" stroke="#67e8f9" strokeWidth={4} opacity={0.18} />
+      <circle cx={800} cy={640} r={110} fill="none" stroke="#38bdf8" strokeWidth={1.2} opacity={0.3} />
+      <circle cx={800} cy={640} r={70} fill="none" stroke="#a78bfa" strokeWidth={1.2} opacity={0.4} />
+      {/* rotating dashed ring */}
+      <circle cx={800} cy={640} r={130} fill="none" stroke="#67e8f9" strokeWidth={2} strokeDasharray="3 16" opacity={0.6} className={reduced ? "" : "rpg-spin"} />
+      {/* central hologram beam + emblem */}
+      <rect x={788} y={520} width={24} height={120} rx={12} fill="#67e8f9" opacity={0.12} filter="url(#tw-glow)" className={reduced ? "" : "rpg-beam"} />
+      <g className={reduced ? "" : "rpg-float"} filter="url(#tw-glow)">
+        <polygon points="800,600 814,632 800,664 786,632" fill="#a5f3fc" opacity={0.9} />
+        <polygon points="800,612 808,632 800,652 792,632" fill="#0ea5e9" />
+      </g>
 
-      {/* trees + bushes (deterministic scatter, avoiding plaza) */}
+      {/* energy pool */}
+      <ellipse cx={1180} cy={560} rx={84} ry={52} fill="url(#tw-pool)" opacity={0.85} />
+      <ellipse cx={1180} cy={560} rx={84} ry={52} fill="none" stroke="#a5f3fc" strokeWidth={2} opacity={0.5} />
+      <ellipse cx={1180} cy={560} rx={54} ry={32} fill="none" stroke="#ffffff" strokeWidth={1} opacity={0.25} className={reduced ? "" : "rpg-twinkle"} />
+
+      {/* glow-canopy trees */}
       {scatterTrees().map((t, i) => (
         <g key={i}>
-          <ellipse cx={t.x} cy={t.y + 10} rx={t.r} ry={t.r * 0.4} fill="#000" opacity="0.18" />
-          <rect x={t.x - 2} y={t.y} width={4} height={8} fill="#5b3a21" />
-          <circle cx={t.x} cy={t.y - 4} r={t.r} fill={t.dark ? "#166534" : "#15803d"} />
-          <circle cx={t.x - t.r * 0.4} cy={t.y - t.r * 0.6} r={t.r * 0.5} fill={t.dark ? "#15803d" : "#22a155"} opacity="0.8" />
+          <ellipse cx={t.x} cy={t.y + 10} rx={t.r} ry={t.r * 0.4} fill="#000" opacity={0.22} />
+          <rect x={t.x - 2.5} y={t.y} width={5} height={9} fill="#3f2d1a" />
+          <circle cx={t.x} cy={t.y - 6} r={t.r + 5} fill={t.c} opacity={0.18} />
+          <circle cx={t.x} cy={t.y - 6} r={t.r} fill={t.dark ? "#0f766e" : "#15803d"} />
+          <circle cx={t.x - t.r * 0.35} cy={t.y - t.r * 0.7} r={t.r * 0.5} fill={t.c} opacity={0.85} />
         </g>
       ))}
-      {/* flowers */}
-      {scatterFlowers().map((f, i) => (
-        <circle key={`f${i}`} cx={f.x} cy={f.y} r={3} fill={f.c} opacity="0.85" />
+
+      {/* glowing crystals */}
+      {scatterCrystals().map((c, i) => (
+        <g key={`c${i}`}>
+          <ellipse cx={c.x} cy={c.y + 12} rx={12} ry={4} fill="#000" opacity={0.25} />
+          <polygon points={`${c.x},${c.y - 18} ${c.x + 9},${c.y} ${c.x},${c.y + 12} ${c.x - 9},${c.y}`} fill={c.col} opacity={0.25} />
+          <polygon points={`${c.x},${c.y - 14} ${c.x + 6},${c.y - 1} ${c.x},${c.y + 9} ${c.x - 6},${c.y - 1}`} fill={c.col} />
+          <polygon points={`${c.x},${c.y - 14} ${c.x + 6},${c.y - 1} ${c.x},${c.y - 1}`} fill="#ffffff" opacity={0.35} />
+        </g>
+      ))}
+
+      {/* floating drone orbs */}
+      {scatterOrbs().map((o, i) => (
+        <g key={`o${i}`} className={reduced ? "" : "rpg-float-slow"} style={{ animationDelay: `${i * 0.7}s` }}>
+          <circle cx={o.x} cy={o.y} r={9} fill={o.col} opacity={0.2} />
+          <circle cx={o.x} cy={o.y} r={5} fill={o.col} />
+          <circle cx={o.x - 1.5} cy={o.y - 1.5} r={1.6} fill="#fff" opacity={0.9} />
+          <ellipse cx={o.x} cy={o.y + 14} rx={6} ry={2} fill="#000" opacity={0.2} />
+        </g>
+      ))}
+
+      {/* fireflies / sparks */}
+      {scatterFireflies().map((f, i) => (
+        <circle key={`f${i}`} cx={f.x} cy={f.y} r={f.r} fill={f.c} className={reduced ? "" : "rpg-twinkle"} style={{ animationDelay: `${(i % 8) * 0.4}s` }} />
       ))}
     </svg>
   );
 }
 
+const TREE_COLS = ["#34d399", "#22d3ee", "#5eead4", "#4ade80"];
 function scatterTrees() {
-  const out: { x: number; y: number; r: number; dark: boolean }[] = [];
+  const out: { x: number; y: number; r: number; dark: boolean; c: string }[] = [];
   let s = 7;
-  for (let i = 0; i < 60; i++) {
+  for (let i = 0; i < 54; i++) {
     s = (s * 1103515245 + 12345) & 0x7fffffff;
     const x = s % WORLD_W;
     const y = (s >> 8) % WORLD_H;
-    if (Math.hypot(x - 800, y - 640) < 220) continue; // keep plaza clear
+    if (Math.hypot(x - 800, y - 640) < 220) continue;
     if (SPOTS.some((sp) => Math.hypot(sp.x - x, sp.y - y) < 130)) continue;
-    out.push({ x, y, r: 14 + (s % 10), dark: i % 2 === 0 });
+    out.push({ x, y, r: 15 + (s % 10), dark: i % 2 === 0, c: TREE_COLS[i % TREE_COLS.length] });
   }
   return out;
 }
-function scatterFlowers() {
-  const cols = ["#f472b6", "#fcd34d", "#f87171", "#a78bfa"];
-  const out: { x: number; y: number; c: string }[] = [];
+const CRYSTAL_COLS = ["#a78bfa", "#67e8f9", "#f472b6", "#fcd34d"];
+function scatterCrystals() {
+  const out: { x: number; y: number; col: string }[] = [];
+  let s = 313;
+  for (let i = 0; i < 14; i++) {
+    s = (s * 1103515245 + 12345) & 0x7fffffff;
+    const x = s % WORLD_W;
+    const y = (s >> 8) % WORLD_H;
+    if (Math.hypot(x - 800, y - 640) < 210) continue;
+    if (SPOTS.some((sp) => Math.hypot(sp.x - x, sp.y - y) < 120)) continue;
+    out.push({ x, y, col: CRYSTAL_COLS[i % CRYSTAL_COLS.length] });
+  }
+  return out;
+}
+function scatterOrbs() {
+  const out: { x: number; y: number; col: string }[] = [];
+  const cols = ["#67e8f9", "#a78bfa", "#fcd34d"];
+  let s = 555;
+  for (let i = 0; i < 7; i++) {
+    s = (s * 1103515245 + 12345) & 0x7fffffff;
+    const x = s % WORLD_W;
+    const y = (s >> 8) % WORLD_H;
+    if (Math.hypot(x - 800, y - 640) < 240) continue;
+    if (SPOTS.some((sp) => Math.hypot(sp.x - x, sp.y - y) < 140)) continue;
+    out.push({ x, y, col: cols[i % cols.length] });
+  }
+  return out;
+}
+function scatterFireflies() {
+  const cols = ["#fcd34d", "#67e8f9", "#a7f3d0"];
+  const out: { x: number; y: number; r: number; c: string }[] = [];
   let s = 99;
-  for (let i = 0; i < 120; i++) {
+  for (let i = 0; i < 80; i++) {
     s = (s * 1103515245 + 12345) & 0x7fffffff;
     const x = s % WORLD_W;
     const y = (s >> 9) % WORLD_H;
-    if (Math.hypot(x - 800, y - 640) < 160) continue;
-    out.push({ x, y, c: cols[i % cols.length] });
+    if (Math.hypot(x - 800, y - 640) < 170) continue;
+    out.push({ x, y, r: 1.6 + (s % 3) * 0.6, c: cols[i % cols.length] });
   }
   return out;
 }
 
-/* ---------------- portal ---------------- */
+/* ---------------- portal (futuristic vortex) ---------------- */
 function Portal({ spot, active, reduced }: { spot: Spot; active: boolean; reduced: boolean }) {
+  const a = spot.accent;
   return (
     <div className="absolute" style={{ left: spot.x, top: spot.y, transform: "translate(-50%,-50%)", zIndex: Math.round(spot.y) - 200 }}>
+      {/* light beam */}
       <div
-        className={reduced ? "" : "animate-pulse"}
-        style={{
-          width: 84,
-          height: 48,
-          borderRadius: "50%",
-          background: `radial-gradient(ellipse at center, ${spot.accent}cc, ${spot.accent}33 60%, transparent 75%)`,
-          border: `2px solid ${spot.accent}`,
-          boxShadow: active ? `0 0 26px ${spot.accent}` : `0 0 14px ${spot.accent}88`,
-        }}
+        className={reduced ? "" : "rpg-beam"}
+        style={{ position: "absolute", left: "50%", bottom: 8, transform: "translateX(-50%)", width: 22, height: 70, borderRadius: 11, background: `linear-gradient(to top, ${a}, transparent)`, opacity: 0.45, filter: "blur(2px)" }}
       />
+      {/* base glow disc */}
       <div
-        className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-lg"
-        style={{ filter: `drop-shadow(0 0 6px ${spot.accent})` }}
-      >
-        ✦
-      </div>
+        style={{ width: 96, height: 56, borderRadius: "50%", background: `radial-gradient(ellipse at center, ${a}, ${a}33 55%, transparent 75%)`, boxShadow: active ? `0 0 34px ${a}` : `0 0 18px ${a}aa` }}
+      />
+      {/* rotating rings */}
+      <svg width="120" height="76" viewBox="0 0 120 76" className="absolute" style={{ left: "50%", top: "50%", transform: "translate(-50%,-50%)", overflow: "visible" }}>
+        <ellipse cx="60" cy="38" rx="50" ry="26" fill="none" stroke={a} strokeWidth="2.5" strokeDasharray="4 10" opacity="0.85" className={reduced ? "" : "rpg-spin"} />
+        <ellipse cx="60" cy="38" rx="34" ry="17" fill="none" stroke="#ffffff" strokeWidth="1.5" strokeDasharray="2 8" opacity="0.5" className={reduced ? "" : "rpg-spin-r"} />
+      </svg>
+      {/* core */}
+      <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-lg" style={{ filter: `drop-shadow(0 0 8px ${a})`, color: "#ffffff" }}>✦</div>
+      {/* label */}
       <div
-        className="absolute left-1/2 top-full mt-1 -translate-x-1/2 whitespace-nowrap rounded-md px-2 py-0.5 text-[10px] font-semibold"
-        style={{ background: "rgba(0,0,0,0.5)", color: "#e2e8f0", border: `1px solid ${spot.accent}66` }}
+        className="absolute left-1/2 top-full mt-2 -translate-x-1/2 whitespace-nowrap rounded-md px-2 py-0.5 text-[10px] font-semibold backdrop-blur"
+        style={{ background: "rgba(8,15,25,0.6)", color: "#e2e8f0", border: `1px solid ${a}77`, boxShadow: active ? `0 0 12px ${a}88` : "none" }}
       >
         {spot.label}
       </div>
@@ -396,27 +527,25 @@ function Portal({ spot, active, reduced }: { spot: Spot; active: boolean; reduce
   );
 }
 
-/* ---------------- building ---------------- */
+/* ---------------- building (neon-futuristic) ---------------- */
 const GLYPHS: Record<string, string> = {
   quest: "📜", class: "🎓", guild: "🏛️", skill: "🌳", shop: "🛍️", arena: "⚔️", home: "🏡",
 };
 
-function Building({ spot, active }: { spot: Spot; active: boolean }) {
+function Building({ spot, active, reduced }: { spot: Spot; active: boolean; reduced: boolean }) {
   const w = spot.w!;
   const h = spot.h!;
+  const a = spot.accent;
   return (
-    <div
-      className="absolute"
-      style={{ left: spot.x, top: spot.y, transform: "translate(-50%,-50%)", width: w, height: h + 40, zIndex: Math.round(spot.y) }}
-    >
-      {/* sign label */}
+    <div className="absolute" style={{ left: spot.x, top: spot.y, transform: "translate(-50%,-50%)", width: w, height: h + 52, zIndex: Math.round(spot.y) }}>
+      {/* holographic floating sign */}
       <div
-        className="absolute left-1/2 top-0 -translate-x-1/2 whitespace-nowrap rounded-md px-2 py-0.5 text-[10px] font-bold transition"
+        className={`absolute left-1/2 top-0 -translate-x-1/2 whitespace-nowrap rounded-lg px-2.5 py-1 text-[10px] font-bold backdrop-blur transition ${reduced ? "" : "rpg-float-slow"}`}
         style={{
-          background: active ? spot.accent : "rgba(0,0,0,0.55)",
+          background: active ? a : "rgba(8,15,25,0.7)",
           color: active ? "#0f172a" : "#e2e8f0",
-          border: `1px solid ${spot.accent}88`,
-          boxShadow: active ? `0 0 14px ${spot.accent}` : "none",
+          border: `1px solid ${a}`,
+          boxShadow: active ? `0 0 18px ${a}` : `0 0 10px ${a}55`,
         }}
       >
         {spot.label}
@@ -424,24 +553,43 @@ function Building({ spot, active }: { spot: Spot; active: boolean }) {
 
       {/* structure */}
       <svg viewBox={`0 0 ${w} ${h}`} width={w} height={h} className="absolute bottom-0 left-0" style={{ overflow: "visible" }}>
-        {/* shadow */}
-        <ellipse cx={w / 2} cy={h - 4} rx={w / 2} ry={10} fill="#000" opacity="0.28" />
-        {/* walls */}
-        <rect x={w * 0.12} y={h * 0.42} width={w * 0.76} height={h * 0.5} rx={6} fill="#2b3344" stroke="#0c1018" strokeWidth="1.5" />
-        {/* roof */}
-        <polygon points={`${w * 0.06},${h * 0.46} ${w / 2},${h * 0.1} ${w * 0.94},${h * 0.46}`} fill={spot.accent} stroke="#0c1018" strokeWidth="1.5" />
-        <polygon points={`${w * 0.06},${h * 0.46} ${w / 2},${h * 0.1} ${w / 2},${h * 0.2}`} fill="#000" opacity="0.12" />
+        <defs>
+          <linearGradient id={`bw-${spot.id}`} x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="#33415a" />
+            <stop offset="100%" stopColor="#141d2e" />
+          </linearGradient>
+          <linearGradient id={`br-${spot.id}`} x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor={a} />
+            <stop offset="100%" stopColor={a} stopOpacity={0.7} />
+          </linearGradient>
+        </defs>
+
+        {/* glow pad */}
+        <ellipse cx={w / 2} cy={h - 3} rx={w / 2} ry={11} fill={a} opacity={active ? 0.4 : 0.18} />
+        <ellipse cx={w / 2} cy={h - 3} rx={w / 2} ry={11} fill="#000" opacity={0.15} />
+
+        {/* body */}
+        <rect x={w * 0.14} y={h * 0.4} width={w * 0.72} height={h * 0.52} rx={10} fill={`url(#bw-${spot.id})`} stroke={a} strokeWidth={1.5} />
+        {/* neon under-glow trim */}
+        <rect x={w * 0.14} y={h * 0.86} width={w * 0.72} height={3} rx={1.5} fill={a} opacity={0.9} />
+        {/* curved neon roof */}
+        <path d={`M ${w * 0.08} ${h * 0.44} Q ${w / 2} ${h * 0.04} ${w * 0.92} ${h * 0.44} Z`} fill={`url(#br-${spot.id})`} stroke="#0c1018" strokeWidth={1.2} />
+        <path d={`M ${w * 0.08} ${h * 0.44} Q ${w / 2} ${h * 0.04} ${w / 2} ${h * 0.16}`} fill="#fff" opacity={0.12} />
+        {/* antenna + blinking light */}
+        <line x1={w / 2} y1={h * 0.1} x2={w / 2} y2={h * -0.04} stroke={a} strokeWidth={1.5} />
+        <circle cx={w / 2} cy={h * -0.06} r={3} fill="#fff" className={reduced ? "" : "rpg-twinkle"} style={{ filter: `drop-shadow(0 0 4px ${a})` }} />
+        {/* glowing window strips */}
+        <rect x={w * 0.22} y={h * 0.54} width={w * 0.16} height={h * 0.07} rx={2} fill="#a5f3fc" opacity={0.85} />
+        <rect x={w * 0.62} y={h * 0.54} width={w * 0.16} height={h * 0.07} rx={2} fill="#a5f3fc" opacity={0.85} />
         {/* door */}
-        <rect x={w * 0.42} y={h * 0.62} width={w * 0.16} height={h * 0.3} rx={3} fill="#0e1626" stroke={`${spot.accent}`} strokeWidth="1" />
-        {/* windows */}
-        <rect x={w * 0.2} y={h * 0.56} width={w * 0.12} height={h * 0.12} rx={2} fill="#fcd34d" opacity="0.7" />
-        <rect x={w * 0.68} y={h * 0.56} width={w * 0.12} height={h * 0.12} rx={2} fill="#fcd34d" opacity="0.7" />
-        {/* active glow ring on ground */}
-        {active && <ellipse cx={w / 2} cy={h - 4} rx={w / 2 + 6} ry={13} fill="none" stroke={spot.accent} strokeWidth="2" opacity="0.8" />}
+        <rect x={w * 0.43} y={h * 0.66} width={w * 0.14} height={h * 0.26} rx={3} fill="#0a1322" stroke={a} strokeWidth={1.2} />
+        <rect x={w * 0.43} y={h * 0.66} width={w * 0.14} height={3} rx={1.5} fill={a} opacity={0.8} />
+
+        {active && <ellipse cx={w / 2} cy={h - 3} rx={w / 2 + 7} ry={14} fill="none" stroke={a} strokeWidth={2} opacity={0.85} />}
       </svg>
 
       {/* emblem */}
-      <div className="absolute left-1/2 text-base" style={{ top: h * 0.5, transform: "translate(-50%,-50%)" }}>
+      <div className="absolute left-1/2 text-base" style={{ top: h * 0.5, transform: "translate(-50%,-50%)", filter: `drop-shadow(0 0 4px ${a})` }}>
         {GLYPHS[spot.glyph ?? "quest"]}
       </div>
     </div>

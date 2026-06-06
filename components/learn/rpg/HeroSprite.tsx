@@ -19,9 +19,13 @@ export function HeroSprite({ accent = "#38bdf8", name }: { accent?: string; name
           {name}
         </div>
       )}
-      <svg width="44" height="62" viewBox="0 0 44 62" style={{ display: "block" }}>
+      <svg width="44" height="64" viewBox="0 0 44 64" style={{ display: "block", overflow: "visible" }}>
+        {/* energy ground ring + aura */}
+        <ellipse cx="22" cy="60" rx="16" ry="5.5" fill={accent} opacity="0.22" />
+        <ellipse cx="22" cy="60" rx="16" ry="5.5" fill="none" stroke={accent} strokeWidth="1.5" opacity="0.7" style={{ filter: `drop-shadow(0 0 4px ${accent})` }} />
+        <ellipse cx="22" cy="34" rx="17" ry="22" fill={accent} opacity="0.10" />
         {/* ground shadow */}
-        <ellipse cx="22" cy="59" rx="13" ry="4" fill="#000" opacity="0.3" />
+        <ellipse cx="22" cy="59" rx="12" ry="3.5" fill="#000" opacity="0.28" />
 
         {/* cape/back accent */}
         <path d="M13 26 Q22 30 31 26 L29 46 Q22 50 15 46 Z" fill={accent} opacity="0.35" />
