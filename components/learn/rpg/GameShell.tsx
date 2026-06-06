@@ -35,9 +35,10 @@ export function SectionNav({ active }: { active: SectionKey }) {
   return (
     <nav
       aria-label="Game sections"
-      className="flex gap-1 overflow-x-auto rounded-2xl p-1.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-      style={{ background: "rgba(10,12,18,0.85)", border: "1px solid rgba(255,255,255,0.08)", backdropFilter: "blur(8px)" }}
+      className="relative flex gap-1.5 overflow-x-auto rounded-2xl p-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+      style={{ background: "linear-gradient(180deg, rgba(22,32,52,0.9), rgba(8,13,22,0.9))", border: "1px solid rgba(56,189,248,0.2)", backdropFilter: "blur(8px)", boxShadow: "inset 0 1px 0 rgba(255,255,255,0.06)" }}
     >
+      <span aria-hidden className="pointer-events-none absolute inset-x-4 top-0 h-px" style={{ background: "linear-gradient(90deg, transparent, rgba(56,189,248,0.7), transparent)" }} />
       {NAV.map((n) => {
         const isActive = n.key === active;
         return (
@@ -45,12 +46,21 @@ export function SectionNav({ active }: { active: SectionKey }) {
             key={n.key}
             href={n.href}
             aria-current={isActive ? "page" : undefined}
-            className={`flex flex-shrink-0 items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-semibold transition ${
-              isActive ? "text-slate-900" : "text-slate-300 hover:bg-white/[0.06]"
+            className={`group relative flex flex-shrink-0 items-center gap-2 rounded-xl px-3 py-2 text-xs font-bold transition ${
+              isActive ? "text-slate-900" : "text-slate-300 hover:text-white"
             }`}
-            style={isActive ? { background: "linear-gradient(180deg,#fcd34d,#f59e0b)", boxShadow: "inset 0 1px 0 rgba(255,255,255,0.4)" } : undefined}
+            style={
+              isActive
+                ? { background: "linear-gradient(180deg,#fcd34d,#f59e0b)", boxShadow: "inset 0 1px 0 rgba(255,255,255,0.45), 0 0 16px rgba(245,158,11,0.45)" }
+                : { background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }
+            }
           >
-            {n.icon}
+            <span
+              className="grid h-6 w-6 place-items-center rounded-md transition"
+              style={isActive ? { background: "rgba(15,23,42,0.18)" } : { background: "rgba(56,189,248,0.12)", color: "#7dd3fc" }}
+            >
+              {n.icon}
+            </span>
             <span>{n.label}</span>
           </Link>
         );

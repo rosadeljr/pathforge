@@ -284,6 +284,14 @@ export function TownWorld({ ps }: { ps: PlayerState }) {
         }}
       />
 
+      {/* game-screen corner brackets */}
+      <div aria-hidden className="pointer-events-none absolute inset-0">
+        <span className="absolute left-2 top-2 h-5 w-5 rounded-tl-lg" style={{ borderTop: "2px solid rgba(56,189,248,0.5)", borderLeft: "2px solid rgba(56,189,248,0.5)" }} />
+        <span className="absolute right-2 top-2 h-5 w-5 rounded-tr-lg" style={{ borderTop: "2px solid rgba(56,189,248,0.5)", borderRight: "2px solid rgba(56,189,248,0.5)" }} />
+        <span className="absolute bottom-2 left-2 h-5 w-5 rounded-bl-lg" style={{ borderBottom: "2px solid rgba(56,189,248,0.5)", borderLeft: "2px solid rgba(56,189,248,0.5)" }} />
+        <span className="absolute bottom-2 right-2 h-5 w-5 rounded-br-lg" style={{ borderBottom: "2px solid rgba(56,189,248,0.5)", borderRight: "2px solid rgba(56,189,248,0.5)" }} />
+      </div>
+
       {/* top bar label */}
       <div
         className="pointer-events-none absolute left-3 top-3 flex items-center gap-2 rounded-xl px-3 py-1.5 text-[11px] font-bold tracking-wide text-cyan-100 backdrop-blur"
