@@ -117,7 +117,7 @@ export function HeroEagle({ size = 620, className = "" }: Props) {
         transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
       >
         <img
-          src="/eagle_mascot_vector_high_fidelity.svg"
+          src="/eagle_mascot_themed.svg"
           alt="PathForge eagle mascot"
           width={1494}
           height={734}
