@@ -19,7 +19,6 @@ import { Logo } from "@/components/brand/Logo";
 import { PrimaryLinkButton } from "@/components/ui/PrimaryButton";
 import { StickyCTA } from "@/components/landing/StickyCTA";
 import { FloatingParticles } from "@/components/landing/FloatingParticles";
-import { ForgeBotMascot } from "@/components/landing/ForgeBotMascot";
 import { HeroPreview } from "@/components/landing/HeroPreview";
 import { UtmCapture } from "@/components/marketing/UtmCapture";
 
@@ -118,9 +117,27 @@ export default function Landing() {
             transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
             className="flex justify-center mb-2"
           >
-            {/* Single instance — auto-scales via the component's responsive
-                width (min(size, 78vw)). Saves a duplicate animation tree. */}
-            <ForgeBotMascot size={320} />
+            {/* Friendly eagle mascot — first thing kids and parents see.
+                Floats gently with a soft glow; respects reduced-motion. */}
+            <div className="relative flex justify-center w-[min(560px,90vw)]">
+              <div
+                aria-hidden
+                className="absolute inset-0 -z-10 blur-3xl opacity-60"
+                style={{
+                  background:
+                    "radial-gradient(circle at 50% 45%, rgba(251,191,36,0.22), rgba(34,211,238,0.14) 45%, transparent 70%)",
+                }}
+              />
+              <motion.img
+                src="/eagle_mascot_vector_high_fidelity.svg"
+                alt="PathForge eagle mascot"
+                width={1494}
+                height={734}
+                className="w-full h-auto drop-shadow-[0_24px_48px_rgba(0,0,0,0.5)] motion-reduce:animate-none"
+                animate={{ y: [0, -14, 0] }}
+                transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
+              />
+            </div>
           </motion.div>
 
           {/* Eyebrow */}
