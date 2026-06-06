@@ -28,17 +28,17 @@ function shardTip(cx, cy, angleDeg, length) {
 function buildWing(ax, ay, dir) {
   const primaries = [];
   const bases = [], tips = [];
-  const N = 11;
+  const N = 8;
   for (let i = 0; i < N; i++) {
     const f = i / (N - 1);
-    const bx = ax + dir * f * 34;
-    const by = ay - f * 28;
-    const angle = dir * (8 + f * 64);
-    const length = 150 - f * 48;
-    const baseW = 26 - f * 11;
+    const bx = ax + dir * f * 30;
+    const by = ay - f * 24;
+    const angle = dir * (12 + f * 56);
+    const length = 146 - f * 40;
+    const baseW = 44 - f * 20;
     const tip = shardTip(bx, by, angle, length);
     bases.push([bx, by]); tips.push(tip);
-    primaries.push({ d: shard(bx, by, angle, length, baseW), spine: shardSpine(bx, by, angle, length * 0.9), tip, gold: i >= N - 4 });
+    primaries.push({ d: shard(bx, by, angle, length, baseW), spine: shardSpine(bx, by, angle, length * 0.9), tip, gold: i >= N - 3 });
   }
   const fmt = (p) => `${p[0].toFixed(1)} ${p[1].toFixed(1)}`;
   const membrane = `M ${fmt(bases[0])} ` + bases.slice(1).map((p) => `L ${fmt(p)}`).join(" ") + " " + [...tips].reverse().map((p) => `L ${fmt(p)}`).join(" ") + " Z";
@@ -66,8 +66,8 @@ const defs = `
 <radialGradient id="headGrad" cx="40%" cy="22%" r="84%"><stop offset="0%" stop-color="#ffffff"/><stop offset="46%" stop-color="#eef2f7"/><stop offset="80%" stop-color="#cdd6e2"/><stop offset="100%" stop-color="#a3aebd"/></radialGradient>
 <linearGradient id="bodyGrad" x1="30%" y1="0%" x2="70%" y2="100%"><stop offset="0%" stop-color="#6c7c93"/><stop offset="50%" stop-color="#3a4862"/><stop offset="100%" stop-color="#1b2536"/></linearGradient>
 <linearGradient id="bellyGrad" x1="50%" y1="0%" x2="50%" y2="100%"><stop offset="0%" stop-color="#9fb0c6"/><stop offset="100%" stop-color="#dbe4f0"/></linearGradient>
-<linearGradient id="featherGrad" x1="50%" y1="100%" x2="50%" y2="0%"><stop offset="0%" stop-color="#1b2330"/><stop offset="55%" stop-color="#46566b"/><stop offset="100%" stop-color="#8d9cb1"/></linearGradient>
-<linearGradient id="featherGold" x1="50%" y1="100%" x2="50%" y2="0%"><stop offset="0%" stop-color="#1b2330"/><stop offset="68%" stop-color="#46566b"/><stop offset="86%" stop-color="#d97706"/><stop offset="100%" stop-color="#fde68a"/></linearGradient>
+<linearGradient id="featherGrad" x1="50%" y1="100%" x2="50%" y2="0%"><stop offset="0%" stop-color="#3a4658"/><stop offset="55%" stop-color="#5d6e84"/><stop offset="100%" stop-color="#aebbcd"/></linearGradient>
+<linearGradient id="featherGold" x1="50%" y1="100%" x2="50%" y2="0%"><stop offset="0%" stop-color="#3a4658"/><stop offset="70%" stop-color="#5d6e84"/><stop offset="88%" stop-color="#e09422"/><stop offset="100%" stop-color="#fde68a"/></linearGradient>
 <linearGradient id="holoSheen" x1="0%" y1="100%" x2="100%" y2="0%"><stop offset="0%" stop-color="#22d3ee" stop-opacity="0"/><stop offset="42%" stop-color="#22d3ee" stop-opacity="0.18"/><stop offset="60%" stop-color="#a78bfa" stop-opacity="0.22"/><stop offset="80%" stop-color="#fbbf24" stop-opacity="0.16"/><stop offset="100%" stop-color="#22d3ee" stop-opacity="0"/></linearGradient>
 <radialGradient id="coreGlow" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#ffffff"/><stop offset="30%" stop-color="#a5f3fc"/><stop offset="70%" stop-color="#22d3ee"/><stop offset="100%" stop-color="#0e7490" stop-opacity="0"/></radialGradient>
 <linearGradient id="crestGrad" x1="0%" y1="100%" x2="100%" y2="0%"><stop offset="0%" stop-color="#334155"/><stop offset="60%" stop-color="#d97706"/><stop offset="100%" stop-color="#fcd34d"/></linearGradient>
@@ -76,11 +76,10 @@ const defs = `
 `;
 
 const wingSvg = (w) => `
-<path d="${w.membrane}" fill="url(#featherGrad)" stroke="rgba(34,211,238,0.4)" stroke-width="1"/>
-<path d="${w.membrane}" fill="url(#holoSheen)"/>
-${w.coverts.map((d) => `<path d="${d}" fill="url(#bodyGrad)" stroke="rgba(8,12,24,0.4)" stroke-width="0.6" opacity="0.92"/>`).join("")}
-${w.primaries.map((ft) => `<path d="${ft.d}" fill="${ft.gold ? "url(#featherGold)" : "url(#featherGrad)"}" stroke="rgba(8,12,24,0.45)" stroke-width="0.6"/><path d="${ft.spine}" stroke="rgba(103,232,249,0.55)" stroke-width="0.9" fill="none" stroke-linecap="round"/>`).join("")}
-${w.primaries.map((ft) => `<circle cx="${ft.tip[0].toFixed(1)}" cy="${ft.tip[1].toFixed(1)}" r="1.7" fill="${ft.gold ? "#fde68a" : "#a5f3fc"}"/>`).join("")}
+<path d="${w.membrane}" fill="url(#featherGrad)" stroke="rgba(34,211,238,0.28)" stroke-width="1"/>
+${w.coverts.map((d) => `<path d="${d}" fill="url(#bodyGrad)" stroke="rgba(15,23,42,0.3)" stroke-width="0.6" opacity="0.9"/>`).join("")}
+${w.primaries.map((ft) => `<path d="${ft.d}" fill="${ft.gold ? "url(#featherGold)" : "url(#featherGrad)"}" stroke="rgba(15,23,42,0.35)" stroke-width="0.8"/>`).join("")}
+${w.primaries.filter((ft) => ft.gold).map((ft) => `<circle cx="${ft.tip[0].toFixed(1)}" cy="${ft.tip[1].toFixed(1)}" r="1.6" fill="#fde68a"/>`).join("")}
 `;
 
 const svg = `<svg viewBox="0 0 400 440" width="400" height="440" xmlns="http://www.w3.org/2000/svg">
@@ -90,15 +89,11 @@ const svg = `<svg viewBox="0 0 400 440" width="400" height="440" xmlns="http://w
 <g>${wingSvg(wingL)}</g>
 <g>${wingSvg(wingR)}</g>
 <g>${tail.map((tf) => `<path d="${tf.d}" fill="url(#featherGrad)" stroke="rgba(8,12,24,0.4)" stroke-width="0.6"/><circle cx="${tf.tip[0].toFixed(1)}" cy="${tf.tip[1].toFixed(1)}" r="3.4" fill="#eef2f7" opacity="0.9"/>`).join("")}</g>
-<path d="M 200 196 C 224 198 240 214 244 244 C 247 268 242 296 228 318 C 220 330 210 336 200 336 C 190 336 180 330 172 318 C 158 296 153 268 156 244 C 160 214 176 198 200 196 Z" fill="url(#bodyGrad)"/>
-<path d="M 200 232 C 214 234 222 250 222 272 C 222 296 213 318 200 326 C 187 318 178 296 178 272 C 178 250 186 234 200 232 Z" fill="url(#bellyGrad)" opacity="0.92"/>
-<g stroke="rgba(8,12,24,0.45)" stroke-width="0.9" fill="none" stroke-linecap="round"><path d="M 200 214 L 200 236"/><path d="M 178 246 Q 200 240 222 246"/><path d="M 172 300 Q 200 312 228 300"/><path d="M 184 318 L 190 328 M 216 318 L 210 328"/></g>
-<g stroke="rgba(34,211,238,0.4)" stroke-width="0.6" fill="none" stroke-linecap="round"><path d="M 200 216 L 200 250"/><path d="M 182 300 Q 200 310 218 300"/></g>
-<circle cx="200" cy="280" r="15" fill="url(#coreGlow)" opacity="0.55"/>
-<circle cx="200" cy="280" r="9" fill="none" stroke="rgba(34,211,238,0.7)" stroke-width="1.2"/>
-<circle cx="200" cy="280" r="6" fill="none" stroke="rgba(167,139,250,0.6)" stroke-width="0.8" stroke-dasharray="2 3"/>
-<path d="M 200 273 L 201.8 278 L 207 278 L 202.8 281.2 L 204.4 286 L 200 283 L 195.6 286 L 197.2 281.2 L 193 278 L 198.2 278 Z" fill="#fde68a"/>
-<circle cx="200" cy="262" r="1.5" fill="#fbbf24"/><circle cx="184" cy="294" r="1.5" fill="#fbbf24"/><circle cx="216" cy="294" r="1.5" fill="#fbbf24"/>
+<path d="M 200 198 C 230 200 248 220 252 248 C 254 272 245 298 226 315 C 218 324 209 328 200 328 C 191 328 182 324 174 315 C 155 298 146 272 148 248 C 152 220 170 200 200 198 Z" fill="url(#bodyGrad)"/>
+<path d="M 200 230 C 216 232 225 250 225 272 C 225 294 215 312 200 320 C 185 312 175 294 175 272 C 175 250 184 232 200 230 Z" fill="url(#bellyGrad)" opacity="0.9"/>
+<g stroke="rgba(15,23,42,0.16)" stroke-width="0.8" fill="none" stroke-linecap="round"><path d="M 184 258 Q 200 264 216 258"/><path d="M 182 280 Q 200 287 218 280"/><path d="M 186 302 Q 200 308 214 302"/></g>
+<circle cx="200" cy="252" r="6.5" fill="none" stroke="rgba(34,211,238,0.4)" stroke-width="0.8"/>
+<path d="M 200 247.5 L 201.3 251 L 205 251 L 202 253.3 L 203.2 257 L 200 254.8 L 196.8 257 L 198 253.3 L 195 251 L 198.7 251 Z" fill="#fde68a"/>
 <g stroke="#92400e" stroke-width="0.6"><path d="M 186 326 q -4 8 -2 16 q 1 4 5 4 q -3 -6 -1 -12 q -2 5 -5 7 q 4 -8 1 -15 Z" fill="url(#beakGrad)"/><path d="M 210 328 q 4 8 2 16 q -1 4 -5 4 q 3 -6 1 -12 q 2 5 5 7 q -4 -8 -1 -15 Z" fill="url(#beakGrad)"/></g>
 <path d="M 180 200 Q 200 188 220 200 Q 214 214 200 216 Q 186 214 180 200 Z" fill="url(#bodyGrad)"/>
 <g>${crest.map((c) => `<path d="${c.outer}" fill="url(#crestGrad)" stroke="rgba(8,12,24,0.4)" stroke-width="0.5"/><path d="${c.spine}" stroke="rgba(103,232,249,0.5)" stroke-width="0.8" fill="none" stroke-linecap="round"/><circle cx="${c.tipX.toFixed(1)}" cy="${c.tipY.toFixed(1)}" r="2" fill="#fef3c7"/>`).join("")}</g>
