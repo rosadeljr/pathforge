@@ -30,6 +30,35 @@ const NAV: { key: SectionKey; label: string; href: string; icon: ReactNode }[] =
   { key: "rewards", label: "Rewards", href: "/learn/rewards", icon: <Gift size={16} /> },
 ];
 
+/** Reusable sticky section nav (used by GameShell and the immersive town). */
+export function SectionNav({ active }: { active: SectionKey }) {
+  return (
+    <nav
+      aria-label="Game sections"
+      className="flex gap-1 overflow-x-auto rounded-2xl p-1.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+      style={{ background: "rgba(10,12,18,0.85)", border: "1px solid rgba(255,255,255,0.08)", backdropFilter: "blur(8px)" }}
+    >
+      {NAV.map((n) => {
+        const isActive = n.key === active;
+        return (
+          <Link
+            key={n.key}
+            href={n.href}
+            aria-current={isActive ? "page" : undefined}
+            className={`flex flex-shrink-0 items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-semibold transition ${
+              isActive ? "text-slate-900" : "text-slate-300 hover:bg-white/[0.06]"
+            }`}
+            style={isActive ? { background: "linear-gradient(180deg,#fcd34d,#f59e0b)", boxShadow: "inset 0 1px 0 rgba(255,255,255,0.4)" } : undefined}
+          >
+            {n.icon}
+            <span>{n.label}</span>
+          </Link>
+        );
+      })}
+    </nav>
+  );
+}
+
 export function GameShell({
   ps,
   active,
@@ -47,29 +76,9 @@ export function GameShell({
       <PlayerHUD ps={ps} />
 
       {/* Section nav */}
-      <nav
-        aria-label="Game sections"
-        className="sticky top-2 z-30 mt-3 flex gap-1 overflow-x-auto rounded-2xl p-1.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-        style={{ background: "rgba(10,12,18,0.85)", border: "1px solid rgba(255,255,255,0.08)", backdropFilter: "blur(8px)" }}
-      >
-        {NAV.map((n) => {
-          const isActive = n.key === active;
-          return (
-            <Link
-              key={n.key}
-              href={n.href}
-              aria-current={isActive ? "page" : undefined}
-              className={`flex flex-shrink-0 items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-semibold transition ${
-                isActive ? "text-slate-900" : "text-slate-300 hover:bg-white/[0.06]"
-              }`}
-              style={isActive ? { background: "linear-gradient(180deg,#fcd34d,#f59e0b)", boxShadow: "inset 0 1px 0 rgba(255,255,255,0.4)" } : undefined}
-            >
-              {n.icon}
-              <span>{n.label}</span>
-            </Link>
-          );
-        })}
-      </nav>
+      <div className="sticky top-2 z-30 mt-3">
+        <SectionNav active={active} />
+      </div>
 
       {/* Mobile drawer toggles */}
       <div className="mt-3 flex gap-2 lg:hidden">
