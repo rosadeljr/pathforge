@@ -98,6 +98,30 @@ export function HeroEagle({ size = 620, className = "" }: Props) {
         </svg>
       </motion.div>
 
+      {/* HUD frame — corner brackets + ticks */}
+      <svg
+        aria-hidden
+        viewBox="0 0 400 240"
+        preserveAspectRatio="none"
+        className="absolute inset-0 -z-10 h-full w-full"
+        style={{ overflow: "visible" }}
+      >
+        <g stroke="rgba(103,232,249,0.45)" strokeWidth="1.4" fill="none" strokeLinecap="round">
+          <path d="M 10 30 L 10 10 L 34 10" />
+          <path d="M 390 30 L 390 10 L 366 10" />
+          <path d="M 10 210 L 10 230 L 34 230" />
+          <path d="M 390 210 L 390 230 L 366 230" />
+        </g>
+        <g stroke="rgba(34,211,238,0.3)" strokeWidth="1">
+          <line x1="200" y1="8" x2="200" y2="16" />
+          <line x1="200" y1="224" x2="200" y2="232" />
+          <line x1="6" y1="120" x2="14" y2="120" />
+          <line x1="386" y1="120" x2="394" y2="120" />
+        </g>
+        <text x="14" y="224" fill="rgba(103,232,249,0.5)" fontSize="7" fontFamily="monospace">PATHFORGE</text>
+        <text x="356" y="22" fill="rgba(251,191,36,0.6)" fontSize="7" fontFamily="monospace">v1.0</text>
+      </svg>
+
       {/* floating embers */}
       {embers.map((e, i) => (
         <motion.span
@@ -110,20 +134,67 @@ export function HeroEagle({ size = 620, className = "" }: Props) {
         />
       ))}
 
-      {/* the eagle */}
+      {/* the eagle + holographic overlays (masked to its silhouette) */}
       <motion.div
         style={{ rotateY, rotateX, transformStyle: "preserve-3d", width: "100%" }}
         animate={reduced ? {} : { y: [0, -12, 0] }}
         transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
       >
-        <img
-          src="/eagle_mascot_themed.svg"
-          alt="PathForge eagle mascot"
-          width={1494}
-          height={734}
-          className="w-full h-auto"
-          style={{ filter: "drop-shadow(0 18px 36px rgba(0,0,0,0.55)) drop-shadow(0 0 22px rgba(34,211,238,0.25))" }}
-        />
+        <div className="relative w-full">
+          <img
+            src="/eagle_mascot_themed.svg"
+            alt="PathForge eagle mascot"
+            width={1494}
+            height={734}
+            className="w-full h-auto"
+            style={{ filter: "drop-shadow(0 18px 40px rgba(0,0,0,0.6)) drop-shadow(0 0 28px rgba(34,211,238,0.35))" }}
+          />
+
+          {/* holographic top-light sheen */}
+          <div
+            aria-hidden
+            className="absolute inset-0 pointer-events-none mix-blend-screen"
+            style={{
+              WebkitMaskImage: "url(/eagle_mascot_themed.svg)",
+              maskImage: "url(/eagle_mascot_themed.svg)",
+              WebkitMaskSize: "contain",
+              maskSize: "contain",
+              WebkitMaskRepeat: "no-repeat",
+              maskRepeat: "no-repeat",
+              WebkitMaskPosition: "center",
+              maskPosition: "center",
+              background:
+                "linear-gradient(155deg, rgba(103,232,249,0.5) 0%, rgba(103,232,249,0.16) 28%, transparent 52%)",
+            }}
+          />
+
+          {/* scan-sweep band */}
+          <div
+            aria-hidden
+            className="absolute inset-0 pointer-events-none overflow-hidden mix-blend-screen"
+            style={{
+              WebkitMaskImage: "url(/eagle_mascot_themed.svg)",
+              maskImage: "url(/eagle_mascot_themed.svg)",
+              WebkitMaskSize: "contain",
+              maskSize: "contain",
+              WebkitMaskRepeat: "no-repeat",
+              maskRepeat: "no-repeat",
+              WebkitMaskPosition: "center",
+              maskPosition: "center",
+            }}
+          >
+            <motion.div
+              className="absolute left-0 right-0 h-[14%]"
+              style={{
+                background:
+                  "linear-gradient(180deg, transparent, rgba(165,243,252,0.55), transparent)",
+                filter: "blur(2px)",
+              }}
+              animate={reduced ? { opacity: 0 } : { top: ["-16%", "112%"] }}
+              transition={{ duration: 4.5, repeat: Infinity, ease: "easeInOut", repeatDelay: 1.6 }}
+            />
+          </div>
+        </div>
       </motion.div>
 
       {/* glowing pedestal */}
