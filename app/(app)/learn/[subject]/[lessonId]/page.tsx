@@ -22,13 +22,16 @@ import {
   pickRealWorldHook,
   type AgeTier,
 } from "@/lib/data/learner";
-import { getLesson, lessonIsBoss } from "@/lib/data/learner-lessons";
+import { getLesson, lessonIsBoss, LESSONS } from "@/lib/data/learner-lessons";
+import { realmForSubject } from "@/lib/data/realms";
 import {
   newlyMasteredCareers,
   generateCredentialCode,
 } from "@/lib/certificates";
+import { nextStreakState } from "@/lib/learner/streak";
 import { PageShimmer } from "@/components/ui/Shimmer";
 import { LevelUpOverlay } from "@/components/learn/LevelUpOverlay";
+import { RegionClearOverlay } from "@/components/learn/RegionClearOverlay";
 
 type Phase = "loading" | "playing" | "done";
 
@@ -224,6 +227,16 @@ export default function LessonPlayerPage() {
     { career_id: string; career_title: string; credential_code: string }[]
   >([]);
   const [leveledUpTo, setLeveledUpTo] = useState<number | null>(null);
+  /** When the kid clears the last lesson in a realm region, snap the
+   * region info so RegionClearOverlay can render it. */
+  const [regionCleared, setRegionCleared] = useState<{
+    regionName: string;
+    regionEmoji: string;
+    realmName: string;
+    accentColor: string;
+    lessonsCleared: number;
+    bossCrowns: number;
+  } | null>(null);
 
   async function persistCompletion() {
     setPersisting(true);
@@ -294,6 +307,93 @@ export default function LessonPlayerPage() {
         xp_delta: awardXp,
       });
 
+      // ── Region clear detection ──
+      // If THIS lesson was the last one the kid hadn't finished in their
+      // current realm region, fire the celebration overlay. We compare
+      // against all the kid's prior lesson_completed events (including
+      // this one we just inserted) — region cleared when every lesson
+      // whose grade falls in the region's gradeRange is in the done set.
+      // Skipped on replays (the kid already cleared this once).
+      if (!alreadyDone) {
+        try {
+          const realm = realmForSubject(lesson!.subject);
+          const region = realm?.regions.find(
+            (r) =>
+              lesson!.grade >= r.gradeRange[0] &&
+              lesson!.grade <= r.gradeRange[1]
+          );
+          if (realm && region) {
+            const regionLessons = LESSONS.filter(
+              (l) =>
+                l.subject === lesson!.subject &&
+                l.grade >= region.gradeRange[0] &&
+                l.grade <= region.gradeRange[1]
+            );
+            // Pull all of this user's completions in this subject — we need
+            // them anyway to decide region completion.
+            const { data: allCompletions } = await supabase
+              .from("analytics_events")
+              .select("event_payload")
+              .eq("user_id", uid)
+              .eq("event_type", "lesson_completed");
+            const completedLessonIds = new Set(
+              (allCompletions || [])
+                .map((e: any) => e?.event_payload?.lesson_id as string | undefined)
+                .filter(Boolean) as string[]
+            );
+            const regionDone = regionLessons.every((l) =>
+              completedLessonIds.has(l.id)
+            );
+            // Was this lesson the one that closed it out? If we mark
+            // region_cleared on every completion the overlay would re-fire
+            // every replay; gating on "this is the lesson that flipped
+            // regionDone to true" requires: (regionLessons - {this} not
+            // all complete prior). We approximate via "regionDone now"
+            // AND "this lesson was not already in the set before this
+            // insert" (the alreadyDone check above already established
+            // that, since we're in the !alreadyDone branch).
+            if (regionDone) {
+              const bossCrowns = regionLessons.filter((l) => {
+                // Boss + cleared = crown
+                const ev = (allCompletions || []).find(
+                  (e: any) => e?.event_payload?.lesson_id === l.id
+                );
+                return ev && (ev as any).event_payload?.boss_cleared;
+              }).length;
+              setRegionCleared({
+                regionName: region.name,
+                regionEmoji: region.emoji,
+                realmName: realm.name,
+                accentColor: realm.accentColor,
+                lessonsCleared: regionLessons.length,
+                bossCrowns,
+              });
+              // Emit analytics so parent reports + retention math can pick
+              // it up later. Best-effort.
+              try {
+                await supabase.from("analytics_events").insert({
+                  user_id: uid,
+                  event_type: "region_cleared",
+                  event_payload: {
+                    subject: lesson!.subject,
+                    realm_id: realm.subjectId,
+                    region_id: region.id,
+                    region_name: region.name,
+                    lessons_cleared: regionLessons.length,
+                    boss_crowns: bossCrowns,
+                  },
+                  xp_delta: 0,
+                });
+              } catch (e) {
+                console.warn("[lesson] region_cleared analytics:", e);
+              }
+            }
+          }
+        } catch (e) {
+          console.warn("[lesson] region-clear detection non-fatal:", e);
+        }
+      }
+
       // ── Ad-funnel + mastery signals ──
       // first_lesson_complete fires once-ever (when there are no prior
       // completions); used as the activation event for ad attribution.
@@ -337,11 +437,36 @@ export default function LessonPlayerPage() {
       }
 
       if (awardXp > 0) {
-        const { data: prof } = await supabase
+        // Read all streak-relevant + level fields in one shot. We tolerate
+        // the streak_freezes_remaining column being missing (pre-migration
+        // deploys) by retrying without it.
+        const fullFields =
+          "total_xp, current_xp, current_level, username, full_name, streak_count, longest_streak, last_quest_completed_at, streak_freezes_remaining";
+        const legacyFields =
+          "total_xp, current_xp, current_level, username, full_name, streak_count, longest_streak, last_quest_completed_at";
+        let profQuery = await supabase
           .from("profiles")
-          .select("total_xp, current_xp, current_level, username, full_name")
+          .select(fullFields)
           .eq("id", uid)
           .single();
+        if (profQuery.error) {
+          profQuery = await supabase
+            .from("profiles")
+            .select(legacyFields)
+            .eq("id", uid)
+            .single();
+        }
+        const prof = profQuery.data as {
+          total_xp?: number | null;
+          current_xp?: number | null;
+          current_level?: number | null;
+          username?: string | null;
+          full_name?: string | null;
+          streak_count?: number | null;
+          longest_streak?: number | null;
+          last_quest_completed_at?: string | null;
+          streak_freezes_remaining?: number | null;
+        } | null;
         if (prof) {
           const oldLevel = prof.current_level || 1;
           const newTotalXp = (prof.total_xp || 0) + awardXp;
@@ -352,15 +477,53 @@ export default function LessonPlayerPage() {
             currentXp -= newLevel * 1000;
             newLevel++;
           }
-          await supabase
-            .from("profiles")
-            .update({
-              total_xp: newTotalXp,
-              current_xp: currentXp,
-              current_level: newLevel,
-              last_quest_completed_at: new Date().toISOString(),
-            })
-            .eq("id", uid);
+
+          // ── Streak math ──
+          // First time anything actually updates streak_count. The schema
+          // had the column since day one but no code touched it — every
+          // UI showed 0d. Now the rollover runs every lesson completion.
+          const nowIso = new Date().toISOString();
+          const nextStreak = nextStreakState({
+            prevStreakCount: prof.streak_count ?? 0,
+            prevLongestStreak: prof.longest_streak ?? 0,
+            prevLastCompletedAt: prof.last_quest_completed_at ?? null,
+            freezesRemaining: prof.streak_freezes_remaining ?? 0,
+          });
+
+          const baseUpdate: Record<string, unknown> = {
+            total_xp: newTotalXp,
+            current_xp: currentXp,
+            current_level: newLevel,
+            last_quest_completed_at: nowIso,
+            streak_count: nextStreak.streakCount,
+            longest_streak: nextStreak.longestStreak,
+          };
+          const withFreeze: Record<string, unknown> = {
+            ...baseUpdate,
+            streak_freezes_remaining: nextStreak.freezesRemaining,
+            streak_frozen_at: nextStreak.freezeUsed ? nowIso : undefined,
+          };
+          // Drop undefined so PostgREST doesn't try to write them.
+          if (!nextStreak.freezeUsed) delete withFreeze.streak_frozen_at;
+
+          let updateErr = (
+            await supabase.from("profiles").update(withFreeze).eq("id", uid)
+          ).error;
+          // Graceful fallback if streak freeze columns aren't there yet.
+          if (
+            updateErr &&
+            /streak_freezes_remaining|streak_frozen_at/i.test(updateErr.message)
+          ) {
+            updateErr = (
+              await supabase.from("profiles").update(baseUpdate).eq("id", uid)
+            ).error;
+          }
+          if (updateErr) {
+            console.warn(
+              "[lesson] profile update non-fatal:",
+              updateErr.message
+            );
+          }
           if (newLevel > oldLevel) {
             setLeveledUpTo(newLevel);
           }
@@ -475,6 +638,21 @@ export default function LessonPlayerPage() {
           <LevelUpOverlay
             level={leveledUpTo}
             onClose={() => setLeveledUpTo(null)}
+          />
+        )}
+
+        {/* Region-clear celebration — fires when the kid just finished the
+            last lesson in a Realm Region. Sits above the level-up overlay
+            visually because z is higher and it auto-dismisses last. */}
+        {regionCleared && (
+          <RegionClearOverlay
+            regionName={regionCleared.regionName}
+            regionEmoji={regionCleared.regionEmoji}
+            realmName={regionCleared.realmName}
+            accentColor={regionCleared.accentColor}
+            lessonsCleared={regionCleared.lessonsCleared}
+            bossCrowns={regionCleared.bossCrowns}
+            onClose={() => setRegionCleared(null)}
           />
         )}
 

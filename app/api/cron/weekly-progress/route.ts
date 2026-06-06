@@ -89,6 +89,33 @@ export async function GET(request: Request) {
   let sent = 0;
   let skipped = 0;
 
+  // ── Grant +1 streak freeze to every learner with an active streak ──
+  // Cap at 2. No PostgreSQL function needed — bucket by current value so
+  // we can use plain PostgREST updates. Failures here are non-fatal: a
+  // skipped freeze grant just means the kid doesn't get this week's
+  // shield; the digest emails still go out.
+  // The streak_freezes_remaining column is added by STREAK_FREEZE_MIGRATION;
+  // if not yet applied the update errors and we log + continue.
+  let freezesGranted = 0;
+  try {
+    const bumpZero = await supabase
+      .from("profiles")
+      .update({ streak_freezes_remaining: 1 })
+      .gt("streak_count", 0)
+      .eq("streak_freezes_remaining", 0)
+      .select("id");
+    const bumpOne = await supabase
+      .from("profiles")
+      .update({ streak_freezes_remaining: 2 })
+      .gt("streak_count", 0)
+      .eq("streak_freezes_remaining", 1)
+      .select("id");
+    freezesGranted =
+      (bumpZero.data?.length ?? 0) + (bumpOne.data?.length ?? 0);
+  } catch (e) {
+    console.warn("[weekly-progress] streak freeze grant non-fatal:", e);
+  }
+
   for (const parent of parents as ParentRow[]) {
     if (!parent.email) {
       skipped++;
@@ -203,5 +230,10 @@ export async function GET(request: Request) {
     else skipped++;
   }
 
-  return NextResponse.json({ sent, skipped, total: parents.length });
+  return NextResponse.json({
+    sent,
+    skipped,
+    total: parents.length,
+    freezesGranted,
+  });
 }

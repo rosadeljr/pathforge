@@ -32,7 +32,10 @@ export type AnalyticsEvent =
   // ── Mastery/learning ──
   | "lesson_completed"
   | "boss_cleared"
-  | "mastery_review_needed";
+  | "mastery_review_needed"
+  | "region_cleared"
+  // ── ForgeBot ──
+  | "mentor_started_from_seed";
 
 interface TrackOptions {
   payload?: Record<string, any>;

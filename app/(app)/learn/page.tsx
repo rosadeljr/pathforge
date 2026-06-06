@@ -39,6 +39,7 @@ import {
 } from "@/lib/data/daily-quests";
 import { PageShimmer } from "@/components/ui/Shimmer";
 import { ForgeBotCompanion } from "@/components/learn/ForgeBotCompanion";
+import { isFreezeProtected } from "@/lib/learner/streak";
 
 interface LearnerProfile {
   username: string | null;
@@ -50,6 +51,10 @@ interface LearnerProfile {
   streak_count: number;
   longest_streak: number;
   dream_career_id: string | null;
+  /** Streak freeze stockpile — added by STREAK_FREEZE_MIGRATION. */
+  streak_freezes_remaining?: number | null;
+  /** Timestamp of most recent freeze use; UI shows ❄️ badge for 24h after. */
+  streak_frozen_at?: string | null;
 }
 
 interface CompletionEvent {
@@ -108,7 +113,9 @@ export default function LearnPage() {
         ] = await Promise.all([
           supabase
             .from("profiles")
-            .select(`${profileFields}, learner_avatar_class`)
+            .select(
+              `${profileFields}, learner_avatar_class, streak_freezes_remaining, streak_frozen_at`
+            )
             .eq("id", uid)
             .maybeSingle(),
           supabase
@@ -367,6 +374,28 @@ export default function LearnPage() {
                   <Flame size={12} />
                   Day {streak} streak
                 </span>
+                {/* Freeze badge — visible for 24h after a freeze auto-used */}
+                {isFreezeProtected(profile?.streak_frozen_at ?? null) && (
+                  <span
+                    className="inline-flex items-center gap-1 text-cyan-300 font-medium"
+                    title="A streak freeze protected your streak from a missed day. Welcome back!"
+                  >
+                    <span className="text-base leading-none">❄️</span>
+                    protected
+                  </span>
+                )}
+                {/* Stockpile chip — how many shields the kid has banked */}
+                {(profile?.streak_freezes_remaining ?? 0) > 0 && (
+                  <span
+                    className="inline-flex items-center gap-1 text-cyan-200/80 font-medium"
+                    title={`${profile?.streak_freezes_remaining} streak freeze${
+                      (profile?.streak_freezes_remaining ?? 0) > 1 ? "s" : ""
+                    } saved. Each one shields a missed day.`}
+                  >
+                    <span className="text-xs leading-none">❄️</span>
+                    {profile?.streak_freezes_remaining}
+                  </span>
+                )}
               </>
             )}
             {grade && (
@@ -878,8 +907,17 @@ export default function LearnPage() {
         </motion.div>
       </div>
 
-      {/* Floating ForgeBot — companion-style entry to the AI tutor */}
-      <ForgeBotCompanion />
+      {/* Floating ForgeBot — companion-style entry to the AI tutor.
+          Passes the spaced-review queue so it can offer personalized
+          "Help me with X" prompts instead of only generic ones. */}
+      <ForgeBotCompanion
+        reviewItems={reviewQueue.map(({ lesson }) => ({
+          lessonId: lesson.id,
+          title: lesson.title,
+          emoji: lesson.emoji,
+          subject: lesson.subject,
+        }))}
+      />
     </div>
   );
 }
