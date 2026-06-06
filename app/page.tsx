@@ -19,7 +19,6 @@ import { Logo } from "@/components/brand/Logo";
 import { PrimaryLinkButton } from "@/components/ui/PrimaryButton";
 import { StickyCTA } from "@/components/landing/StickyCTA";
 import { FloatingParticles } from "@/components/landing/FloatingParticles";
-import { HeroEagle } from "@/components/landing/HeroEagle";
 import { HeroPreview } from "@/components/landing/HeroPreview";
 import { UtmCapture } from "@/components/marketing/UtmCapture";
 
@@ -111,18 +110,6 @@ export default function Landing() {
       {/* HERO */}
       <section className="relative z-10 pt-12 lg:pt-16 pb-20 lg:pb-28">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          {/* Mascot — first thing kids and parents see */}
-          <motion.div
-            initial={{ opacity: 0, scale: 0.85, y: 30 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
-            className="flex justify-center mb-2"
-          >
-            {/* Eagle mascot with a premium hero treatment (glow, orbit rings,
-                embers, pedestal, float + cursor parallax). */}
-            <HeroEagle size={620} />
-          </motion.div>
-
           {/* Eyebrow */}
           <motion.div
             initial={{ opacity: 0, y: 12 }}
