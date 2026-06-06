@@ -1,66 +1,41 @@
 "use client";
 
 /**
- * HeroSprite — the player's top-down avatar, drawn in SVG and tinted by the
- * chosen class accent. A foundation for the dress-up/wardrobe milestone: the
- * outfit/hair/accessory layers can be swapped later. Feet sit at the bottom
- * (the parent anchors translate(-50%,-100%) so the sprite stands on its point).
+ * HeroSprite — the player's avatar: a robust RPG character (CharacterSprite)
+ * tinted by the chosen class, standing on a glowing energy ring with a soft
+ * aura and a name banner. The CharacterLook here is the seam the dress-up /
+ * wardrobe milestone will drive from equipped cosmetics.
  */
+
+import { CharacterSprite } from "./CharacterSprite";
 
 export function HeroSprite({ accent = "#38bdf8", name }: { accent?: string; name?: string }) {
   return (
     <div className="relative flex flex-col items-center">
-      {/* name tag */}
+      {/* name banner */}
       {name && (
         <div
-          className="mb-0.5 max-w-[90px] truncate rounded px-1.5 py-0.5 text-[9px] font-bold text-white"
-          style={{ background: "rgba(0,0,0,0.55)", border: `1px solid ${accent}88` }}
+          className="mb-0.5 max-w-[100px] truncate rounded-md px-2 py-0.5 text-[10px] font-bold text-white"
+          style={{ background: "rgba(8,15,25,0.7)", border: `1px solid ${accent}`, boxShadow: `0 0 10px ${accent}66` }}
         >
           {name}
         </div>
       )}
-      <svg width="44" height="64" viewBox="0 0 44 64" style={{ display: "block", overflow: "visible" }}>
-        {/* energy ground ring + aura */}
-        <ellipse cx="22" cy="60" rx="16" ry="5.5" fill={accent} opacity="0.22" />
-        <ellipse cx="22" cy="60" rx="16" ry="5.5" fill="none" stroke={accent} strokeWidth="1.5" opacity="0.7" style={{ filter: `drop-shadow(0 0 4px ${accent})` }} />
-        <ellipse cx="22" cy="34" rx="17" ry="22" fill={accent} opacity="0.10" />
-        {/* ground shadow */}
-        <ellipse cx="22" cy="59" rx="12" ry="3.5" fill="#000" opacity="0.28" />
-
-        {/* cape/back accent */}
-        <path d="M13 26 Q22 30 31 26 L29 46 Q22 50 15 46 Z" fill={accent} opacity="0.35" />
-
-        {/* legs */}
-        <rect x="16" y="42" width="5" height="13" rx="2.5" fill="#1f2937" />
-        <rect x="23" y="42" width="5" height="13" rx="2.5" fill="#1f2937" />
-        {/* boots */}
-        <rect x="15.5" y="52" width="6" height="5" rx="2" fill="#0f172a" />
-        <rect x="22.5" y="52" width="6" height="5" rx="2" fill="#0f172a" />
-
-        {/* body / tunic */}
-        <path d="M13 28 Q22 24 31 28 L30 44 Q22 47 14 44 Z" fill={accent} stroke="#0c1018" strokeWidth="1" />
-        {/* belt */}
-        <rect x="14" y="41" width="16" height="3" rx="1.5" fill="#0c1018" opacity="0.5" />
-        {/* chest emblem */}
-        <circle cx="22" cy="34" r="2.6" fill="#fff" opacity="0.85" />
-
-        {/* arms */}
-        <rect x="9" y="29" width="5" height="12" rx="2.5" fill={accent} stroke="#0c1018" strokeWidth="0.8" />
-        <rect x="30" y="29" width="5" height="12" rx="2.5" fill={accent} stroke="#0c1018" strokeWidth="0.8" />
-        {/* hands */}
-        <circle cx="11.5" cy="42" r="2.6" fill="#f1c9a5" />
-        <circle cx="32.5" cy="42" r="2.6" fill="#f1c9a5" />
-
-        {/* head */}
-        <circle cx="22" cy="17" r="11" fill="#f6d3b0" stroke="#0c1018" strokeWidth="1" />
-        {/* hair */}
-        <path d="M11 16 Q12 5 22 5 Q32 5 33 16 Q30 11 22 11 Q14 11 11 16 Z" fill="#3b2a1a" />
-        {/* eyes */}
-        <circle cx="18" cy="18" r="1.6" fill="#1f2937" />
-        <circle cx="26" cy="18" r="1.6" fill="#1f2937" />
-        {/* smile */}
-        <path d="M18.5 22 Q22 25 25.5 22" fill="none" stroke="#9a5b3b" strokeWidth="1.2" strokeLinecap="round" />
-      </svg>
+      <div className="relative">
+        {/* aura */}
+        <div
+          aria-hidden
+          className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full"
+          style={{ width: 60, height: 60, background: `radial-gradient(circle, ${accent}33, transparent 70%)` }}
+        />
+        {/* energy ground ring */}
+        <div
+          aria-hidden
+          className="absolute left-1/2 rounded-[50%]"
+          style={{ bottom: 2, width: 38, height: 13, transform: "translateX(-50%)", background: `radial-gradient(ellipse at center, ${accent}55, transparent 70%)`, border: `1.5px solid ${accent}`, boxShadow: `0 0 10px ${accent}` }}
+        />
+        <CharacterSprite accent={accent} trim="#fcd34d" hair="#3b2a1a" width={60} />
+      </div>
     </div>
   );
 }

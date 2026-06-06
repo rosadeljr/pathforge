@@ -14,6 +14,7 @@ import { useRouter } from "next/navigation";
 import { useReducedMotion } from "framer-motion";
 import type { PlayerState } from "@/lib/rpg/state";
 import { HeroSprite } from "./HeroSprite";
+import { CharacterSprite } from "./CharacterSprite";
 
 const WORLD_W = 1600;
 const WORLD_H = 1200;
@@ -248,9 +249,19 @@ export function TownWorld({ ps }: { ps: PlayerState }) {
           <Portal key={s.id} spot={s} active={activeId === s.id} reduced={!!reduced} />
         ))}
 
+        {/* market stalls */}
+        {STALLS.map((st) => (
+          <Stall key={st.id} st={st} />
+        ))}
+
         {/* buildings */}
         {SPOTS.filter((s) => s.kind === "building").map((s) => (
           <Building key={s.id} spot={s} active={activeId === s.id} reduced={!!reduced} />
+        ))}
+
+        {/* townsfolk (foundation for co-op) */}
+        {NPCS.map((n, i) => (
+          <Townsfolk key={n.id} npc={n} reduced={!!reduced} delay={i * 0.5} />
         ))}
 
         {/* avatar */}
@@ -592,6 +603,88 @@ function Building({ spot, active, reduced }: { spot: Spot; active: boolean; redu
       <div className="absolute left-1/2 text-base" style={{ top: h * 0.5, transform: "translate(-50%,-50%)", filter: `drop-shadow(0 0 4px ${a})` }}>
         {GLYPHS[spot.glyph ?? "quest"]}
       </div>
+    </div>
+  );
+}
+
+/* ---------------- townsfolk (populated RPG feel) ---------------- */
+interface Npc {
+  id: string;
+  x: number;
+  y: number;
+  accent: string;
+  trim: string;
+  hair: string;
+  skin: string;
+  sign: string;
+}
+
+const NPCS: Npc[] = [
+  { id: "n1", x: 985, y: 742, accent: "#fb7185", trim: "#fcd34d", hair: "#2b2b2b", skin: "#f6d3b0", sign: "Join my party!" },
+  { id: "n2", x: 636, y: 720, accent: "#22d3ee", trim: "#a5f3fc", hair: "#5b3a21", skin: "#e8b88f", sign: "Quiz duel?" },
+  { id: "n3", x: 1086, y: 662, accent: "#a78bfa", trim: "#e9d5ff", hair: "#1f2937", skin: "#f2c79b", sign: "Trade stickers!" },
+  { id: "n4", x: 560, y: 726, accent: "#f59e0b", trim: "#fde68a", hair: "#3b2a1a", skin: "#f6d3b0", sign: "Math tips here" },
+  { id: "n5", x: 900, y: 446, accent: "#34d399", trim: "#bbf7d0", hair: "#4b2e1e", skin: "#e8b88f", sign: "Reading club" },
+  { id: "n6", x: 700, y: 498, accent: "#38bdf8", trim: "#bae6fd", hair: "#222", skin: "#f6d3b0", sign: "Study buddy?" },
+  { id: "n7", x: 1186, y: 720, accent: "#f472b6", trim: "#fbcfe8", hair: "#3b2a1a", skin: "#f2c79b", sign: "Art jam today!" },
+];
+
+function Townsfolk({ npc, reduced, delay }: { npc: Npc; reduced: boolean; delay: number }) {
+  return (
+    <div className="absolute" style={{ left: npc.x, top: npc.y, transform: "translate(-50%,-100%)", zIndex: Math.round(npc.y) }}>
+      {/* vendor-style sign bubble */}
+      <div
+        className="absolute left-1/2 -translate-x-1/2 whitespace-nowrap rounded-lg px-2 py-0.5 text-[10px] font-semibold text-slate-900"
+        style={{ bottom: "calc(100% + 4px)", background: "rgba(255,255,255,0.94)", border: `1.5px solid ${npc.accent}`, boxShadow: `0 2px 8px rgba(0,0,0,0.4)` }}
+      >
+        <span className="mr-1" style={{ color: npc.accent }}>◈</span>
+        {npc.sign}
+        <span
+          className="absolute left-1/2 top-full -translate-x-1/2"
+          style={{ width: 0, height: 0, borderLeft: "5px solid transparent", borderRight: "5px solid transparent", borderTop: "6px solid rgba(255,255,255,0.94)" }}
+        />
+      </div>
+      <div className={reduced ? "" : "rpg-float-slow"} style={{ animationDelay: `${delay}s` }}>
+        <CharacterSprite accent={npc.accent} trim={npc.trim} hair={npc.hair} skin={npc.skin} width={48} />
+      </div>
+    </div>
+  );
+}
+
+/* ---------------- market stalls ---------------- */
+interface StallData { id: string; x: number; y: number; accent: string; }
+const STALLS: StallData[] = [
+  { id: "s1", x: 1024, y: 748, accent: "#fb7185" },
+  { id: "s2", x: 600, y: 730, accent: "#22d3ee" },
+  { id: "s3", x: 1150, y: 726, accent: "#f472b6" },
+];
+
+function Stall({ st }: { st: StallData }) {
+  const a = st.accent;
+  const w = 84;
+  const h = 70;
+  return (
+    <div className="absolute" style={{ left: st.x, top: st.y, transform: "translate(-50%,-100%)", zIndex: Math.round(st.y) - 4 }}>
+      <svg width={w} height={h} viewBox="0 0 84 70" style={{ overflow: "visible" }}>
+        <ellipse cx="42" cy="66" rx="38" ry="6" fill="#000" opacity="0.25" />
+        {/* posts */}
+        <rect x="10" y="20" width="4" height="46" fill="#6b4a2b" />
+        <rect x="70" y="20" width="4" height="46" fill="#6b4a2b" />
+        {/* counter */}
+        <rect x="8" y="46" width="68" height="18" rx="3" fill="#7c5a36" stroke="#0c1018" strokeWidth="1" />
+        <rect x="8" y="46" width="68" height="5" fill="#9a7349" />
+        {/* goods */}
+        <circle cx="22" cy="44" r="5" fill="#ef4444" /><circle cx="33" cy="44" r="5" fill="#fcd34d" /><circle cx="44" cy="44" r="5" fill="#34d399" /><circle cx="55" cy="44" r="5" fill="#a78bfa" />
+        {/* striped awning */}
+        <path d="M2 22 L82 22 L74 36 L10 36 Z" fill={a} stroke="#0c1018" strokeWidth="1" />
+        {[0, 1, 2, 3, 4].map((i) => (
+          <path key={i} d={`M${10 + i * 16} 22 L${6 + i * 16} 36 L${14 + i * 16} 36 L${18 + i * 16} 22 Z`} fill="#ffffff" opacity="0.85" />
+        ))}
+        <rect x="2" y="20" width="80" height="3" rx="1.5" fill={a} />
+        {/* little hanging lantern */}
+        <line x1="42" y1="22" x2="42" y2="28" stroke="#0c1018" strokeWidth="1" />
+        <circle cx="42" cy="30" r="3" fill="#fde68a" style={{ filter: "drop-shadow(0 0 4px #fde68a)" }} />
+      </svg>
     </div>
   );
 }
