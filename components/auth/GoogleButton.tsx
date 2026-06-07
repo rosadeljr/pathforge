@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { clientAppUrl } from "@/lib/site-url";
 import toast from "react-hot-toast";
 import { Loader2 } from "lucide-react";
 
@@ -32,10 +33,12 @@ export function GoogleButton({ label = "Continue with Google" }: { label?: strin
         }
       }
 
+      // Pin the OAuth round-trip to the canonical origin so the session
+      // cookie is written for pathforger.app (not a *.vercel.app host).
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
-          redirectTo: `${window.location.origin}/api/auth/callback${nextParam}`,
+          redirectTo: `${clientAppUrl()}/api/auth/callback${nextParam}`,
         },
       });
       if (error) throw error;

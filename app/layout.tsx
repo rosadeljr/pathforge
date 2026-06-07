@@ -5,15 +5,13 @@ import { Inter } from "next/font/google";
 import { AppToaster } from "@/components/ui/AppToaster";
 import { ThemeProvider } from "@/components/theme/ThemeProvider";
 import { Pixels } from "@/components/marketing/Pixels";
+import { APP_URL } from "@/lib/site-url";
 
 const inter = Inter({
   subsets: ["latin"],
   variable: "--font-inter",
   display: "swap",
 });
-
-// Canonical origin — set NEXT_PUBLIC_APP_URL in Vercel if a custom domain is used.
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "https://pathforger.app";
 
 export const metadata: Metadata = {
   metadataBase: new URL(APP_URL),

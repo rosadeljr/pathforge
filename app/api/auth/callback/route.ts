@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { serverAppUrl } from "@/lib/site-url";
 import { NextRequest, NextResponse } from "next/server";
 
 /**
@@ -36,11 +37,15 @@ export async function GET(request: NextRequest) {
   const code = searchParams.get("code");
   const next = safeNext(searchParams.get("next"));
 
+  // Canonical origin for every redirect below — prevents landing on a
+  // *.vercel.app deployment host (which would orphan the auth cookie).
+  const base = serverAppUrl(request);
+
   // OAuth provider returned an error (user denied, popup closed, etc.)
   const oauthError =
     searchParams.get("error_description") || searchParams.get("error");
   if (oauthError) {
-    const url = new URL("/login", request.url);
+    const url = new URL("/login", base);
     url.searchParams.set(
       "error",
       // Keep the error message short — it shows in a toast.
@@ -52,7 +57,7 @@ export async function GET(request: NextRequest) {
   if (!code) {
     // Direct hit on /api/auth/callback without a code is just a stray
     // browser hit (back button, etc.). Send them home.
-    return NextResponse.redirect(new URL("/login", request.url));
+    return NextResponse.redirect(new URL("/login", base));
   }
 
   const supabase = await createClient();
@@ -61,7 +66,7 @@ export async function GET(request: NextRequest) {
   );
   if (exchangeError) {
     console.error("[auth/callback] exchange failed:", exchangeError);
-    const url = new URL("/login", request.url);
+    const url = new URL("/login", base);
     url.searchParams.set("error", "auth_failed");
     return NextResponse.redirect(url);
   }
@@ -76,7 +81,7 @@ export async function GET(request: NextRequest) {
       data: { user },
     } = await supabase.auth.getUser();
     if (!user) {
-      return NextResponse.redirect(new URL(destination, request.url));
+      return NextResponse.redirect(new URL(destination, base));
     }
 
     // Try to read the profile. If it doesn't exist (Google first-time
@@ -143,5 +148,5 @@ export async function GET(request: NextRequest) {
     console.warn("[auth/callback] profile lookup non-fatal:", e);
   }
 
-  return NextResponse.redirect(new URL(destination, request.url));
+  return NextResponse.redirect(new URL(destination, base));
 }

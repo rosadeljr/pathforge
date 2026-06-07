@@ -1,4 +1,5 @@
 import { Resend } from "resend";
+import { APP_URL } from "@/lib/site-url";
 
 /**
  * Email sending via Resend.
@@ -68,7 +69,7 @@ export async function sendAdminPaymentAlert(data: PaymentAlertData): Promise<boo
   }
 
   try {
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://pathforge-zeta.vercel.app";
+    const appUrl = APP_URL;
     const row = (label: string, value: string) =>
       `<tr>
         <td style="padding:6px 0;font-size:13px;color:#94a3b8;width:130px;">${label}</td>
@@ -129,7 +130,7 @@ export async function sendPaymentApprovedEmail(
   if (!resend) return false;
 
   try {
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://pathforge-zeta.vercel.app";
+    const appUrl = APP_URL;
     const inner = `
       <h1 style="margin:0 0 4px;font-size:18px;font-weight:600;color:#fff;">⚡ You're now ${tier.toUpperCase()}!</h1>
       <p style="margin:0 0 16px;font-size:13px;color:#94a3b8;line-height:1.6;">
@@ -219,7 +220,7 @@ export async function sendReengagementEmail(
   if (!resend) return false;
 
   try {
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://pathforge-zeta.vercel.app";
+    const appUrl = APP_URL;
     const inner = `
       <h1 style="margin:0 0 4px;font-size:18px;font-weight:600;color:#fff;">ForgeBot misses you 👋</h1>
       <p style="margin:0 0 14px;font-size:13px;color:#94a3b8;line-height:1.6;">
@@ -294,7 +295,7 @@ export async function sendWeeklyProgressEmail(
   if (kids.length === 0) return false;
 
   try {
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://pathforger.app";
+    const appUrl = APP_URL;
 
     const kidCard = (k: WeeklyKidSummary) => `
       <div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:14px;margin-bottom:10px;">
