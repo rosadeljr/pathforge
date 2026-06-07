@@ -4,7 +4,6 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  Compass,
   Lock,
   Sparkles,
   ArrowRight,
@@ -29,6 +28,7 @@ import {
 } from "@/lib/data/careers";
 import { SUBJECTS, ageTierForGrade } from "@/lib/data/learner";
 import { PageShimmer } from "@/components/ui/Shimmer";
+import { ScreenIntro } from "@/components/learn/rpg/primitives";
 
 /**
  * Career exploration — kids browse careers, see what each does,
@@ -120,33 +120,29 @@ export default function CareersPage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
         >
-          <div className="flex items-center justify-between gap-3 flex-wrap mb-3">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/[0.04] border border-white/[0.06]">
-              <Compass size={11} className="text-amber-400" />
-              <span className="text-xs font-medium text-slate-300 tracking-wide">
-                Guild Hall
-              </span>
-            </div>
-            <Link
-              href="/learn/certificates"
-              className="inline-flex items-center gap-1.5 text-xs font-semibold text-amber-300 hover:text-amber-200 transition-colors"
-            >
-              <Trophy size={12} />
-              My certificates
-              <ArrowRight size={10} />
-            </Link>
-          </div>
-          <h1 className="text-3xl sm:text-4xl font-semibold tracking-tight mb-1">
-            {tier === "little"
-              ? "What do you want to be? 🌟"
-              : tier === "junior"
-              ? "Pick your future career"
-              : "Explore careers · find your path"}
-          </h1>
-          <p className="text-sm text-slate-400">
-            Every lesson you finish unlocks new careers. Master the full
-            5-stage adventure to earn a Career Mastery Certificate. 🏆
-          </p>
+          <ScreenIntro
+            emoji="🧭"
+            accent="#fb7185"
+            title={
+              tier === "little"
+                ? "What do you want to be? 🌟"
+                : tier === "junior"
+                ? "Pick your future career"
+                : "Explore careers · find your path"
+            }
+            blurb="Every lesson you finish unlocks new careers to discover. Pick a dream career, then master its full 5-stage adventure to earn a Career Mastery Certificate! 🏆"
+            right={
+              <Link
+                href="/learn/certificates"
+                className="inline-flex items-center gap-1.5 rounded-full bg-amber-400/15 px-3 py-1.5 text-xs font-semibold text-amber-300 transition-colors hover:text-amber-200"
+                style={{ border: "1px solid rgba(251,191,36,0.4)" }}
+              >
+                <Trophy size={12} />
+                My certificates
+                <ArrowRight size={10} />
+              </Link>
+            }
+          />
         </motion.div>
 
         {/* Progress + dream career */}

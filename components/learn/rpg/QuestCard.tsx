@@ -9,7 +9,7 @@
 import Link from "next/link";
 import { Clock, Star, Sparkles } from "lucide-react";
 import type { Quest } from "@/lib/data/rpg-quests";
-import { QUEST_TYPE_META, DIFFICULTY_META, questParentValue } from "@/lib/data/rpg-quests";
+import { QUEST_TYPE_META, DIFFICULTY_META, questParentValue, questLessonHref } from "@/lib/data/rpg-quests";
 import type { QuestStatus, PlayerState } from "@/lib/rpg/state";
 import { questStatus } from "@/lib/rpg/state";
 import { getSubject } from "@/lib/data/learner";
@@ -19,9 +19,12 @@ import { StatusChip } from "./primitives";
 import { LockedContentOverlay } from "./LockedContentOverlay";
 import { logRpgEvent } from "@/lib/rpg/track";
 
-function actionHref(q: Quest): string {
-  if (q.completionType === "ai_feedback") return "/mentor";
+function actionHref(q: Quest, grade?: number): string {
   if (q.questType === "arena") return "/learn/arena";
+  if (q.completionType === "ai_feedback") return "/mentor";
+  // jump straight into a real, grade-appropriate lesson when there is one
+  const lesson = questLessonHref(q, grade);
+  if (lesson) return lesson;
   if (q.subject) return `/learn/${q.subject}`;
   return "/learn/map";
 }
@@ -114,7 +117,7 @@ export function QuestCard({ quest, ps, highlight = false }: { quest: Quest; ps: 
             <div className="w-full rounded-xl bg-white/[0.05] py-2 text-center text-xs font-semibold text-slate-400">🔒 Locked</div>
           ) : (
             <Link
-              href={actionHref(quest)}
+              href={actionHref(quest, ps.grade)}
               onClick={() => void logRpgEvent("rpg_quest_started", { quest_id: quest.id, subject: quest.subject ?? null, career: quest.careerIds[0] ?? null })}
               className="block w-full rounded-xl py-2 text-center text-xs font-bold text-slate-900 transition active:scale-[0.98]"
               style={{ background: "linear-gradient(180deg,#fcd34d,#f59e0b)", boxShadow: "inset 0 1px 0 rgba(255,255,255,0.4)" }}

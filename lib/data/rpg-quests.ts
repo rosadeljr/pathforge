@@ -201,14 +201,35 @@ export function questsForCareer(careerId: string): Quest[] {
   return QUESTS.filter((x) => x.careerIds.includes(careerId));
 }
 
-/** Resolve real lessons that satisfy a lesson/quiz quest, by subject + grade. */
-export function recommendedLessonsForQuest(quest: Quest, grade?: number) {
+/** Resolve real lessons that satisfy a lesson/quiz quest, by subject + grade.
+ *  When a quest doesn't pin explicit lesson ids, we pick real lessons from the
+ *  catalog whose grade best matches the quest's difficulty (scaled across its
+ *  grade band) — capped near the learner's own grade so we never throw a
+ *  6-year-old into a Grade 10 lesson. Returns lesson ids, closest match first. */
+const DIFF_RANK: Record<QuestDifficulty, number> = { starter: 0, easy: 1, medium: 2, hard: 3, boss: 4 };
+export function recommendedLessonsForQuest(quest: Quest, grade?: number): string[] {
   if (quest.recommendedLessonIds.length) {
     return quest.recommendedLessonIds;
   }
   if (!quest.subject) return [];
-  const lessons = getLessonsBySubject(quest.subject, grade);
-  return lessons.slice(0, 5).map((l) => l.id);
+  const all = getLessonsBySubject(quest.subject);
+  if (!all.length) return [];
+  const [lo, hi] = quest.gradeBand;
+  // difficulty → target grade within the quest's band (0 = easiest end)
+  let target = Math.round(lo + (hi - lo) * (DIFF_RANK[quest.difficulty] / 4));
+  if (grade != null) target = Math.min(target, grade + 1);
+  const sorted = [...all].sort(
+    (a, b) => Math.abs(a.grade - target) - Math.abs(b.grade - target) || a.grade - b.grade
+  );
+  return sorted.slice(0, 5).map((l) => l.id);
+}
+
+/** The single best lesson deep-link target for a quest's "Start" button, or
+ *  null when the quest isn't a lesson-style quest. */
+export function questLessonHref(quest: Quest, grade?: number): string | null {
+  if (!quest.subject) return null;
+  const ids = recommendedLessonsForQuest(quest, grade);
+  return ids.length ? `/learn/${quest.subject}/${ids[0]}` : null;
 }
 
 export const QUEST_TYPE_META: Record<QuestType, { label: string; emoji: string; accent: string }> = {
