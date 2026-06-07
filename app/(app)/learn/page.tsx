@@ -8,7 +8,7 @@
 
 import { PlayerHUD } from "@/components/learn/rpg/PlayerHUD";
 import { SectionNav } from "@/components/learn/rpg/GameShell";
-import { TownWorld } from "@/components/learn/rpg/TownWorld";
+import { IsometricTown } from "@/components/learn/rpg/iso/IsometricTown";
 import { usePlayerState } from "@/components/learn/rpg/usePlayerState";
 
 export default function LearnHubPage() {
@@ -44,7 +44,7 @@ export default function LearnHubPage() {
         <SectionNav active="town" />
       </div>
       <div className="mt-3">
-        <TownWorld ps={ps} />
+        <IsometricTown ps={ps} />
       </div>
     </div>
   );
