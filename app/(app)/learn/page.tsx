@@ -10,6 +10,7 @@ import { useRouter } from "next/navigation";
 import { PlayerHUD } from "@/components/learn/rpg/PlayerHUD";
 import { SectionNav } from "@/components/learn/rpg/GameShell";
 import { ForgeheartTown } from "@/components/learn/rpg/ForgeheartTown";
+import { DailyGoalsCard } from "@/components/learn/rpg/DailyGoalsCard";
 import { usePlayerState } from "@/components/learn/rpg/usePlayerState";
 
 export default function LearnHubPage() {
@@ -55,8 +56,11 @@ export default function LearnHubPage() {
       <div className="sticky top-2 z-30 mt-3">
         <SectionNav active="town" />
       </div>
-      <div className="mt-3">
+      <div className="mt-3 grid grid-cols-1 gap-3 lg:grid-cols-[minmax(0,1fr)_320px]">
         <ForgeheartTown ps={ps} />
+        <div className="lg:order-last">
+          <DailyGoalsCard streak={ps.streak} />
+        </div>
       </div>
     </div>
   );

@@ -13,7 +13,8 @@ export type RpgEvent =
   | "rpg_quest_started"
   | "rpg_arena_completed"
   | "rpg_reward_claimed"
-  | "rpg_map_entered";
+  | "rpg_map_entered"
+  | "rpg_daily_claimed";
 
 export async function logRpgEvent(eventType: RpgEvent, payload: Record<string, unknown> = {}, xpDelta = 0) {
   try {

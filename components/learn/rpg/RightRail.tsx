@@ -12,6 +12,7 @@ import { questStatus } from "@/lib/rpg/state";
 import { QUESTS, QUEST_TYPE_META, type Quest } from "@/lib/data/rpg-quests";
 import { WORLD_MAPS, mapUnlockStatus } from "@/lib/data/rpg-maps";
 import { Panel, PanelHeader, StatusChip } from "./primitives";
+import { DailyGoalsCard } from "./DailyGoalsCard";
 
 function recommend(ps: PlayerState): { quest?: Quest; reason: string } {
   // Prefer an in-progress quest in a started subject, else an available daily.
@@ -39,6 +40,9 @@ export function RightRail({ ps }: { ps: PlayerState }) {
 
   return (
     <div className="space-y-4">
+      {/* daily engagement loop */}
+      <DailyGoalsCard streak={ps.streak} />
+
       {/* recommended next action */}
       <Panel accent="#34d399" glow className="pb-4">
         <PanelHeader emoji="🎯" title="Recommended next" subtitle={reason} accent="#34d399" />

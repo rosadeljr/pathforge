@@ -32,6 +32,7 @@ import { nextStreakState } from "@/lib/learner/streak";
 import { PageShimmer } from "@/components/ui/Shimmer";
 import { LevelUpOverlay } from "@/components/learn/LevelUpOverlay";
 import { RegionClearOverlay } from "@/components/learn/RegionClearOverlay";
+import { bumpDailyGoal } from "@/lib/rpg/daily-goals";
 
 type Phase = "loading" | "playing" | "done";
 
@@ -220,6 +221,7 @@ export default function LessonPlayerPage() {
   async function finishLesson() {
     setPhase("done");
     persistCompletion();
+    bumpDailyGoal("lesson");
   }
 
   const [isFirstEver, setIsFirstEver] = useState(false);

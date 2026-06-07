@@ -18,6 +18,7 @@ import { getSkill } from "@/lib/data/rpg-skills";
 import { StatusChip } from "./primitives";
 import { LockedContentOverlay } from "./LockedContentOverlay";
 import { logRpgEvent } from "@/lib/rpg/track";
+import { bumpDailyGoal } from "@/lib/rpg/daily-goals";
 
 function actionHref(q: Quest, grade?: number): string {
   if (q.questType === "arena") return "/learn/arena";
@@ -118,7 +119,10 @@ export function QuestCard({ quest, ps, highlight = false }: { quest: Quest; ps: 
           ) : (
             <Link
               href={actionHref(quest, ps.grade)}
-              onClick={() => void logRpgEvent("rpg_quest_started", { quest_id: quest.id, subject: quest.subject ?? null, career: quest.careerIds[0] ?? null })}
+              onClick={() => {
+                void logRpgEvent("rpg_quest_started", { quest_id: quest.id, subject: quest.subject ?? null, career: quest.careerIds[0] ?? null });
+                bumpDailyGoal("quest");
+              }}
               className="block w-full rounded-xl py-2 text-center text-xs font-bold text-slate-900 transition active:scale-[0.98]"
               style={{ background: "linear-gradient(180deg,#fcd34d,#f59e0b)", boxShadow: "inset 0 1px 0 rgba(255,255,255,0.4)" }}
             >

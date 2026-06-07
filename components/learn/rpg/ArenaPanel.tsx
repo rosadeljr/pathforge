@@ -21,6 +21,7 @@ import {
 import { Panel, PanelHeader, ScreenIntro } from "./primitives";
 import { LevelProgressBar } from "./LevelProgressBar";
 import { logRpgEvent } from "@/lib/rpg/track";
+import { bumpDailyGoal } from "@/lib/rpg/daily-goals";
 
 type Phase = "select" | "matchup" | "playing" | "result";
 interface MiniQ {
@@ -62,6 +63,7 @@ export function ArenaPanel({ ps }: { ps: PlayerState }) {
         setResult(res);
         setPhase("result");
         void logRpgEvent("rpg_arena_completed", { mode: mode!.id, correct: res.correct, total: res.total, accuracy: res.accuracy, outcome: res.outcome }, res.xpEarned);
+        bumpDailyGoal("arena");
       } else {
         setCorrect(nextCorrect);
         setQIndex(qIndex + 1);
