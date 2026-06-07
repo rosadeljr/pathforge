@@ -55,6 +55,7 @@ export default function KidDetailPage() {
   const [kid, setKid] = useState<Kid | null>(null);
   const [completedLessonIds, setCompletedLessonIds] = useState<Set<string>>(new Set());
   const [eventPayloads, setEventPayloads] = useState<LessonEventPayload[]>([]);
+  const [eventTimes, setEventTimes] = useState<{ subject?: string; at: number }[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -70,15 +71,19 @@ export default function KidDetailPage() {
             .maybeSingle(),
           supabase
             .from("analytics_events")
-            .select("event_payload")
+            .select("event_payload, created_at")
             .eq("user_id", kidId)
             .eq("event_type", "lesson_completed"),
         ]);
         setKid((kidData as Kid) || null);
-        const payloads = (events || [])
-          .map((e: any) => e?.event_payload)
-          .filter(Boolean) as LessonEventPayload[];
+        const rows = (events || []) as { event_payload?: LessonEventPayload; created_at?: string }[];
+        const payloads = rows.map((e) => e?.event_payload).filter(Boolean) as LessonEventPayload[];
         setEventPayloads(payloads);
+        setEventTimes(
+          rows
+            .filter((e) => e?.created_at)
+            .map((e) => ({ subject: e.event_payload?.subject, at: Date.parse(e.created_at as string) }))
+        );
         setCompletedLessonIds(
           new Set(payloads.map((p) => p.lesson_id).filter(Boolean) as string[])
         );
@@ -207,6 +212,36 @@ export default function KidDetailPage() {
     [eventPayloads]
   );
 
+  /** Last-7-days activity: per-day lesson counts, active days, and the
+   *  subjects practiced — the "is my kid actually doing this?" proof. */
+  const weekly = useMemo(() => {
+    const DAY = 86400000;
+    const now = new Date();
+    const startToday = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+    const labels = ["S", "M", "T", "W", "T", "F", "S"];
+    const days = Array.from({ length: 7 }, (_, i) => {
+      const dayStart = startToday - (6 - i) * DAY;
+      return { dayStart, label: labels[new Date(dayStart).getDay()], count: 0 };
+    });
+    const windowStart = startToday - 6 * DAY;
+    const subjectCounts: Record<string, number> = {};
+    for (const e of eventTimes) {
+      if (e.at < windowStart) continue;
+      const idx = Math.floor((e.at - windowStart) / DAY);
+      if (idx >= 0 && idx < 7) days[idx].count++;
+      if (e.subject) subjectCounts[e.subject] = (subjectCounts[e.subject] ?? 0) + 1;
+    }
+    const total = days.reduce((s, d) => s + d.count, 0);
+    const activeDays = days.filter((d) => d.count > 0).length;
+    const max = Math.max(1, ...days.map((d) => d.count));
+    const topSubjects = Object.entries(subjectCounts)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 3)
+      .map(([id]) => SUBJECTS.find((s) => s.id === id))
+      .filter(Boolean) as typeof SUBJECTS;
+    return { days, total, activeDays, max, topSubjects };
+  }, [eventTimes]);
+
   if (loading) return <PageShimmer />;
   if (!kid) {
     return (
@@ -294,6 +329,73 @@ export default function KidDetailPage() {
             icon={Trophy}
             accent="#fbbf24"
           />
+        </motion.div>
+
+        {/* This week — consistency at a glance */}
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.07 }}
+          className="rounded-3xl border border-white/[0.08] bg-gradient-to-br from-white/[0.04] to-transparent p-5 sm:p-6"
+        >
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xs font-semibold uppercase tracking-wider text-slate-400">This week</h2>
+            <span className="text-[11px] text-slate-500">
+              {weekly.activeDays}/7 active days · {weekly.total} lesson{weekly.total === 1 ? "" : "s"}
+            </span>
+          </div>
+
+          {/* 7-day bars */}
+          <div className="flex items-end justify-between gap-2 h-24">
+            {weekly.days.map((d, i) => {
+              const h = d.count > 0 ? Math.max(12, (d.count / weekly.max) * 100) : 4;
+              const isToday = i === 6;
+              return (
+                <div key={i} className="flex flex-1 flex-col items-center gap-1.5">
+                  <div className="relative flex w-full flex-1 items-end">
+                    <div
+                      className="w-full rounded-md transition-all"
+                      style={{
+                        height: `${h}%`,
+                        background: d.count > 0
+                          ? "linear-gradient(180deg,#6366f1,#4338ca)"
+                          : "rgba(255,255,255,0.05)",
+                        boxShadow: d.count > 0 ? "0 0 12px rgba(99,102,241,0.4)" : "none",
+                      }}
+                      title={`${d.count} lesson${d.count === 1 ? "" : "s"}`}
+                    />
+                  </div>
+                  <span className={`text-[10px] font-semibold ${isToday ? "text-indigo-300" : "text-slate-500"}`}>{d.label}</span>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* plain-language summary */}
+          <p className="mt-4 text-sm text-slate-300 leading-relaxed">
+            {weekly.total === 0 ? (
+              <>No lessons in the last 7 days. A short session tonight restarts the habit.</>
+            ) : (
+              <>
+                {kid.username || "Your kid"} practiced{" "}
+                <span className="font-semibold text-white">{weekly.activeDays} day{weekly.activeDays === 1 ? "" : "s"}</span>{" "}
+                this week
+                {weekly.topSubjects.length > 0 && (
+                  <> — mostly{" "}
+                    {weekly.topSubjects.map((s, i) => (
+                      <span key={s.id} className="font-semibold text-white">
+                        {i > 0 ? ", " : ""}{s.emoji} {s.title}
+                      </span>
+                    ))}
+                  </>
+                )}
+                {(kid.streak_count || 0) > 0 && (
+                  <> — and is on a <span className="font-semibold text-amber-300">{kid.streak_count}-day streak</span></>
+                )}
+                .
+              </>
+            )}
+          </p>
         </motion.div>
 
         {/* Recommended next action — the most actionable card for a parent. */}
