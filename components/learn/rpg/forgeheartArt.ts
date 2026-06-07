@@ -72,6 +72,7 @@ function defs() {
  <linearGradient id="shade" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#000" stop-opacity="0"/><stop offset="100%" stop-color="#000" stop-opacity="0.34"/></linearGradient>
  <radialGradient id="win" cx="50%" cy="35%" r="65%"><stop offset="0%" stop-color="#d6fbff"/><stop offset="60%" stop-color="#5fd6ee"/><stop offset="100%" stop-color="#0e7490"/></radialGradient>
  <radialGradient id="vig" cx="50%" cy="48%" r="72%"><stop offset="60%" stop-color="#000" stop-opacity="0"/><stop offset="100%" stop-color="#000" stop-opacity="0.5"/></radialGradient>
+ <linearGradient id="fog" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#0b1a26" stop-opacity="0.6"/><stop offset="100%" stop-color="#0b1a26" stop-opacity="0"/></linearGradient>
  <pattern id="scan" width="3" height="3" patternUnits="userSpaceOnUse"><rect width="3" height="1" fill="#081320" opacity="0.5"/></pattern>
 </defs>`;
 }
@@ -94,6 +95,7 @@ function building(cx: number, cy: number, bw: number, height: number, accent: st
   s += `<polygon points="${Lt} ${Bt} ${apex}" fill="${accent}" stroke="${OL}" stroke-width="0.8"/><polygon points="${Bt} ${Rt} ${apex}" fill="${accent}" stroke="${OL}" stroke-width="0.8"/><polygon points="${Lt} ${Bt} ${apex} ${Rt}" fill="url(#sheen)"/>`;
   s += `<line x1="${cx}" y1="${cy + bh - height}" x2="${cx}" y2="${cy - bh - height - roofH}" stroke="#fff" opacity="0.3" stroke-width="1.4"/>`;
   if (v === "tower") s += `<polygon points="${cx - 7},${cy - bh - height - roofH} ${cx + 7},${cy - bh - height - roofH} ${cx},${cy - bh - height - roofH - spire}" fill="${accent}" stroke="${OL}"/><circle cx="${cx}" cy="${cy - bh - height - roofH - spire - 5}" r="9" fill="${accent}" opacity="0.25"/><circle cx="${cx}" cy="${cy - bh - height - roofH - spire - 5}" r="5" fill="#eaffff" class="rpg-twinkle"/>`;
+  else s += `<circle cx="${cx}" cy="${cy - bh - height - roofH}" r="7" fill="${accent}" opacity="0.3"/><circle cx="${cx}" cy="${cy - bh - height - roofH}" r="2.4" fill="#eaffff" class="rpg-twinkle"/>`;
   s += `<polygon points="${cx - bw * 0.55},${cy - height * 0.6} ${cx - bw * 0.32},${cy - height * 0.6 + 11} ${cx - bw * 0.32},${cy - height * 0.6 + 25} ${cx - bw * 0.55},${cy - height * 0.6 + 14}" fill="url(#win)"/>`;
   if (v === "guild") s += [0.3, 0.5, 0.7].map((t) => `<polygon points="${cx + bw * t},${cy + bh * t - height + 8} ${cx + bw * t + 5},${cy + bh * t - height + 11} ${cx + bw * t + 5},${cy + bh * t - 6} ${cx + bw * t},${cy + bh * t - 9}" fill="#dbe3f2" opacity="0.9"/>`).join("");
   else s += `<polygon points="${cx + bw * 0.4},${cy + bh * 0.4 - height * 0.55} ${cx + bw * 0.62},${cy + bh * 0.4 - height * 0.55 + 8} ${cx + bw * 0.62},${cy + bh * 0.4 - height * 0.55 + 22} ${cx + bw * 0.4},${cy + bh * 0.4 - height * 0.55 + 14}" fill="url(#win)"/>`;
@@ -156,6 +158,8 @@ export function buildTownSvg(opts: { classId: string; accent: string; name: stri
   s += paths([[210, 380], [1000, 380], [1085, 590], [150, 590], [390, 520], [300, 650], [830, 630], [615, 150]]);
   SUBJECTS.forEach((sub, i) => (s += portal(PORTAL_X[i], 120, sub.accent, sub.name)));
   s += fountain(615, 412);
+  // floating holographic town crest above the fountain
+  s += `<g class="rpg-float-slow"><polygon points="615,338 631,360 615,382 599,360" fill="#67e8f9" opacity="0.18"/><polygon points="615,344 627,360 615,376 603,360" fill="none" stroke="#a5f3fc" stroke-width="1.5" opacity="0.85"/><polygon points="615,350 622,360 615,370 608,360" fill="#bdf3fc" opacity="0.9"/></g>`;
   s += building(210, 360, 64, 74, "#a78bfa", crestBook, "Class Hall", { banner: "#a78bfa", variant: "hall" });
   s += building(1000, 360, 64, 74, "#fb7185", crestGuild, "Guild Hall", { banner: "#fb7185", variant: "guild" });
   s += building(1085, 575, 48, 104, "#2dd4bf", crestSpark, "Mentor Tower", { variant: "tower" });
@@ -168,7 +172,8 @@ export function buildTownSvg(opts: { classId: string; accent: string; name: stri
   s += npc(700, 575, { accent: "#10b981", item: "satchel", hat: "hood" }, "Health Helper", "Care quest ready", true);
   s += playerSvg(620, 680, heroAccent, look, name, level);
   s += `<g>${parts}</g>`;
-  s += `<rect width="${VB_W}" height="${VB_H}" fill="url(#scan)" opacity="0.12"/>`;
+  s += `<rect width="${VB_W}" height="180" fill="url(#fog)"/>`;
+  s += `<rect width="${VB_W}" height="${VB_H}" fill="url(#scan)" opacity="0.1"/>`;
   s += `<rect width="${VB_W}" height="${VB_H}" fill="url(#vig)"/>`;
   s += `<g><rect x="18" y="18" width="218" height="30" rx="9" fill="rgba(10,22,38,0.66)" stroke="rgba(103,232,249,0.5)"/><circle cx="36" cy="33" r="4" fill="#22d3ee"/><text x="50" y="38" font-size="14" font-weight="700" fill="#cffafe" font-family="Inter,system-ui,sans-serif" letter-spacing="0.5">FORGEHEART CITY</text></g>`;
   s += `<g><rect x="${VB_W - 152}" y="18" width="134" height="30" rx="9" fill="rgba(10,22,38,0.66)" stroke="rgba(251,191,36,0.4)"/><text x="${VB_W - 85}" y="38" font-size="13" font-weight="700" fill="#fde68a" text-anchor="middle" font-family="Inter,system-ui,sans-serif">Realms ${maps}</text></g>`;
