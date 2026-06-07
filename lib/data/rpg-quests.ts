@@ -201,15 +201,55 @@ export function questsForCareer(careerId: string): Quest[] {
   return QUESTS.filter((x) => x.careerIds.includes(careerId));
 }
 
+/**
+ * Hand-curated lesson sets for the high-traffic daily + map quests, ordered
+ * easiest → hardest so the deep-link picks a sensible entry point and a learner
+ * can climb the set. Themed to each quest's story (e.g. "Bridge of Operations"
+ * → multiplication/division). Quests not listed here fall back to the
+ * grade-aware auto-matcher below. Every id is verified against learner-lessons.
+ */
+export const CURATED_QUEST_LESSONS: Record<string, string[]> = {
+  // ── Daily warm-ups: a short low→mid spread per subject ──
+  "q-math-daily": ["math-1-count-to-10", "math-3-add-basic", "math-5-decimals"],
+  "q-eng-daily": ["english-1-alphabet", "english-3-synonyms", "english-5-reading"],
+  "q-fil-daily": ["filipino-1-titik", "filipino-3-bokabularyo", "filipino-5-sawikain"],
+  "q-sci-daily": ["science-3-living-things", "science-4-water-cycle", "science-7-photosynthesis"],
+  "q-ap-daily": ["ap-3-bayan-ko", "ap-5-bayani", "ap-7-asyano"],
+
+  // ── Map quests: themed to the quest's story ──
+  "q-math-map-1": ["math-1-count-to-10", "math-2-add-20", "math-3-add-basic"], // Counting Crossroads
+  "q-math-map-2": ["math-3-multiply-2", "math-4-multiply-3", "math-6-long-division"], // Bridge of Operations
+  "q-eng-map-1": ["english-1-alphabet", "english-2-sight-words", "english-3-synonyms"], // Whispering Words
+  "q-eng-map-2": ["english-5-reading", "english-5-idioms", "english-6-vocab"], // Path of Comprehension
+  "q-fil-map-1": ["filipino-1-titik", "filipino-3-bokabularyo", "filipino-4-pangungusap"], // Daan ng mga Salita
+  "q-fil-map-2": ["filipino-4-pagbasa", "filipino-5-sawikain", "filipino-5-panguri"], // Kwento ng Bayani
+  "q-sci-map-1": ["science-3-living-things", "science-4-water-cycle"], // Tidepool Discoveries
+  "q-sci-map-2": ["science-9-cells", "science-10-newton-laws"], // Currents & Forces
+  "q-ap-map-1": ["ap-3-bayan-ko", "ap-5-bayani"], // Island Stories
+  "q-ap-map-2": ["ap-7-asyano", "ap-9-ekonomiya"], // Voyages of the Past
+};
+
 /** Resolve real lessons that satisfy a lesson/quiz quest, by subject + grade.
- *  When a quest doesn't pin explicit lesson ids, we pick real lessons from the
- *  catalog whose grade best matches the quest's difficulty (scaled across its
- *  grade band) — capped near the learner's own grade so we never throw a
- *  6-year-old into a Grade 10 lesson. Returns lesson ids, closest match first. */
+ *  Priority: ids pinned on the quest → hand-curated set → grade-aware auto-match.
+ *  The auto-matcher picks real lessons from the catalog whose grade best matches
+ *  the quest's difficulty (scaled across its grade band) — capped near the
+ *  learner's own grade so we never throw a 6-year-old into a Grade 10 lesson.
+ *  Returns lesson ids, easiest/closest match first. */
 const DIFF_RANK: Record<QuestDifficulty, number> = { starter: 0, easy: 1, medium: 2, hard: 3, boss: 4 };
 export function recommendedLessonsForQuest(quest: Quest, grade?: number): string[] {
   if (quest.recommendedLessonIds.length) {
     return quest.recommendedLessonIds;
+  }
+  const curated = CURATED_QUEST_LESSONS[quest.id];
+  if (curated?.length) {
+    // when we know the learner's grade, lead with the closest-fit curated lesson
+    if (grade != null) {
+      const byCloseness = [...curated].sort(
+        (a, b) => Math.abs((gradeOf(a) ?? grade) - grade) - Math.abs((gradeOf(b) ?? grade) - grade)
+      );
+      return byCloseness;
+    }
+    return curated;
   }
   if (!quest.subject) return [];
   const all = getLessonsBySubject(quest.subject);
@@ -222,6 +262,12 @@ export function recommendedLessonsForQuest(quest: Quest, grade?: number): string
     (a, b) => Math.abs(a.grade - target) - Math.abs(b.grade - target) || a.grade - b.grade
   );
   return sorted.slice(0, 5).map((l) => l.id);
+}
+
+/** Grade number parsed from a lesson id like "math-3-add-basic" → 3. */
+function gradeOf(lessonId: string): number | undefined {
+  const m = lessonId.match(/^[a-z]+-(\d+)-/);
+  return m ? Number(m[1]) : undefined;
 }
 
 /** The single best lesson deep-link target for a quest's "Start" button, or
