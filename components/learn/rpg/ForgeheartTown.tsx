@@ -6,12 +6,13 @@
  * layers accessible <button> overlays for client-side routing.
  */
 
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { PlayerState } from "@/lib/rpg/state";
 import { WORLD_MAPS } from "@/lib/data/rpg-maps";
 import { mapStatusFor } from "@/lib/rpg/state";
-import { buildTownSvg, SUBJECTS, PORTAL_X, VB_W, VB_H } from "./forgeheartArt";
+import { buildTownSvg, SUBJECTS, PORTAL_X, VB_W, VB_H, type AvatarLook } from "./forgeheartArt";
+import { loadAvatar } from "./useAvatar";
 
 interface Hit { id: string; label: string; href: string; x: number; y: number; w: number; h: number; }
 
@@ -22,6 +23,10 @@ export function ForgeheartTown({ ps }: { ps: PlayerState }) {
   const totalMaps = WORLD_MAPS.length;
   const unlockedMapCount = useMemo(() => WORLD_MAPS.filter((m) => mapStatusFor(m, ps).unlocked).length, [ps]);
 
+  // saved hero cosmetics (worn in town)
+  const [look, setLook] = useState<AvatarLook>({});
+  useEffect(() => setLook(loadAvatar()), []);
+
   const hits: Hit[] = [
     { id: "class", label: "Class Hall — skill tree & job progress", href: "/learn/skills", x: 140, y: 205, w: 150, h: 222 },
     { id: "guild", label: "Career Guild Hall — real career paths", href: "/learn/careers", x: 930, y: 205, w: 150, h: 222 },
@@ -30,12 +35,13 @@ export function ForgeheartTown({ ps }: { ps: PlayerState }) {
     { id: "quest", label: "Quest Board — daily, class & career quests", href: "/learn/quests", x: 322, y: 392, w: 136, h: 156 },
     { id: "reward", label: "Reward Shop — cosmetics, badges & tokens", href: "/learn/rewards", x: 220, y: 558, w: 130, h: 116 },
     { id: "arena", label: "Arena Gate — safe quiz duels", href: "/learn/arena", x: 760, y: 503, w: 140, h: 174 },
+    { id: "avatar", label: "Customize your hero", href: "/learn/avatar", x: 578, y: 600, w: 84, h: 110 },
     ...SUBJECTS.map((s, i) => ({ id: `p-${s.id}`, label: `${s.name} realm — ${s.id} maps`, href: `/learn/${s.id}`, x: PORTAL_X[i] - 56, y: 70, w: 112, h: 120 })),
   ];
 
   const svg = useMemo(
-    () => buildTownSvg({ classId, accent, name: ps.name, level: ps.characterLevel, maps: `${unlockedMapCount}/${totalMaps}` }),
-    [classId, accent, ps.name, ps.characterLevel, unlockedMapCount, totalMaps]
+    () => buildTownSvg({ classId, accent, name: ps.name, level: ps.characterLevel, maps: `${unlockedMapCount}/${totalMaps}`, look }),
+    [classId, accent, ps.name, ps.characterLevel, unlockedMapCount, totalMaps, look]
   );
 
   return (
