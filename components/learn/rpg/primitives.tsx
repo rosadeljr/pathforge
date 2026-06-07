@@ -43,12 +43,20 @@ export const Panel = forwardRef<
   );
 });
 
+/** One live metric shown in a ScreenIntro stat strip. */
+export interface ScreenStat {
+  icon?: ReactNode;
+  value: ReactNode;
+  label: string;
+}
+
 /**
  * ScreenIntro — a sleek "mission console" header shown atop each RPG screen
  * (Quests / Skills / Arena …). Deep panel with a left accent spine, a faint
  * holo-grid, a framed tech-badge icon, an uppercase section label, a bold title
- * and a confident one-line brief. Tuned to read for ages 7–15 — game-UI, not
- * a toddler app — while staying part of the Forgeheart world.
+ * and a confident one-line brief. Optionally carries a live stat strip + a
+ * progress bar so each header doubles as an at-a-glance dashboard. Tuned to read
+ * for ages 7–15 — game-UI, not a toddler app — while staying part of Forgeheart.
  */
 export function ScreenIntro({
   emoji,
@@ -58,6 +66,8 @@ export function ScreenIntro({
   eyebrow,
   chips,
   right,
+  stats,
+  progress,
 }: {
   emoji: ReactNode;
   title: string;
@@ -66,6 +76,8 @@ export function ScreenIntro({
   eyebrow?: string;
   chips?: ReactNode;
   right?: ReactNode;
+  stats?: ScreenStat[];
+  progress?: { pct: number; label: string };
 }) {
   return (
     <div
@@ -118,6 +130,45 @@ export function ScreenIntro({
         </div>
         {right && <div className="flex-shrink-0 self-start">{right}</div>}
       </div>
+
+      {/* live stat strip */}
+      {stats && stats.length > 0 && (
+        <div className="relative mt-3.5 flex flex-wrap items-stretch gap-2 border-t pt-3" style={{ borderColor: "rgba(255,255,255,0.07)" }}>
+          {stats.map((s, i) => (
+            <div
+              key={i}
+              className="flex items-center gap-2 rounded-lg px-2.5 py-1.5"
+              style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)" }}
+            >
+              {s.icon != null && (
+                <span className="grid h-6 w-6 flex-shrink-0 place-items-center rounded-md text-[13px]" style={{ background: `${accent}1c`, color: accent }}>
+                  {s.icon}
+                </span>
+              )}
+              <span className="leading-tight">
+                <span className="block text-sm font-bold tabular-nums text-white">{s.value}</span>
+                <span className="block text-[9px] font-medium uppercase tracking-wide text-slate-400">{s.label}</span>
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* progress bar */}
+      {progress && (
+        <div className="relative mt-3">
+          <div className="mb-1 flex items-center justify-between text-[10px] font-semibold uppercase tracking-wide text-slate-400">
+            <span>{progress.label}</span>
+            <span className="tabular-nums" style={{ color: accent }}>{Math.round(progress.pct)}%</span>
+          </div>
+          <div className="h-2 w-full overflow-hidden rounded-full" style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.08)" }}>
+            <div
+              className="h-full rounded-full transition-[width] duration-700"
+              style={{ width: `${Math.max(0, Math.min(100, progress.pct))}%`, background: `linear-gradient(90deg, ${accent}, ${accent}cc)`, boxShadow: `0 0 10px ${accent}` }}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 }

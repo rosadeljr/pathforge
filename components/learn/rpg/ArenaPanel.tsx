@@ -88,6 +88,11 @@ export function ArenaPanel({ ps }: { ps: PlayerState }) {
         title="Knowledge Arena"
         blurb="Test your knowledge in fast, fair duels against an AI rival matched to your level. Every match earns XP — no chat, no real names, ever."
         accent="#f43f5e"
+        stats={[
+          { value: ARENA_MODES.length, label: "Duel modes" },
+          { value: `Grade ${ps.grade}`, label: "Your bracket" },
+          { value: ps.cls?.name ?? "—", label: "Fighting as" },
+        ]}
         chips={ARENA_SAFETY_RULES.map((r) => (
           <span key={r} className="inline-flex items-center gap-1 rounded-full bg-emerald-500/15 px-2 py-0.5 text-[10px] font-semibold text-emerald-300">
             <ShieldCheck size={10} /> {r}

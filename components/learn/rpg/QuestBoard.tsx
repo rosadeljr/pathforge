@@ -28,6 +28,17 @@ export function QuestBoard({ ps, focusId }: { ps: PlayerState; focusId?: string 
     return [...list].sort((a, b) => rank(a.id) - rank(b.id));
   }, [filter, focusId, ps]);
 
+  const tally = useMemo(() => {
+    let cleared = 0, active = 0, ready = 0;
+    for (const q of QUESTS) {
+      const s = questStatus(q, ps);
+      if (s === "completed") cleared++;
+      else if (s === "in-progress") active++;
+      else if (s === "available") ready++;
+    }
+    return { cleared, active, ready, total: QUESTS.length };
+  }, [ps]);
+
   return (
     <div className="space-y-4">
       <ScreenIntro
@@ -36,6 +47,12 @@ export function QuestBoard({ ps, focusId }: { ps: PlayerState; focusId?: string 
         title="Quest Board"
         blurb="Take on quests to earn XP, unlock skills, and level up your hero. Clear daily drills, map trials, and class challenges to climb the ranks."
         accent="#38bdf8"
+        stats={[
+          { value: tally.cleared, label: "Cleared" },
+          { value: tally.active, label: "In progress" },
+          { value: tally.ready, label: "Ready now" },
+        ]}
+        progress={{ pct: (tally.cleared / Math.max(1, tally.total)) * 100, label: "Quests cleared" }}
       />
       <Panel accent="#38bdf8" glow>
         <PanelHeader emoji="🔎" title="Find a quest" subtitle="Tap a tag to see just that kind of quest" accent="#38bdf8" />

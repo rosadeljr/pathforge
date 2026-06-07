@@ -22,6 +22,9 @@ export function CareerGuildPanel({ ps }: { ps: PlayerState }) {
     ...(ps.cls?.recommendedCareers ?? []),
   ]);
 
+  const activeGuilds = GUILDS.filter((g) => currentRank(g, ps.totalXp).idx > 0).length;
+  const dream = ps.dreamCareerId ? getCareer(ps.dreamCareerId) : undefined;
+
   return (
     <div className="space-y-4">
       <ScreenIntro
@@ -30,6 +33,11 @@ export function CareerGuildPanel({ ps }: { ps: PlayerState }) {
         title="Career Guilds"
         blurb="Join a guild tied to a real career and rank up as you learn. Reach the top rank to earn a Mastery Certificate you can actually show off."
         accent="#fb7185"
+        stats={[
+          { value: `${activeGuilds}/${GUILDS.length}`, label: "Guilds joined" },
+          { value: ps.totalXp.toLocaleString(), label: "Guild XP" },
+          { value: dream?.title ?? "Not set", label: "Dream career" },
+        ]}
       />
 
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">

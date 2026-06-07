@@ -30,6 +30,7 @@ export function RewardShop({ ps }: { ps: PlayerState }) {
     () => REWARDS.filter((r) => COLLECTION_TYPES.includes(r.type)),
     []
   );
+  const collectedCount = collection.reduce((n, r) => n + (earned.has(r.id) ? 1 : 0), 0);
 
   return (
     <div className="space-y-4">
@@ -44,6 +45,11 @@ export function RewardShop({ ps }: { ps: PlayerState }) {
             <Coins size={15} /> {ps.coins.toLocaleString()}
           </span>
         }
+        stats={[
+          { value: `${collectedCount}/${collection.length}`, label: "Collected" },
+          { value: ps.coins.toLocaleString(), label: "Coins" },
+        ]}
+        progress={{ pct: (collectedCount / Math.max(1, collection.length)) * 100, label: "Collection complete" }}
       />
       <Panel accent="#fbbf24">
         <div className="flex gap-2 p-3">

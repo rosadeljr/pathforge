@@ -143,6 +143,12 @@ export default function CareersPage() {
                 <ArrowRight size={10} />
               </Link>
             }
+            stats={[
+              { value: `${unlockedCount}/${CAREERS.length}`, label: "Unlocked" },
+              { value: totalXp.toLocaleString(), label: "Total XP" },
+              { value: dreamCareer?.title ?? "Not set", label: "Dream career" },
+            ]}
+            progress={{ pct: (unlockedCount / Math.max(1, CAREERS.length)) * 100, label: "Careers discovered" }}
           />
         </motion.div>
 
