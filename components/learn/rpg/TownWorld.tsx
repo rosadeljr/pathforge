@@ -20,6 +20,8 @@ const WORLD_W = 1600;
 const WORLD_H = 1200;
 const SPEED = 240; // px/sec
 const AV_R = 16;
+const MM_W = 150;
+const MM_H = 112;
 
 type SpotKind = "building" | "portal";
 interface Spot {
@@ -65,6 +67,7 @@ export function TownWorld({ ps }: { ps: PlayerState }) {
   const viewportRef = useRef<HTMLDivElement | null>(null);
   const worldRef = useRef<HTMLDivElement | null>(null);
   const avatarRef = useRef<HTMLDivElement | null>(null);
+  const miniDotRef = useRef<HTMLDivElement | null>(null);
 
   const pos = useRef({ x: 800, y: 640 });
   const target = useRef<{ x: number; y: number } | null>(null);
@@ -194,6 +197,11 @@ export function TownWorld({ ps }: { ps: PlayerState }) {
         av.style.transform = `translate(-50%, -100%) translateY(${-bobY}px) scaleX(${facing.current})`;
         av.style.zIndex = String(Math.round(pos.current.y));
       }
+      const md = miniDotRef.current;
+      if (md) {
+        md.style.left = `${(pos.current.x / WORLD_W) * MM_W}px`;
+        md.style.top = `${(pos.current.y / WORLD_H) * MM_H}px`;
+      }
 
       // proximity
       let nearest: string | null = null;
@@ -232,6 +240,7 @@ export function TownWorld({ ps }: { ps: PlayerState }) {
   }
 
   const activeSpot = activeId ? SPOTS.find((s) => s.id === activeId) ?? null : null;
+  const objective = !ps.cls ? "Choose your class at the Class Hall" : "Take on a quest at the Quest Board";
 
   return (
     <div
@@ -301,6 +310,41 @@ export function TownWorld({ ps }: { ps: PlayerState }) {
         FORGEHEART CITY
       </div>
 
+      {/* objective tracker */}
+      <div
+        className="pointer-events-none absolute left-3 top-12 flex items-center gap-2 rounded-xl px-3 py-1.5 text-[11px] font-semibold text-amber-100 backdrop-blur"
+        style={{ background: "rgba(8,15,25,0.55)", border: "1px solid rgba(251,191,36,0.35)" }}
+      >
+        <span style={{ color: "#fcd34d" }}>★</span>
+        <span className="text-slate-300">Objective:</span> {objective}
+      </div>
+
+      {/* minimap */}
+      <div className="pointer-events-none absolute right-3 top-3 rounded-xl p-1.5 backdrop-blur" style={{ background: "rgba(8,15,25,0.6)", border: "1px solid rgba(56,189,248,0.3)", boxShadow: "0 0 16px rgba(56,189,248,0.15)" }}>
+        <div className="relative overflow-hidden rounded-lg" style={{ width: MM_W, height: MM_H, background: "radial-gradient(circle at 50% 42%, #15403a, #0a2320)" }}>
+          {/* plaza marker */}
+          <span className="absolute -translate-x-1/2 -translate-y-1/2 rounded-full" style={{ left: (800 / WORLD_W) * MM_W, top: (640 / WORLD_H) * MM_H, width: 14, height: 14, border: "1px solid rgba(103,232,249,0.6)" }} />
+          {SPOTS.map((s) => (
+            <span
+              key={s.id}
+              className="absolute -translate-x-1/2 -translate-y-1/2"
+              style={{
+                left: (s.x / WORLD_W) * MM_W,
+                top: (s.y / WORLD_H) * MM_H,
+                width: s.kind === "building" ? 5 : 4,
+                height: s.kind === "building" ? 5 : 4,
+                background: s.accent,
+                borderRadius: s.kind === "portal" ? "50%" : 1,
+                boxShadow: `0 0 4px ${s.accent}`,
+              }}
+            />
+          ))}
+          {/* live hero dot */}
+          <div ref={miniDotRef} className="absolute -translate-x-1/2 -translate-y-1/2 rounded-full" style={{ left: (pos.current.x / WORLD_W) * MM_W, top: (pos.current.y / WORLD_H) * MM_H, width: 7, height: 7, background: "#fff", boxShadow: "0 0 6px #fff, 0 0 10px #22d3ee", border: "1px solid #22d3ee" }} />
+        </div>
+        <div className="mt-1 text-center text-[9px] font-bold tracking-widest text-cyan-200/70">MAP</div>
+      </div>
+
       {showHint && (
         <div
           className="pointer-events-none absolute bottom-3 left-1/2 -translate-x-1/2 rounded-full px-4 py-1.5 text-[11px] text-cyan-50 backdrop-blur"
@@ -355,28 +399,59 @@ function Particles() {
   );
 }
 
-/* ---------------- ground (futuristic) ---------------- */
+/* ---------------- ground (crafted RPG map) ---------------- */
 function GroundLayer({ reduced }: { reduced: boolean }) {
+  const buildings = SPOTS.filter((s) => s.kind === "building");
+
+  // lamp posts lining each road
+  const lamps: { x: number; y: number }[] = [];
+  for (const s of buildings) {
+    const dx = s.x - 800;
+    const dy = s.y + 30 - 640;
+    const len = Math.hypot(dx, dy);
+    const ux = dx / len, uy = dy / len;
+    const px = -uy, py = ux;
+    for (const [t, side] of [[0.52, 1], [0.82, -1]] as const) {
+      lamps.push({ x: 800 + ux * len * t + px * 38 * side, y: 640 + uy * len * t + py * 38 * side });
+    }
+  }
+  const banners: { x: number; y: number; c: string }[] = [
+    { x: 690, y: 745, c: "#fcd34d" }, { x: 910, y: 745, c: "#22d3ee" },
+    { x: 690, y: 545, c: "#a78bfa" }, { x: 910, y: 545, c: "#fb7185" },
+  ];
+  const statues = [{ x: 430, y: 470 }, { x: 1175, y: 460 }];
+
   return (
     <svg viewBox={`0 0 ${WORLD_W} ${WORLD_H}`} width={WORLD_W} height={WORLD_H} className="absolute inset-0">
       <defs>
-        <radialGradient id="tw-ground" cx="50%" cy="42%" r="78%">
-          <stop offset="0%" stopColor="#1b5e57" />
-          <stop offset="45%" stopColor="#123f4a" />
-          <stop offset="100%" stopColor="#0a1f30" />
+        <radialGradient id="tw-ground" cx="48%" cy="42%" r="80%">
+          <stop offset="0%" stopColor="#1f6b4f" />
+          <stop offset="48%" stopColor="#134a39" />
+          <stop offset="100%" stopColor="#0a2520" />
         </radialGradient>
-        <radialGradient id="tw-plaza" cx="50%" cy="45%" r="55%">
-          <stop offset="0%" stopColor="#243a5e" />
-          <stop offset="70%" stopColor="#16233c" />
-          <stop offset="100%" stopColor="#0e1830" />
+        <radialGradient id="tw-plazaHi" cx="50%" cy="42%" r="60%">
+          <stop offset="0%" stopColor="#ffffff" stopOpacity="0.10" />
+          <stop offset="100%" stopColor="#ffffff" stopOpacity="0" />
+        </radialGradient>
+        <radialGradient id="tw-water" cx="50%" cy="40%" r="60%">
+          <stop offset="0%" stopColor="#a5f3fc" />
+          <stop offset="55%" stopColor="#22d3ee" />
+          <stop offset="100%" stopColor="#0e7490" />
         </radialGradient>
         <radialGradient id="tw-pool" cx="50%" cy="40%" r="60%">
           <stop offset="0%" stopColor="#67e8f9" />
           <stop offset="55%" stopColor="#22d3ee" />
           <stop offset="100%" stopColor="#0e7490" />
         </radialGradient>
-        <pattern id="tw-grid" width="64" height="64" patternUnits="userSpaceOnUse">
-          <path d="M64 0 H0 V64" fill="none" stroke="#5eead4" strokeWidth="1" opacity="0.05" />
+        <pattern id="tw-cobble" width="34" height="34" patternUnits="userSpaceOnUse">
+          <rect width="34" height="34" fill="#39435a" />
+          <rect x="2" y="2" width="14" height="14" rx="5" fill="#434f68" />
+          <rect x="18" y="2" width="14" height="14" rx="5" fill="#333d52" />
+          <rect x="2" y="18" width="14" height="14" rx="5" fill="#333d52" />
+          <rect x="18" y="18" width="14" height="14" rx="5" fill="#434f68" />
+        </pattern>
+        <pattern id="tw-grass" width="26" height="26" patternUnits="userSpaceOnUse">
+          <path d="M6 20 l2 -6 M7 20 l-1 -5 M18 22 l2 -6 M19 22 l-1 -5" stroke="#1f9a64" strokeWidth="1.3" opacity="0.45" fill="none" />
         </pattern>
         <filter id="tw-glow" x="-60%" y="-60%" width="220%" height="220%">
           <feGaussianBlur stdDeviation="6" result="b" />
@@ -384,47 +459,110 @@ function GroundLayer({ reduced }: { reduced: boolean }) {
         </filter>
       </defs>
 
+      {/* grass base + texture */}
       <rect width={WORLD_W} height={WORLD_H} fill="url(#tw-ground)" />
-      <rect width={WORLD_W} height={WORLD_H} fill="url(#tw-grid)" />
+      <rect width={WORLD_W} height={WORLD_H} fill="url(#tw-grass)" />
 
-      {/* energy walkways: dark base + glowing animated center line */}
-      <g strokeLinecap="round">
-        {SPOTS.filter((s) => s.kind === "building").map((s) => (
-          <line key={`pb${s.id}`} x1={800} y1={640} x2={s.x} y2={s.y + 30} stroke="#0c1c2e" strokeWidth={38} opacity={0.9} />
-        ))}
-        {SPOTS.filter((s) => s.kind === "building").map((s) => (
-          <line key={`pe${s.id}`} x1={800} y1={640} x2={s.x} y2={s.y + 30} stroke="#22d3ee" strokeWidth={26} opacity={0.08} />
-        ))}
-        {SPOTS.filter((s) => s.kind === "building").map((s) => (
-          <line key={`pc${s.id}`} x1={800} y1={640} x2={s.x} y2={s.y + 30} stroke="#7dd3fc" strokeWidth={3} opacity={0.7} className={reduced ? "" : "rpg-dash"} />
-        ))}
+      {/* stone roads (tiled) */}
+      {buildings.map((s) => {
+        const dx = s.x - 800;
+        const dy = s.y + 30 - 640;
+        const len = Math.hypot(dx, dy);
+        const deg = (Math.atan2(dy, dx) * 180) / Math.PI;
+        return (
+          <g key={`road${s.id}`} transform={`translate(800 640) rotate(${deg})`}>
+            <rect x={0} y={-27} width={len} height={54} fill="url(#tw-cobble)" />
+            <rect x={0} y={-27} width={len} height={2.5} fill="#0c1018" opacity={0.45} />
+            <rect x={0} y={24.5} width={len} height={2.5} fill="#0c1018" opacity={0.45} />
+          </g>
+        );
+      })}
+
+      {/* plaza */}
+      <circle cx={800} cy={640} r={158} fill="url(#tw-cobble)" stroke="#0c1018" strokeWidth={3} />
+      <circle cx={800} cy={640} r={158} fill="url(#tw-plazaHi)" />
+      <circle cx={800} cy={640} r={150} fill="none" stroke="#5b6b86" strokeWidth={3} opacity={0.6} />
+      <circle cx={800} cy={640} r={118} fill="none" stroke="#5b6b86" strokeWidth={2} opacity={0.4} />
+      {/* compass inlay */}
+      <g opacity={0.5}>
+        <polygon points="800,540 812,628 800,648 788,628" fill="#56688a" />
+        <polygon points="800,740 812,652 800,632 788,652" fill="#46587a" />
+        <polygon points="700,640 788,628 808,640 788,652" fill="#46587a" />
+        <polygon points="900,640 812,628 792,640 812,652" fill="#56688a" />
+      </g>
+      {/* rotating magic ring */}
+      <circle cx={800} cy={640} r={134} fill="none" stroke="#67e8f9" strokeWidth={1.6} strokeDasharray="3 18" opacity={0.5} className={reduced ? "" : "rpg-spin"} />
+
+      {/* central fountain */}
+      <g>
+        <ellipse cx={800} cy={690} rx={74} ry={20} fill="#000" opacity={0.28} />
+        {/* outer basin */}
+        <circle cx={800} cy={650} r={70} fill="#3a4458" stroke="#222c3e" strokeWidth={3} />
+        <circle cx={800} cy={650} r={70} fill="none" stroke="#5b6b86" strokeWidth={2} opacity={0.7} />
+        <ellipse cx={800} cy={646} rx={58} ry={48} fill="url(#tw-water)" opacity={0.92} />
+        <ellipse cx={800} cy={636} rx={40} ry={14} fill="#ffffff" opacity={0.18} />
+        {/* mid basin */}
+        <circle cx={800} cy={636} r={30} fill="#3a4458" stroke="#222c3e" strokeWidth={2} />
+        <ellipse cx={800} cy={632} rx={22} ry={16} fill="url(#tw-water)" />
+        {/* pillar + top bowl */}
+        <rect x={794} y={604} width={12} height={28} rx={3} fill="#46587a" />
+        <ellipse cx={800} cy={606} rx={16} ry={6} fill="#3a4458" stroke="#222c3e" strokeWidth={1.5} />
+        {/* magic spout glow */}
+        <circle cx={800} cy={600} r={7} fill="#a5f3fc" filter="url(#tw-glow)" className={reduced ? "" : "rpg-float"} />
+        <circle cx={800} cy={600} r={3} fill="#ffffff" />
+        {/* droplets */}
+        <circle cx={786} cy={616} r={2} fill="#a5f3fc" opacity={0.8} />
+        <circle cx={814} cy={616} r={2} fill="#a5f3fc" opacity={0.8} />
+        <circle cx={800} cy={588} r={1.6} fill="#a5f3fc" opacity={0.9} className={reduced ? "" : "rpg-twinkle"} />
       </g>
 
-      {/* holographic plaza */}
-      <circle cx={800} cy={640} r={155} fill="url(#tw-plaza)" stroke="#22d3ee" strokeWidth={2} opacity={0.95} />
-      <circle cx={800} cy={640} r={155} fill="none" stroke="#67e8f9" strokeWidth={4} opacity={0.18} />
-      <circle cx={800} cy={640} r={110} fill="none" stroke="#38bdf8" strokeWidth={1.2} opacity={0.3} />
-      <circle cx={800} cy={640} r={70} fill="none" stroke="#a78bfa" strokeWidth={1.2} opacity={0.4} />
-      {/* rotating dashed ring */}
-      <circle cx={800} cy={640} r={130} fill="none" stroke="#67e8f9" strokeWidth={2} strokeDasharray="3 16" opacity={0.6} className={reduced ? "" : "rpg-spin"} />
-      {/* central hologram beam + emblem */}
-      <rect x={788} y={520} width={24} height={120} rx={12} fill="#67e8f9" opacity={0.12} filter="url(#tw-glow)" className={reduced ? "" : "rpg-beam"} />
-      <g className={reduced ? "" : "rpg-float"} filter="url(#tw-glow)">
-        <polygon points="800,600 814,632 800,664 786,632" fill="#a5f3fc" opacity={0.9} />
-        <polygon points="800,612 808,632 800,652 792,632" fill="#0ea5e9" />
-      </g>
+      {/* decorative water pool (stone rim) */}
+      <ellipse cx={1180} cy={560} rx={90} ry={56} fill="#3a4458" />
+      <ellipse cx={1180} cy={560} rx={84} ry={50} fill="url(#tw-pool)" opacity={0.9} />
+      <ellipse cx={1180} cy={560} rx={84} ry={50} fill="none" stroke="#5b6b86" strokeWidth={2.5} />
+      <ellipse cx={1180} cy={552} rx={50} ry={26} fill="#ffffff" opacity={0.12} />
 
-      {/* energy pool */}
-      <ellipse cx={1180} cy={560} rx={84} ry={52} fill="url(#tw-pool)" opacity={0.85} />
-      <ellipse cx={1180} cy={560} rx={84} ry={52} fill="none" stroke="#a5f3fc" strokeWidth={2} opacity={0.5} />
-      <ellipse cx={1180} cy={560} rx={54} ry={32} fill="none" stroke="#ffffff" strokeWidth={1} opacity={0.25} className={reduced ? "" : "rpg-twinkle"} />
+      {/* banners around the plaza */}
+      {banners.map((b, i) => (
+        <g key={`ban${i}`}>
+          <ellipse cx={b.x} cy={b.y + 2} rx={7} ry={2.5} fill="#000" opacity={0.25} />
+          <rect x={b.x - 2} y={b.y - 78} width={4} height={80} rx={2} fill="#4a3a24" />
+          <circle cx={b.x} cy={b.y - 80} r={3.5} fill={b.c} style={{ filter: `drop-shadow(0 0 4px ${b.c})` }} />
+          <path d={`M ${b.x + 2} ${b.y - 76} L ${b.x + 30} ${b.y - 70} L ${b.x + 24} ${b.y - 58} L ${b.x + 30} ${b.y - 46} L ${b.x + 2} ${b.y - 40} Z`} fill={b.c} stroke="#0c1018" strokeWidth={0.8} opacity={0.92} />
+          <path d={`M ${b.x + 2} ${b.y - 76} L ${b.x + 14} ${b.y - 74} L ${b.x + 14} ${b.y - 42} L ${b.x + 2} ${b.y - 40} Z`} fill="#fff" opacity={0.12} />
+        </g>
+      ))}
+
+      {/* town guardian statues */}
+      {statues.map((st, i) => (
+        <g key={`st${i}`}>
+          <ellipse cx={st.x} cy={st.y + 30} rx={26} ry={8} fill="#000" opacity={0.28} />
+          <rect x={st.x - 22} y={st.y + 18} width={44} height={16} rx={3} fill="#3a4458" stroke="#222c3e" strokeWidth={1.5} />
+          <rect x={st.x - 16} y={st.y + 8} width={32} height={12} rx={2} fill="#46587a" />
+          {/* robed figure */}
+          <path d={`M ${st.x - 14} ${st.y + 10} Q ${st.x} ${st.y - 34} ${st.x + 14} ${st.y + 10} Z`} fill="#5b6b86" stroke="#2b3850" strokeWidth={1.2} />
+          <circle cx={st.x} cy={st.y - 34} r={9} fill="#6b7c98" stroke="#2b3850" strokeWidth={1} />
+          <rect x={st.x + 10} y={st.y - 40} width={3} height={50} rx={1.5} fill="#4a3a24" />
+          <circle cx={st.x + 11.5} cy={st.y - 42} r={5} fill="#a5f3fc" opacity={0.85} style={{ filter: "drop-shadow(0 0 5px #67e8f9)" }} />
+        </g>
+      ))}
+
+      {/* lamp posts */}
+      {lamps.map((l, i) => (
+        <g key={`lamp${i}`}>
+          <ellipse cx={l.x} cy={l.y + 2} rx={6} ry={2} fill="#000" opacity={0.25} />
+          <rect x={l.x - 2} y={l.y - 30} width={4} height={32} rx={2} fill="#2b3344" />
+          <rect x={l.x - 6} y={l.y - 38} width={12} height={10} rx={3} fill="#1f2937" stroke="#3a4458" strokeWidth={1} />
+          <circle cx={l.x} cy={l.y - 33} r={3.5} fill="#fde68a" style={{ filter: "drop-shadow(0 0 6px #fbbf24)" }} className={reduced ? "" : "rpg-twinkle"} />
+        </g>
+      ))}
 
       {/* glow-canopy trees */}
       {scatterTrees().map((t, i) => (
         <g key={i}>
           <ellipse cx={t.x} cy={t.y + 10} rx={t.r} ry={t.r * 0.4} fill="#000" opacity={0.22} />
           <rect x={t.x - 2.5} y={t.y} width={5} height={9} fill="#3f2d1a" />
-          <circle cx={t.x} cy={t.y - 6} r={t.r + 5} fill={t.c} opacity={0.18} />
+          <circle cx={t.x} cy={t.y - 6} r={t.r + 5} fill={t.c} opacity={0.16} />
           <circle cx={t.x} cy={t.y - 6} r={t.r} fill={t.dark ? "#0f766e" : "#15803d"} />
           <circle cx={t.x - t.r * 0.35} cy={t.y - t.r * 0.7} r={t.r * 0.5} fill={t.c} opacity={0.85} />
         </g>
