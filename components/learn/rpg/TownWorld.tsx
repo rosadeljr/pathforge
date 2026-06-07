@@ -14,7 +14,7 @@ import { useRouter } from "next/navigation";
 import { useReducedMotion } from "framer-motion";
 import type { PlayerState } from "@/lib/rpg/state";
 import { HeroSprite } from "./HeroSprite";
-import { CharacterSprite } from "./CharacterSprite";
+import { CharacterSprite, type Hat } from "./CharacterSprite";
 
 const WORLD_W = 1600;
 const WORLD_H = 1200;
@@ -345,6 +345,9 @@ export function TownWorld({ ps }: { ps: PlayerState }) {
         <div className="mt-1 text-center text-[9px] font-bold tracking-widest text-cyan-200/70">MAP</div>
       </div>
 
+      {/* party portraits */}
+      <PartyStrip />
+
       {showHint && (
         <div
           className="pointer-events-none absolute bottom-3 left-1/2 -translate-x-1/2 rounded-full px-4 py-1.5 text-[11px] text-cyan-50 backdrop-blur"
@@ -443,12 +446,22 @@ function GroundLayer({ reduced }: { reduced: boolean }) {
           <stop offset="55%" stopColor="#22d3ee" />
           <stop offset="100%" stopColor="#0e7490" />
         </radialGradient>
-        <pattern id="tw-cobble" width="34" height="34" patternUnits="userSpaceOnUse">
-          <rect width="34" height="34" fill="#39435a" />
-          <rect x="2" y="2" width="14" height="14" rx="5" fill="#434f68" />
-          <rect x="18" y="2" width="14" height="14" rx="5" fill="#333d52" />
-          <rect x="2" y="18" width="14" height="14" rx="5" fill="#333d52" />
-          <rect x="18" y="18" width="14" height="14" rx="5" fill="#434f68" />
+        <pattern id="tw-cobble" width="128" height="64" patternUnits="userSpaceOnUse">
+          <rect width="128" height="64" fill="#2b3447" />
+          {/* isometric diamond tiles (checker) */}
+          <polygon points="32,0 64,16 32,32 0,16" fill="#3a4458" />
+          <polygon points="96,0 128,16 96,32 64,16" fill="#323c50" />
+          <polygon points="64,32 96,48 64,64 32,48" fill="#3a4458" />
+          <polygon points="0,32 32,48 0,64 -32,48" fill="#323c50" />
+          <polygon points="128,32 160,48 128,64 96,48" fill="#323c50" />
+          {/* relief: light upper-left edges */}
+          <g stroke="#515f7a" strokeWidth="1" opacity="0.5" fill="none">
+            <path d="M0,16 L32,0 M64,16 L96,0 M32,48 L64,32 M-32,48 L0,32 M96,48 L128,32" />
+          </g>
+          {/* relief: dark lower-right edges */}
+          <g stroke="#1b2330" strokeWidth="1" opacity="0.6" fill="none">
+            <path d="M64,16 L32,32 M128,16 L96,32 M96,48 L64,64 M32,48 L0,64 M160,48 L128,64" />
+          </g>
         </pattern>
         <pattern id="tw-grass" width="26" height="26" patternUnits="userSpaceOnUse">
           <path d="M6 20 l2 -6 M7 20 l-1 -5 M18 22 l2 -6 M19 22 l-1 -5" stroke="#1f9a64" strokeWidth="1.3" opacity="0.45" fill="none" />
@@ -478,20 +491,47 @@ function GroundLayer({ reduced }: { reduced: boolean }) {
         );
       })}
 
-      {/* plaza */}
-      <circle cx={800} cy={640} r={158} fill="url(#tw-cobble)" stroke="#0c1018" strokeWidth={3} />
-      <circle cx={800} cy={640} r={158} fill="url(#tw-plazaHi)" />
-      <circle cx={800} cy={640} r={150} fill="none" stroke="#5b6b86" strokeWidth={3} opacity={0.6} />
-      <circle cx={800} cy={640} r={118} fill="none" stroke="#5b6b86" strokeWidth={2} opacity={0.4} />
+      {/* raised tile platforms (daises) under buildings — adds depth */}
+      {buildings.map((s) => {
+        const cx = s.x;
+        const cy = s.y + s.h! / 2 + 4;
+        const hw = s.w! * 0.64;
+        const hh = hw * 0.5;
+        const H = 13;
+        const top = `${cx},${cy - hh} ${cx + hw},${cy} ${cx},${cy + hh} ${cx - hw},${cy}`;
+        const left = `${cx - hw},${cy} ${cx},${cy + hh} ${cx},${cy + hh + H} ${cx - hw},${cy + H}`;
+        const right = `${cx},${cy + hh} ${cx + hw},${cy} ${cx + hw},${cy + H} ${cx},${cy + hh + H}`;
+        return (
+          <g key={`dais${s.id}`}>
+            <polygon points={left} fill="#1c2433" />
+            <polygon points={right} fill="#27324a" />
+            <polygon points={top} fill="url(#tw-cobble)" stroke="#0c1018" strokeWidth={1.5} />
+            <polygon points={top} fill="none" stroke={`${s.accent}`} strokeWidth={1.5} opacity={0.45} />
+          </g>
+        );
+      })}
+
+      {/* grand plaza medallion */}
+      <circle cx={800} cy={640} r={205} fill="url(#tw-cobble)" stroke="#0c1018" strokeWidth={4} />
+      <circle cx={800} cy={640} r={205} fill="url(#tw-plazaHi)" />
+      <circle cx={800} cy={640} r={196} fill="none" stroke="#5b6b86" strokeWidth={3} opacity={0.6} />
+      <circle cx={800} cy={640} r={188} fill="none" stroke="#fcd34d" strokeWidth={1.5} opacity={0.25} />
+      <circle cx={800} cy={640} r={120} fill="none" stroke="#5b6b86" strokeWidth={2} opacity={0.4} />
       {/* compass inlay */}
-      <g opacity={0.5}>
-        <polygon points="800,540 812,628 800,648 788,628" fill="#56688a" />
-        <polygon points="800,740 812,652 800,632 788,652" fill="#46587a" />
-        <polygon points="700,640 788,628 808,640 788,652" fill="#46587a" />
-        <polygon points="900,640 812,628 792,640 812,652" fill="#56688a" />
+      <g opacity={0.55}>
+        <polygon points="800,520 814,628 800,652 786,628" fill="#56688a" />
+        <polygon points="800,760 814,652 800,628 786,652" fill="#46587a" />
+        <polygon points="680,640 786,628 812,640 786,652" fill="#46587a" />
+        <polygon points="920,640 814,628 788,640 814,652" fill="#56688a" />
       </g>
+      {/* corner ornament gems on the border (N/E/S/W) */}
+      {[[800, 437], [1003, 640], [800, 843], [597, 640]].map(([gx, gy], i) => (
+        <g key={`gem${i}`}>
+          <polygon points={`${gx},${gy - 9} ${gx + 8},${gy} ${gx},${gy + 9} ${gx - 8},${gy}`} fill="#fcd34d" stroke="#0c1018" strokeWidth={0.8} />
+        </g>
+      ))}
       {/* rotating magic ring */}
-      <circle cx={800} cy={640} r={134} fill="none" stroke="#67e8f9" strokeWidth={1.6} strokeDasharray="3 18" opacity={0.5} className={reduced ? "" : "rpg-spin"} />
+      <circle cx={800} cy={640} r={168} fill="none" stroke="#67e8f9" strokeWidth={1.6} strokeDasharray="3 20" opacity={0.45} className={reduced ? "" : "rpg-spin"} />
 
       {/* central fountain */}
       <g>
@@ -763,16 +803,17 @@ interface Npc {
   hair: string;
   skin: string;
   sign: string;
+  hat: Hat;
 }
 
 const NPCS: Npc[] = [
-  { id: "n1", x: 985, y: 742, accent: "#fb7185", trim: "#fcd34d", hair: "#2b2b2b", skin: "#f6d3b0", sign: "Join my party!" },
-  { id: "n2", x: 636, y: 720, accent: "#22d3ee", trim: "#a5f3fc", hair: "#5b3a21", skin: "#e8b88f", sign: "Quiz duel?" },
-  { id: "n3", x: 1086, y: 662, accent: "#a78bfa", trim: "#e9d5ff", hair: "#1f2937", skin: "#f2c79b", sign: "Trade stickers!" },
-  { id: "n4", x: 560, y: 726, accent: "#f59e0b", trim: "#fde68a", hair: "#3b2a1a", skin: "#f6d3b0", sign: "Math tips here" },
-  { id: "n5", x: 900, y: 446, accent: "#34d399", trim: "#bbf7d0", hair: "#4b2e1e", skin: "#e8b88f", sign: "Reading club" },
-  { id: "n6", x: 700, y: 498, accent: "#38bdf8", trim: "#bae6fd", hair: "#222", skin: "#f6d3b0", sign: "Study buddy?" },
-  { id: "n7", x: 1186, y: 720, accent: "#f472b6", trim: "#fbcfe8", hair: "#3b2a1a", skin: "#f2c79b", sign: "Art jam today!" },
+  { id: "n1", x: 985, y: 742, accent: "#fb7185", trim: "#fcd34d", hair: "#2b2b2b", skin: "#f6d3b0", sign: "Join my party!", hat: "cap" },
+  { id: "n2", x: 636, y: 720, accent: "#22d3ee", trim: "#a5f3fc", hair: "#5b3a21", skin: "#e8b88f", sign: "Quiz duel?", hat: "none" },
+  { id: "n3", x: 1086, y: 662, accent: "#a78bfa", trim: "#e9d5ff", hair: "#1f2937", skin: "#f2c79b", sign: "Trade stickers!", hat: "wizard" },
+  { id: "n4", x: 560, y: 726, accent: "#f59e0b", trim: "#fde68a", hair: "#3b2a1a", skin: "#f6d3b0", sign: "Math tips here", hat: "hood" },
+  { id: "n5", x: 900, y: 446, accent: "#34d399", trim: "#bbf7d0", hair: "#4b2e1e", skin: "#e8b88f", sign: "Reading club", hat: "cap" },
+  { id: "n6", x: 700, y: 498, accent: "#38bdf8", trim: "#bae6fd", hair: "#222", skin: "#f6d3b0", sign: "Study buddy?", hat: "none" },
+  { id: "n7", x: 1186, y: 720, accent: "#f472b6", trim: "#fbcfe8", hair: "#3b2a1a", skin: "#f2c79b", sign: "Art jam today!", hat: "hood" },
 ];
 
 function Townsfolk({ npc, reduced, delay }: { npc: Npc; reduced: boolean; delay: number }) {
@@ -791,7 +832,7 @@ function Townsfolk({ npc, reduced, delay }: { npc: Npc; reduced: boolean; delay:
         />
       </div>
       <div className={reduced ? "" : "rpg-float-slow"} style={{ animationDelay: `${delay}s` }}>
-        <CharacterSprite accent={npc.accent} trim={npc.trim} hair={npc.hair} skin={npc.skin} width={48} />
+        <CharacterSprite accent={npc.accent} trim={npc.trim} hair={npc.hair} skin={npc.skin} hat={npc.hat} width={48} />
       </div>
     </div>
   );
@@ -832,5 +873,66 @@ function Stall({ st }: { st: StallData }) {
         <circle cx="42" cy="30" r="3" fill="#fde68a" style={{ filter: "drop-shadow(0 0 4px #fde68a)" }} />
       </svg>
     </div>
+  );
+}
+
+/* ---------------- party portraits (RPG-style) ---------------- */
+interface PartyMember { name: string; lvl: number; accent: string; hair: string; skin: string; hat: Hat; pct: number; you?: boolean; }
+const PARTY: PartyMember[] = [
+  { name: "Aria", lvl: 8, accent: "#10b981", hair: "#3b2a1a", skin: "#f6d3b0", hat: "circlet", pct: 80, you: true },
+  { name: "Comet Owl", lvl: 7, accent: "#22d3ee", hair: "#5b3a21", skin: "#e8b88f", hat: "none", pct: 64 },
+  { name: "Brave Maya", lvl: 9, accent: "#fb7185", hair: "#2b2b2b", skin: "#f6d3b0", hat: "cap", pct: 72 },
+  { name: "Sky Lawin", lvl: 6, accent: "#a78bfa", hair: "#1f2937", skin: "#f2c79b", hat: "wizard", pct: 48 },
+];
+
+function PartyStrip() {
+  return (
+    <div className="pointer-events-none absolute left-3 top-[92px] hidden w-[178px] flex-col gap-1.5 md:flex">
+      <div className="px-1 text-[10px] font-bold tracking-widest text-cyan-200/70">PARTY</div>
+      {PARTY.map((m) => (
+        <PartyCard key={m.name} m={m} />
+      ))}
+    </div>
+  );
+}
+
+function PartyCard({ m }: { m: PartyMember }) {
+  return (
+    <div
+      className="flex items-center gap-2 rounded-xl px-2 py-1.5 backdrop-blur"
+      style={{ background: "rgba(8,15,25,0.6)", border: `1px solid ${m.you ? m.accent : "rgba(56,189,248,0.2)"}`, boxShadow: m.you ? `0 0 12px ${m.accent}44` : "none" }}
+    >
+      <div className="relative h-9 w-9 flex-shrink-0 overflow-hidden rounded-lg" style={{ background: `radial-gradient(circle at 50% 30%, ${m.accent}33, rgba(8,11,18,0.8))`, border: `1px solid ${m.accent}66` }}>
+        <div className="absolute left-1/2 top-1 -translate-x-1/2">
+          <FaceMini accent={m.accent} hair={m.hair} skin={m.skin} hat={m.hat} />
+        </div>
+      </div>
+      <div className="min-w-0 flex-1">
+        <div className="flex items-center justify-between gap-1">
+          <span className="truncate text-[11px] font-bold text-white">{m.name}{m.you ? " (you)" : ""}</span>
+          <span className="flex-shrink-0 text-[9px] font-bold" style={{ color: m.accent }}>Lv {m.lvl}</span>
+        </div>
+        <div className="mt-1 h-1.5 w-full overflow-hidden rounded-full" style={{ background: "rgba(255,255,255,0.08)" }}>
+          <div className="h-full rounded-full" style={{ width: `${m.pct}%`, background: m.accent, boxShadow: `0 0 6px ${m.accent}` }} />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function FaceMini({ accent, hair, skin, hat }: { accent: string; hair: string; skin: string; hat: Hat }) {
+  const O = "#0c1018";
+  return (
+    <svg width="30" height="30" viewBox="0 0 30 30" style={{ overflow: "visible", display: "block" }}>
+      <circle cx="15" cy="16" r="10" fill={skin} stroke={O} strokeWidth="0.8" />
+      <path d="M6 16 Q5 4 15 3 Q25 4 24 16 Q22 9 15 9 Q8 9 6 16 Z" fill={hair} />
+      {hat === "circlet" && <path d="M8 11 Q15 7 22 11" fill="none" stroke="#fcd34d" strokeWidth="2" strokeLinecap="round" />}
+      {hat === "cap" && <path d="M6 12 Q15 1 24 12 Q21 7 15 7 Q9 7 6 12 Z" fill={accent} stroke={O} strokeWidth="0.6" />}
+      {hat === "hood" && <path d="M5 17 Q4 2 15 2 Q26 2 25 17 Q21 8 15 8 Q9 8 5 17 Z" fill={accent} stroke={O} strokeWidth="0.6" />}
+      {hat === "wizard" && <path d="M15 -4 L23 12 L7 12 Z" fill={accent} stroke={O} strokeWidth="0.6" />}
+      <circle cx="11.5" cy="16" r="1.3" fill="#1f2937" />
+      <circle cx="18.5" cy="16" r="1.3" fill="#1f2937" />
+      <path d="M12 20 Q15 22 18 20" fill="none" stroke="#9a5b3b" strokeWidth="1" strokeLinecap="round" />
+    </svg>
   );
 }

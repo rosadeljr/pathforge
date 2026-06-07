@@ -34,7 +34,7 @@ export function HeroSprite({ accent = "#38bdf8", name }: { accent?: string; name
           className="absolute left-1/2 rounded-[50%]"
           style={{ bottom: 2, width: 38, height: 13, transform: "translateX(-50%)", background: `radial-gradient(ellipse at center, ${accent}55, transparent 70%)`, border: `1.5px solid ${accent}`, boxShadow: `0 0 10px ${accent}` }}
         />
-        <CharacterSprite accent={accent} trim="#fcd34d" hair="#3b2a1a" width={60} />
+        <CharacterSprite accent={accent} trim="#fcd34d" hair="#3b2a1a" hat="circlet" width={60} />
       </div>
     </div>
   );

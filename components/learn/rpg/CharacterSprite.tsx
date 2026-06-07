@@ -8,12 +8,15 @@
  * bottom of the viewBox.
  */
 
+export type Hat = "none" | "circlet" | "cap" | "hood" | "wizard";
+
 export interface CharacterLook {
   accent?: string; // tunic
   trim?: string; // collar/belt/cuffs/cape lining
   hair?: string;
   skin?: string;
   cape?: boolean;
+  hat?: Hat;
 }
 
 export function CharacterSprite({
@@ -22,6 +25,7 @@ export function CharacterSprite({
   hair = "#3b2a1a",
   skin = "#f6d3b0",
   cape = true,
+  hat = "none",
   width = 58,
 }: CharacterLook & { width?: number }) {
   const O = "#0c1018"; // outline
@@ -81,6 +85,36 @@ export function CharacterSprite({
       <path d="M16 19 Q17 13 22 11 L20 18 Z" fill="#fff" opacity="0.08" />
       {/* side fringe */}
       <path d="M40 13 q4 5 1 11 l-3 -1 q2 -5 0 -9 z" fill={hair} />
+
+      {/* headgear */}
+      {hat === "circlet" && (
+        <g>
+          <path d="M17 13 Q29 8 41 13" fill="none" stroke="#fcd34d" strokeWidth="2.6" strokeLinecap="round" />
+          <circle cx="29" cy="10.5" r="2.6" fill="#a5f3fc" stroke={O} strokeWidth="0.5" />
+        </g>
+      )}
+      {hat === "cap" && (
+        <g>
+          <path d="M15 15 Q29 0 43 15 Q40 9 29 9 Q18 9 15 15 Z" fill={accent} stroke={O} strokeWidth="0.8" />
+          <rect x="13.5" y="14" width="31" height="3.2" rx="1.6" fill={trim} />
+          <circle cx="29" cy="3.5" r="2.2" fill={trim} />
+        </g>
+      )}
+      {hat === "hood" && (
+        <g>
+          <path d="M12 21 Q10 1 29 1 Q48 1 46 21 Q40 10 29 10 Q18 10 12 21 Z" fill={accent} stroke={O} strokeWidth="0.9" />
+          <path d="M12 21 Q14 11 21 8 L19 19 Z" fill="#fff" opacity="0.08" />
+        </g>
+      )}
+      {hat === "wizard" && (
+        <g>
+          <path d="M29 -11 L41 16 L17 16 Z" fill={accent} stroke={O} strokeWidth="0.9" />
+          <path d="M29 -11 L41 16 L29 16 Z" fill="#000" opacity="0.12" />
+          <rect x="14.5" y="14" width="29" height="4" rx="2" fill={trim} />
+          <circle cx="29" cy="-10" r="2.1" fill="#a5f3fc" />
+          <path d="M25 4 l1.6 0 0 1.6 -1.6 0 z" fill="#fde68a" />
+        </g>
+      )}
 
       {/* face */}
       <ellipse cx="23.5" cy="21.5" rx="2.7" ry="3.1" fill="#fff" />
