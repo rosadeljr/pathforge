@@ -229,3 +229,27 @@ export const DIFFICULTY_META: Record<QuestDifficulty, { label: string; color: st
   hard: { label: "Hard", color: "#fb923c" },
   boss: { label: "Mastery", color: "#fbbf24" },
 };
+
+/**
+ * Parent-visible value: a plain-language summary of what a quest builds and how,
+ * so parents immediately see the learning outcome behind the game.
+ */
+const SUBJECT_SKILL: Record<string, string> = {
+  math: "number sense & logical thinking",
+  english: "reading & writing skills",
+  filipino: "Filipino language & cultural literacy",
+  science: "scientific thinking & curiosity",
+  "araling-panlipunan": "history, geography & civic awareness",
+};
+const ACTIVITY: Record<CompletionType, string> = {
+  lesson: "guided practice",
+  quiz: "a mastery check",
+  project: "a hands-on project",
+  reflection: "reflection & self-awareness",
+  parent_review: "a family activity",
+  ai_feedback: "explaining their thinking with AI mentor feedback",
+};
+export function questParentValue(q: Quest): string {
+  const skill = q.subject ? SUBJECT_SKILL[q.subject] : "real-world problem solving";
+  return `Builds ${skill} through ${ACTIVITY[q.completionType]}.`;
+}

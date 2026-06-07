@@ -9,7 +9,7 @@
 import Link from "next/link";
 import { Clock, Star, Sparkles } from "lucide-react";
 import type { Quest } from "@/lib/data/rpg-quests";
-import { QUEST_TYPE_META, DIFFICULTY_META } from "@/lib/data/rpg-quests";
+import { QUEST_TYPE_META, DIFFICULTY_META, questParentValue } from "@/lib/data/rpg-quests";
 import type { QuestStatus, PlayerState } from "@/lib/rpg/state";
 import { questStatus } from "@/lib/rpg/state";
 import { getSubject } from "@/lib/data/learner";
@@ -92,6 +92,18 @@ export function QuestCard({ quest, ps, highlight = false }: { quest: Quest; ps: 
             )}
           </div>
         )}
+
+        {/* parent-visible value */}
+        <div
+          className="rounded-lg px-2 py-1.5 text-[10px] leading-snug"
+          style={{ background: "rgba(56,189,248,0.08)", border: "1px solid rgba(56,189,248,0.18)" }}
+        >
+          <span className="font-semibold text-sky-300">For parents:</span>{" "}
+          <span className="text-slate-300">
+            {questParentValue(quest)}
+            {careers[0] ? ` Connects to becoming a ${careers[0]!.title}.` : ""}
+          </span>
+        </div>
 
         {/* action */}
         <div className="mt-auto pt-1">
