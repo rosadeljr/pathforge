@@ -12,7 +12,7 @@ import { ChevronRight } from "lucide-react";
 import type { PlayerState } from "@/lib/rpg/state";
 import { GUILDS, currentRank, unlockedRewards } from "@/lib/data/guilds";
 import { getCareer } from "@/lib/data/careers";
-import { Panel, PanelHeader } from "./primitives";
+import { Panel, ScreenIntro } from "./primitives";
 import { LevelProgressBar } from "./LevelProgressBar";
 
 export function CareerGuildPanel({ ps }: { ps: PlayerState }) {
@@ -24,12 +24,12 @@ export function CareerGuildPanel({ ps }: { ps: PlayerState }) {
 
   return (
     <div className="space-y-4">
-      <Panel accent="#fb7185" glow>
-        <PanelHeader emoji="🏛️" title="Career Guild Hall" subtitle="Join a guild and climb toward a real dream job" accent="#fb7185" />
-        <p className="px-4 pb-4 pt-1 text-xs text-slate-400">
-          Guild rank grows with your total XP. Each guild leads to real careers and a capstone certificate.
-        </p>
-      </Panel>
+      <ScreenIntro
+        emoji="🏛️"
+        title="Career Guild Hall"
+        blurb="Join a guild that matches a real dream job. The more you learn, the higher your guild rank climbs — all the way to a special certificate you can be proud of!"
+        accent="#fb7185"
+      />
 
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         {GUILDS.map((guild) => {

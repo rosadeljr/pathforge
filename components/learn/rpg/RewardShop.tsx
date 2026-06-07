@@ -10,7 +10,7 @@ import { useMemo, useState } from "react";
 import { Coins } from "lucide-react";
 import type { PlayerState } from "@/lib/rpg/state";
 import { REWARDS, shopRewards, type RewardType } from "@/lib/data/rpg-rewards";
-import { Panel, PanelHeader } from "./primitives";
+import { Panel, PanelHeader, ScreenIntro } from "./primitives";
 import { RewardBadge } from "./RewardBadge";
 import { logRpgEvent } from "@/lib/rpg/track";
 
@@ -33,19 +33,19 @@ export function RewardShop({ ps }: { ps: PlayerState }) {
 
   return (
     <div className="space-y-4">
-      <Panel accent="#fbbf24" glow>
-        <PanelHeader
-          emoji="🛍️"
-          title="Reward Shop"
-          subtitle="Earn it by learning — never by chance"
-          accent="#fbbf24"
-          right={
-            <span className="mr-4 inline-flex items-center gap-1 rounded-full bg-amber-400/15 px-2.5 py-1 text-xs font-bold text-amber-300">
-              <Coins size={13} /> {ps.coins.toLocaleString()}
-            </span>
-          }
-        />
-        <div className="flex gap-2 px-4 pb-4 pt-2">
+      <ScreenIntro
+        emoji="🛍️"
+        title="Reward Shop"
+        blurb="Collect badges, titles and cool looks for your hero. You earn everything by learning and spending coins you've already won — never by luck or real money."
+        accent="#fbbf24"
+        right={
+          <span className="inline-flex items-center gap-1 rounded-full bg-amber-400/15 px-3 py-1.5 text-sm font-bold text-amber-300" style={{ border: "1px solid rgba(251,191,36,0.4)" }}>
+            <Coins size={15} /> {ps.coins.toLocaleString()}
+          </span>
+        }
+      />
+      <Panel accent="#fbbf24">
+        <div className="flex gap-2 p-3">
           <Tab label="My Collection" active={tab === "collection"} onClick={() => setTab("collection")} />
           <Tab label="Coin Shop" active={tab === "shop"} onClick={() => setTab("shop")} />
         </div>

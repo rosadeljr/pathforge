@@ -77,8 +77,8 @@ export function QuestCard({ quest, ps, highlight = false }: { quest: Quest; ps: 
         {/* rewards row */}
         <div className="flex flex-wrap items-center gap-2 text-[11px]">
           <Chip icon={<Star size={11} />} text={`+${quest.xpReward} XP`} color="#a78bfa" />
-          <Chip icon={<Sparkles size={11} />} text={`+${quest.classXpReward} Class`} color="#38bdf8" />
-          <Chip icon={<Clock size={11} />} text={`${quest.estimatedMinutes}m`} color="#94a3b8" />
+          <Chip icon={<Sparkles size={11} />} text={`+${quest.classXpReward} class power`} color="#38bdf8" />
+          <Chip icon={<Clock size={11} />} text={`${quest.estimatedMinutes} min`} color="#94a3b8" />
           {subject && <Chip text={`${subject.emoji} ${subject.title}`} color={subject.accentColor} />}
         </div>
 
