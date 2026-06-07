@@ -982,3 +982,25 @@ textarea:focus-visible {
 @media (prefers-reduced-motion: reduce) {
   .rpg-spin, .rpg-spin-r, .rpg-float, .rpg-float-slow, .rpg-twinkle, .rpg-beam, .rpg-dash, .rpg-drift { animation: none !important; }
 }
+
+/* ============================================================
+   Forgeheart City (ForgeheartTown) — single-SVG town + hit areas
+   ============================================================ */
+@keyframes fhSway { 0%, 100% { transform: rotate(-2.5deg); } 50% { transform: rotate(2.5deg); } }
+.fh-sway { animation: fhSway 3.6s ease-in-out infinite; transform-origin: top center; transform-box: fill-box; }
+/* clickable landmark overlays */
+.fh-hit {
+  position: absolute;
+  border-radius: 16px;
+  cursor: pointer;
+  background: transparent;
+  transition: background 0.12s ease, box-shadow 0.12s ease;
+}
+.fh-hit:hover, .fh-hit:focus-visible {
+  background: rgba(255, 255, 255, 0.05);
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.55), 0 0 20px rgba(56, 189, 248, 0.45);
+  outline: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .fh-sway { animation: none !important; }
+}
