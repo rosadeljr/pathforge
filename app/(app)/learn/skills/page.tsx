@@ -8,13 +8,19 @@
 import { RpgScreen } from "@/components/learn/rpg/RpgScreen";
 import { ClassHall } from "@/components/learn/rpg/ClassHall";
 import { SkillTree } from "@/components/learn/rpg/SkillTree";
-import { Panel, PanelHeader } from "@/components/learn/rpg/primitives";
+import { Panel, PanelHeader, ScreenIntro } from "@/components/learn/rpg/primitives";
 
 export default function SkillsPage() {
   return (
     <RpgScreen active="skills">
       {({ ps, selectClass, saving }) => (
         <div className="space-y-4">
+          <ScreenIntro
+            emoji="🌳"
+            title="Your Powers"
+            blurb="Pick a hero class that matches what you love, then unlock new learning powers as you level up. You can change your class anytime!"
+            accent="#a78bfa"
+          />
           <ClassHall ps={ps} onSelectClass={selectClass} saving={saving} />
           <div id="tree">
             {ps.classId ? (

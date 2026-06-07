@@ -9,7 +9,7 @@ import { useMemo, useState } from "react";
 import type { PlayerState } from "@/lib/rpg/state";
 import { questStatus } from "@/lib/rpg/state";
 import { QUESTS, QUEST_TYPE_META, type QuestType } from "@/lib/data/rpg-quests";
-import { Panel, PanelHeader } from "./primitives";
+import { Panel, PanelHeader, ScreenIntro } from "./primitives";
 import { QuestCard } from "./QuestCard";
 
 const TYPE_ORDER: QuestType[] = ["daily", "map", "class", "career", "party", "arena", "capstone", "job-change"];
@@ -30,8 +30,14 @@ export function QuestBoard({ ps, focusId }: { ps: PlayerState; focusId?: string 
 
   return (
     <div className="space-y-4">
+      <ScreenIntro
+        emoji="📜"
+        title="Quest Board"
+        blurb="Pick a quest, play it, and earn XP and rewards. Start with the easy ones and work your way up — every quest teaches you something new!"
+        accent="#38bdf8"
+      />
       <Panel accent="#38bdf8" glow>
-        <PanelHeader emoji="📜" title="Quest Board" subtitle="Training quests, trials, and career challenges" accent="#38bdf8" />
+        <PanelHeader emoji="🔎" title="Find a quest" subtitle="Tap a tag to see just that kind of quest" accent="#38bdf8" />
         {/* filters */}
         <div className="flex gap-1.5 overflow-x-auto px-4 pb-4 pt-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           <FilterChip label="All" active={filter === "all"} onClick={() => setFilter("all")} />

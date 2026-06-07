@@ -43,6 +43,61 @@ export const Panel = forwardRef<
   );
 });
 
+/**
+ * ScreenIntro — a soft, friendly "anime dusk" hero banner shown at the top of
+ * each RPG screen (Quests / Skills / Arena …). Warm gradient, a big glowing
+ * emoji badge, a plain-language title + description written for kids, gentle
+ * twinkles, and an optional right slot. Keeps every screen feeling like part of
+ * the same storybook world as Forgeheart City.
+ */
+export function ScreenIntro({
+  emoji,
+  title,
+  blurb,
+  accent = "#7c5cff",
+  chips,
+  right,
+}: {
+  emoji: ReactNode;
+  title: string;
+  blurb: string;
+  accent?: string;
+  chips?: ReactNode;
+  right?: ReactNode;
+}) {
+  return (
+    <div
+      className="relative overflow-hidden rounded-3xl p-4 sm:p-5"
+      style={{
+        background: `linear-gradient(135deg, ${accent}33 0%, rgba(124,92,255,0.14) 38%, rgba(8,13,22,0.72) 100%)`,
+        border: `1px solid ${accent}55`,
+        boxShadow: `inset 0 1px 0 rgba(255,255,255,0.12), 0 16px 40px -22px ${accent}aa`,
+      }}
+    >
+      {/* warm dusk glow + gentle twinkles */}
+      <span aria-hidden className="pointer-events-none absolute -right-10 -top-12 h-40 w-40 rounded-full opacity-40 blur-2xl" style={{ background: accent }} />
+      <span aria-hidden className="rpg-twinkle pointer-events-none absolute right-8 top-5 text-sm">✦</span>
+      <span aria-hidden className="rpg-twinkle pointer-events-none absolute right-24 top-10 text-xs" style={{ animationDelay: "1.1s" }}>✦</span>
+      <span aria-hidden className="rpg-twinkle pointer-events-none absolute right-14 bottom-4 text-[10px]" style={{ animationDelay: "0.6s" }}>✦</span>
+
+      <div className="relative flex items-start gap-3 sm:gap-4">
+        <span
+          className="rpg-float grid h-14 w-14 flex-shrink-0 place-items-center rounded-2xl text-3xl sm:h-16 sm:w-16"
+          style={{ background: `${accent}2e`, border: `1px solid ${accent}88`, boxShadow: `inset 0 1px 0 rgba(255,255,255,0.25), 0 0 22px ${accent}66` }}
+        >
+          {emoji}
+        </span>
+        <div className="min-w-0 flex-1">
+          <h2 className="font-display text-lg font-black tracking-tight text-white sm:text-xl">{title}</h2>
+          <p className="mt-0.5 max-w-xl text-sm text-slate-200/90">{blurb}</p>
+          {chips && <div className="mt-2 flex flex-wrap gap-1.5">{chips}</div>}
+        </div>
+        {right && <div className="flex-shrink-0">{right}</div>}
+      </div>
+    </div>
+  );
+}
+
 /** Small header used inside panels (icon chip + title + optional right slot). */
 export function PanelHeader({
   emoji,

@@ -18,7 +18,7 @@ import {
   type ArenaMode,
   type ArenaResult,
 } from "@/lib/data/rpg-arena";
-import { Panel, PanelHeader } from "./primitives";
+import { Panel, PanelHeader, ScreenIntro } from "./primitives";
 import { LevelProgressBar } from "./LevelProgressBar";
 import { logRpgEvent } from "@/lib/rpg/track";
 
@@ -82,16 +82,17 @@ export function ArenaPanel({ ps }: { ps: PlayerState }) {
 
   return (
     <div className="space-y-4">
-      <Panel accent="#f43f5e" glow>
-        <PanelHeader emoji="⚔️" title="Knowledge Arena" subtitle="Friendly, fair, encouraging duels" accent="#f43f5e" />
-        <div className="flex flex-wrap gap-1.5 px-4 pb-4 pt-2">
-          {ARENA_SAFETY_RULES.map((r) => (
-            <span key={r} className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2 py-0.5 text-[10px] font-medium text-emerald-300">
-              <ShieldCheck size={10} /> {r}
-            </span>
-          ))}
-        </div>
-      </Panel>
+      <ScreenIntro
+        emoji="⚔️"
+        title="Knowledge Arena"
+        blurb="Play quick, friendly quiz duels and earn XP. You're matched with a kind practice buddy your age — it's all about having fun and learning, win or lose!"
+        accent="#f43f5e"
+        chips={ARENA_SAFETY_RULES.map((r) => (
+          <span key={r} className="inline-flex items-center gap-1 rounded-full bg-emerald-500/15 px-2 py-0.5 text-[10px] font-semibold text-emerald-300">
+            <ShieldCheck size={10} /> {r}
+          </span>
+        ))}
+      />
 
       {phase === "select" && (
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
