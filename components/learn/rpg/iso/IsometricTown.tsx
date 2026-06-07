@@ -12,7 +12,7 @@ import { useRouter } from "next/navigation";
 import type { ReactNode } from "react";
 import type { PlayerState } from "@/lib/rpg/state";
 import { TILE_W, TILE_H, isoToScreen } from "./iso";
-import { IsoTile, type TileVariant } from "./IsoTile";
+import { IsoTile } from "./IsoTile";
 import { IsoBuilding } from "./IsoBuilding";
 import { QuestBoardBuilding } from "./QuestBoardBuilding";
 import { RewardShopStall } from "./RewardShopStall";
@@ -28,12 +28,22 @@ const OY = 76;
 const SW = 1060;
 const SH = 760;
 
-function tileVariant(col: number, row: number): TileVariant {
+function thash(c: number, r: number) {
+  let h = (c * 73856093) ^ (r * 19349663);
+  h = (h ^ (h >>> 13)) >>> 0;
+  return (h % 1000) / 1000;
+}
+/** Warm, lit cobblestone with grass borders, worn paths and mosaic inlays. */
+function tileColor(col: number, row: number): string {
   const d = Math.hypot(col - 7.5, row - 7.5);
-  if (d > 8.6) return "grass";
-  if (d < 2.4) return "accent";
-  if (col === 7 || col === 8 || row === 7 || row === 8) return "path";
-  return (col + row) % 2 === 0 ? "a" : "b";
+  const n = thash(col, row);
+  if (d > 8.7) return n < 0.5 ? "#2f7d52" : "#276a46"; // grass border
+  if (d < 2.3) return "#9a7a4e"; // amber medallion
+  if (col === 7 || col === 8 || row === 7 || row === 8) return n < 0.5 ? "#928b7c" : "#9a9384"; // worn paths
+  if (n < 0.05) return "#3a7d8f"; // teal mosaic inlay
+  if (n < 0.09) return "#a86a5a"; // rose mosaic inlay
+  const base = ["#726c61", "#7d776b", "#6b655b", "#787165"];
+  return base[Math.floor(n * 997) % base.length];
 }
 
 const CLASS_ITEM: Record<string, AvatarItem> = {
@@ -70,20 +80,19 @@ export function IsometricTown({ ps }: { ps: PlayerState }) {
   add(530, 300, <Fountain />);
 
   // buildings
-  add(250, 300, <IsoBuilding label="Class Hall" emoji="🎓" accent="#a78bfa" onClick={go("/learn/skills")} banner={{ color: "#a78bfa", crest: "✦" }} />);
-  add(820, 300, <IsoBuilding label="Career Guild Hall" emoji="🏛️" accent="#fb7185" onClick={go("/learn/guilds")} banner={{ color: "#fb7185", crest: "⚜" }} />);
-  add(940, 470, <IsoBuilding label="Mentor Tower" emoji="🔮" accent="#38bdf8" height={92} bw={46} onClick={go("/mentor")} />);
-  add(120, 470, <IsoBuilding label="Parent Office" emoji="🏡" accent="#60a5fa" bw={50} onClick={go("/parent")} />);
+  add(250, 300, <IsoBuilding label="Class Hall" emoji="🎓" accent="#a78bfa" variant="hall" onClick={go("/learn/skills")} banner={{ color: "#a78bfa", crest: "✦" }} />);
+  add(820, 300, <IsoBuilding label="Career Guild Hall" emoji="🏛️" accent="#fb7185" variant="guild" onClick={go("/learn/guilds")} banner={{ color: "#fb7185", crest: "⚜" }} />);
+  add(940, 470, <IsoBuilding label="Mentor Tower" emoji="🔮" accent="#2dd4bf" height={96} bw={44} variant="tower" onClick={go("/mentor")} />);
+  add(120, 470, <IsoBuilding label="Parent Office" emoji="🏡" accent="#60a5fa" bw={50} variant="office" onClick={go("/parent")} />);
   add(530, 430, <QuestBoardBuilding onClick={go("/learn/quests")} count={undefined} />);
   add(330, 560, <RewardShopStall onClick={go("/learn/rewards")} />);
-  add(720, 560, <IsoBuilding label="Arena Gate" emoji="⚔️" accent="#f43f5e" bw={52} status={ps.characterLevel >= 2 ? "open" : "locked"} onClick={go("/learn/arena")} />);
+  add(720, 560, <IsoBuilding label="Arena Gate" emoji="⚔️" accent="#f43f5e" bw={54} variant="gate" status={ps.characterLevel >= 2 ? "open" : "locked"} onClick={go("/learn/arena")} />);
 
-  // mentors / townsfolk (chibi) with speech bubbles
-  add(360, 360, <ClassMentorNpc name="Mentor Vale" line="Welcome, Scholar!" accent="#6366f1" item="book" hat="glasses" />);
-  add(640, 500, <ClassMentorNpc name="Pip" line="Quiz duel?" accent="#22d3ee" item="scroll" flip />);
-  add(430, 600, <ClassMentorNpc name="Lumi" line="Trade stickers!" accent="#f472b6" item="notebook" hat="cap" />);
-  add(700, 470, <ClassMentorNpc name="Coach Bru" line="Good luck!" accent="#f43f5e" item="satchel" hat="hood" flip />);
-  add(210, 560, <ClassMentorNpc name="Tala" line="New maps await!" accent="#34d399" item="compass" />);
+  // mentors / townsfolk (chibi) with helpful, educational speech bubbles
+  add(360, 360, <Idle><ClassMentorNpc name="Quest Aide" line="Quiz due?" accent="#38bdf8" item="scroll" hat="glasses" /></Idle>);
+  add(700, 470, <Idle d={0.6}><ClassMentorNpc name="Health Helper" line="Care quest ready" accent="#10b981" item="satchel" hat="hood" flip /></Idle>);
+  add(430, 600, <Idle d={1.1}><ClassMentorNpc name="Reward Keeper" line="Trade tokens!" accent="#f472b6" item="notebook" hat="cap" /></Idle>);
+  add(210, 560, <Idle d={0.3}><ClassMentorNpc name="Map Guide" line="New realms await!" accent="#34d399" item="compass" /></Idle>);
 
   // signs + props
   add(470, 470, <TownSignProp text="Plaza" />, -2);
@@ -96,7 +105,7 @@ export function IsometricTown({ ps }: { ps: PlayerState }) {
   add(
     540,
     640,
-    <div className="relative flex flex-col items-center">
+    <div className="relative flex flex-col items-center rpg-float-slow">
       <div className="absolute bottom-full mb-1">
         <SpeechBubble text={ps.cls ? `${ps.classTitle?.title ?? ps.cls.name}` : "Pick a class!"} accent={heroAccent} icon="★" />
       </div>
@@ -117,7 +126,7 @@ export function IsometricTown({ ps }: { ps: PlayerState }) {
       const { x, y } = isoToScreen(col, row, OX, OY);
       tiles.push(
         <div key={`${col}-${row}`} className="absolute" style={{ left: x - TILE_W / 2, top: y, zIndex: 0 }}>
-          <IsoTile variant={tileVariant(col, row)} />
+          <IsoTile color={tileColor(col, row)} />
         </div>
       );
     }
@@ -126,12 +135,12 @@ export function IsometricTown({ ps }: { ps: PlayerState }) {
   return (
     <div
       className="relative w-full overflow-auto rounded-2xl"
-      style={{ height: "70vh", minHeight: 480, border: "1px solid rgba(56,189,248,0.25)", boxShadow: "inset 0 0 0 1px rgba(255,255,255,0.05), 0 18px 55px -22px #000", background: "radial-gradient(120% 90% at 50% 0%, #14403a, #0a2018 70%)" }}
+      style={{ height: "70vh", minHeight: 480, border: "1px solid rgba(56,189,248,0.25)", boxShadow: "inset 0 0 0 1px rgba(255,255,255,0.05), 0 18px 55px -22px #000", background: "radial-gradient(140% 100% at 50% -10%, #26364f 0%, #182742 45%, #0e1726 100%)" }}
     >
       {/* stage */}
       <div className="relative mx-auto" style={{ width: SW, height: SH }}>
-        {/* plaza glow under center */}
-        <div aria-hidden className="absolute" style={{ left: SW / 2 - 220, top: 200, width: 440, height: 300, background: "radial-gradient(ellipse at center, rgba(103,232,249,0.12), transparent 70%)", pointerEvents: "none" }} />
+        {/* warm plaza light + cool rim */}
+        <div aria-hidden className="absolute" style={{ left: SW / 2 - 300, top: 120, width: 600, height: 420, background: "radial-gradient(ellipse at center, rgba(251,191,36,0.14), rgba(103,232,249,0.07) 52%, transparent 74%)", pointerEvents: "none" }} />
         {tiles}
         {entities.map((e, i) => (
           <div key={i}>{e.node}</div>
@@ -150,6 +159,15 @@ export function IsometricTown({ ps }: { ps: PlayerState }) {
 function Positioned({ x, y, z, children }: { x: number; y: number; z: number; children: ReactNode }) {
   return (
     <div className="absolute" style={{ left: x, top: y, transform: "translate(-50%, -100%)", zIndex: z }}>
+      {children}
+    </div>
+  );
+}
+
+/** Gentle idle bob for townsfolk (disabled under prefers-reduced-motion via CSS). */
+function Idle({ children, d = 0 }: { children: ReactNode; d?: number }) {
+  return (
+    <div className="rpg-float" style={{ animationDelay: `${d}s` }}>
       {children}
     </div>
   );
