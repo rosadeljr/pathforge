@@ -25,6 +25,7 @@ import {
   isCareerUnlocked,
   getStages,
   currentStageIndex,
+  careerStageLessons,
 } from "@/lib/data/careers";
 import {
   guildForCareer,
@@ -492,6 +493,7 @@ export default function CareerDetailPage() {
             {(() => {
               const stages = getStages(career);
               const currentIdx = currentStageIndex(career, totalXp);
+              const stageLessons = careerStageLessons(career, grade ?? undefined);
               return (
                 <div className="relative">
                   {/* Vertical connecting line */}
@@ -589,6 +591,22 @@ export default function CareerDetailPage() {
                             >
                               {stage.whatYouLearn}
                             </div>
+                            {/* Concrete lesson to practice for this stage */}
+                            {stageLessons[i] && (
+                              <Link
+                                href={`/learn/${stageLessons[i]!.subject}/${stageLessons[i]!.id}`}
+                                className="mt-1.5 inline-flex items-center gap-1.5 rounded-lg px-2 py-1 text-[11px] font-semibold transition hover:brightness-110"
+                                style={{
+                                  color: career.accentColor,
+                                  background: `${career.accentColor}14`,
+                                  border: `1px solid ${career.accentColor}33`,
+                                }}
+                              >
+                                <span>{stageLessons[i]!.emoji}</span>
+                                <span className="truncate">Practice: {stageLessons[i]!.title}</span>
+                                <ArrowRight size={11} />
+                              </Link>
+                            )}
                             {!reached && (
                               <div className="text-[10px] text-slate-500 mt-1 inline-flex items-center gap-1">
                                 <Lock size={9} />

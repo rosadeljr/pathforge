@@ -11,6 +11,7 @@
  */
 
 import type { SubjectId } from "./learner";
+import { getLessonsBySubject, getLesson, type Lesson } from "./learner-lessons";
 
 /**
  * Career categories — designed for the Philippine market so paths like
@@ -44,6 +45,9 @@ export interface CareerStage {
   emoji: string;
   xpRequired: number; // total XP needed to reach this stage
   whatYouLearn: string;
+  /** Optional explicit lesson ids to practice at this stage (overrides the
+   *  auto-mapping from helpful subjects in careerStageLessons). */
+  lessonIds?: string[];
 }
 
 export interface Career {
@@ -143,6 +147,34 @@ export function getStages(c: Career): CareerStage[] {
       whatYouLearn: "You've mastered the journey. Time to keep growing.",
     },
   ];
+}
+
+/**
+ * Map each career stage to one concrete, real lesson the kid can practice —
+ * an easy → hard ramp drawn from the career's helpful subjects (sorted by
+ * grade). A stage may pin explicit lessonIds to override the auto-mapping.
+ * Returns an array aligned 1:1 with getStages(); entries may be undefined when
+ * no lesson fits. This is what turns "What you learn" prose into a tappable
+ * lesson, wiring the career ladder directly into the curriculum.
+ */
+export function careerStageLessons(c: Career, grade?: number): (Lesson | undefined)[] {
+  const stages = getStages(c);
+  // build an easy→hard pool from the career's helpful subjects
+  const pool: Lesson[] = [];
+  const seen = new Set<string>();
+  for (const subj of c.helpfulSubjects) {
+    for (const l of getLessonsBySubject(subj)) {
+      if (!seen.has(l.id)) { seen.add(l.id); pool.push(l); }
+    }
+  }
+  pool.sort((a, b) => a.grade - b.grade);
+  return stages.map((stage, i) => {
+    if (stage.lessonIds?.length) return getLesson(stage.lessonIds[0]);
+    if (!pool.length) return undefined;
+    // spread the pool across the stages so later stages show harder lessons
+    const idx = Math.min(pool.length - 1, Math.floor((i * pool.length) / stages.length));
+    return pool[idx];
+  });
 }
 
 /** Which stage is the learner currently on (0-indexed). */

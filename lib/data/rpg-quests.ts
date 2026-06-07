@@ -227,6 +227,26 @@ export const CURATED_QUEST_LESSONS: Record<string, string[]> = {
   "q-sci-map-2": ["science-9-cells", "science-10-newton-laws"], // Currents & Forces
   "q-ap-map-1": ["ap-3-bayan-ko", "ap-5-bayani"], // Island Stories
   "q-ap-map-2": ["ap-7-asyano", "ap-9-ekonomiya"], // Voyages of the Past
+
+  // ── Class quests: only the lesson-style ones (others are reflection/project
+  //    /AI-mentor and have no subject). Themed to the class + quest title. ──
+  "cq-scholar-1": ["science-3-living-things", "science-4-water-cycle"], // The Curious Mind
+  "cq-builder-1": ["math-3-place-value", "math-5-area-perimeter"], // Measure & Plan
+  "cq-builder-3": ["science-10-newton-laws"], // Force & Motion Trial
+  "cq-healer-1": ["science-3-living-things"], // First Care Basics
+  "cq-healer-2": ["science-9-cells", "science-7-photosynthesis"], // How the Body Works
+  "cq-storyteller-1": ["english-3-synonyms", "english-5-reading"], // Read Closely
+  "cq-storyteller-3": ["filipino-5-sawikain", "filipino-5-panguri"], // Two Languages
+  "cq-explorer-1": ["science-3-living-things", "science-4-water-cycle"], // Sharp Eyes
+  "cq-explorer-2": ["ap-5-bayani", "ap-7-asyano"], // Read the Map
+  "cq-guardian-1": ["ap-3-bayan-ko"], // Fair Play
+  "cq-guardian-3": ["ap-7-asyano", "ap-9-ekonomiya"], // Community Sense
+  "cq-merchant-1": ["math-3-ph-money", "math-6-percent"], // Money Smarts
+  "cq-tech-1": ["math-3-place-value", "math-8-algebra-intro"], // Logic Blocks
+  "cq-creator-1": ["english-3-synonyms", "english-6-vocab"], // Sketch an Idea
+  "cq-navigator-1": ["math-3-place-value", "math-9-geometry-angles"], // Plan a Route
+  "cq-navigator-2": ["science-4-water-cycle", "science-7-photosynthesis"], // Read the Sky
+  "cq-navigator-3": ["ap-7-asyano", "ap-9-ekonomiya"], // World Geography
 };
 
 /** Resolve real lessons that satisfy a lesson/quiz quest, by subject + grade.
