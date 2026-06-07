@@ -5,15 +5,28 @@
  * nav over the ForgeheartTown isometric city (a single responsive SVG hub).
  */
 
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { PlayerHUD } from "@/components/learn/rpg/PlayerHUD";
 import { SectionNav } from "@/components/learn/rpg/GameShell";
 import { ForgeheartTown } from "@/components/learn/rpg/ForgeheartTown";
 import { usePlayerState } from "@/components/learn/rpg/usePlayerState";
 
 export default function LearnHubPage() {
-  const { ps, loading, error, refresh } = usePlayerState();
+  const router = useRouter();
+  const { ps, loading, error, needsSetup, refresh } = usePlayerState();
 
-  if (loading) {
+  // Signed in but never onboarded → send to setup (restores prior behavior).
+  useEffect(() => {
+    if (needsSetup) router.replace("/learn/setup");
+  }, [needsSetup, router]);
+
+  // Not signed in → send to login rather than showing an error wall.
+  useEffect(() => {
+    if (error === "Not signed in") router.replace("/login");
+  }, [error, router]);
+
+  if (loading || needsSetup) {
     return (
       <div className="mx-auto flex min-h-[60vh] max-w-7xl items-center justify-center px-4">
         <div className="flex flex-col items-center gap-3 text-slate-400">

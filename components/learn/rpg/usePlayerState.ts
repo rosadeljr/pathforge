@@ -74,6 +74,8 @@ export function usePlayerState() {
 
   const merged: RawProfile | null = profile || Object.keys(override).length ? { ...(profile ?? {}), ...override } : null;
   const ps: PlayerState = buildPlayerState(merged, events);
+  // signed in but never finished onboarding (no grade) → needs /learn/setup
+  const needsSetup = !loading && !error && (!profile || profile.learner_grade == null);
 
-  return { ps, loading, error, saving, refresh: load, selectClass };
+  return { ps, loading, error, saving, needsSetup, refresh: load, selectClass };
 }
