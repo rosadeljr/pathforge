@@ -9,9 +9,15 @@ import { createServerClient } from "@supabase/ssr";
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request });
 
+  // No env configured (e.g. preview without secrets) → skip session refresh
+  // instead of throwing a 500 on every route.
+  if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+    return supabaseResponse;
+  }
+
   const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    process.env.NEXT_PUBLIC_SUPABASE_URL,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
     {
       cookies: {
         getAll() {
@@ -35,7 +41,11 @@ export async function updateSession(request: NextRequest) {
 
   // IMPORTANT: Do not run any code between createServerClient and getUser().
   // This refreshes the session if it has expired.
-  await supabase.auth.getUser();
+  try {
+    await supabase.auth.getUser();
+  } catch {
+    // never let an auth/network hiccup 500 the whole site
+  }
 
   return supabaseResponse;
 }
