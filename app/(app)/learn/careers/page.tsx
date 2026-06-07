@@ -123,14 +123,15 @@ export default function CareersPage() {
           <ScreenIntro
             emoji="🧭"
             accent="#fb7185"
+            eyebrow="Career Atlas"
             title={
               tier === "little"
-                ? "What do you want to be? 🌟"
+                ? "What do you want to be?"
                 : tier === "junior"
                 ? "Pick your future career"
                 : "Explore careers · find your path"
             }
-            blurb="Every lesson you finish unlocks new careers to discover. Pick a dream career, then master its full 5-stage adventure to earn a Career Mastery Certificate! 🏆"
+            blurb="Unlock careers as you earn XP, then set a dream career and work through its 5-stage path to a Mastery Certificate."
             right={
               <Link
                 href="/learn/certificates"

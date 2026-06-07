@@ -35,8 +35,9 @@ export function RewardShop({ ps }: { ps: PlayerState }) {
     <div className="space-y-4">
       <ScreenIntro
         emoji="🛍️"
+        eyebrow="Inventory"
         title="Reward Shop"
-        blurb="Collect badges, titles and cool looks for your hero. You earn everything by learning and spending coins you've already won — never by luck or real money."
+        blurb="Spend the coins you've earned on badges, titles, and gear for your hero. Everything is unlocked by skill — never by luck or real money."
         accent="#fbbf24"
         right={
           <span className="inline-flex items-center gap-1 rounded-full bg-amber-400/15 px-3 py-1.5 text-sm font-bold text-amber-300" style={{ border: "1px solid rgba(251,191,36,0.4)" }}>

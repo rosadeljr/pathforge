@@ -126,17 +126,18 @@ function chibi(x: number, y: number, look: { accent: string; item?: string; hat?
   const shield = acc === "shield" ? `<g transform="translate(12,42)"><path d="M0 -6 L5 -3.5 L5 2.6 Q5 6.6 0 8.4 Q-5 6.6 -5 2.6 L-5 -3.5 Z" fill="${a}" stroke="${ol}" stroke-width="0.5"/></g>` : "";
   const goggles = acc === "goggles" ? `<g stroke="${ol}" stroke-width="0.9"><circle cx="23" cy="10" r="2.8" fill="#bfeaf2"/><circle cx="33" cy="10" r="2.8" fill="#bfeaf2"/><path d="M25.8 10 h4.4"/></g>` : "";
   return `<g transform="translate(${tx},${ty}) scale(${sc}) ${flip ? `translate(56,0) scale(-1,1)` : ""}">
-  <ellipse cx="28" cy="61" rx="12" ry="3" fill="#000" opacity="0.22"/>
-  <rect x="23.8" y="50" width="4" height="9" rx="2" fill="#2b3142"/><rect x="28.2" y="50" width="4" height="9" rx="2" fill="#2b3142"/>
-  <path d="M22.2 57 h6 v2.3 q0 1.5 -1.5 1.5 h-3 q-1.5 0 -1.5 -1.5 z" fill="#1c2233"/><path d="M27.8 57 h6 v2.3 q0 1.5 -1.5 1.5 h-3 q-1.5 0 -1.5 -1.5 z" fill="#1c2233"/>
-  <path d="M20.5 31 Q28 28 35.5 31 L34 51 Q28 53.4 22 51 Z" fill="${a}" stroke="${ol}" stroke-width="0.6"/>
-  <path d="M28 28.6 Q32 29.4 35.5 31 L34 51 Q31 52.6 28 53 Z" fill="#000" opacity="0.10"/>
-  <path d="M20.5 31 Q24 29.4 28 28.6 L28 53 Q24 52.6 22 51 Z" fill="#fff" opacity="0.08"/>
-  <path d="M24.6 30.4 L28 34.4 L31.4 30.4" fill="none" stroke="#fff" stroke-width="1" opacity="0.5" stroke-linecap="round"/>
-  <circle cx="28" cy="36" r="1.2" fill="#fff" opacity="0.8"/>
-  <path d="M19.8 31 q-2.4 5 -1.2 9.8 l2.4 -0.7 q-1 -4.6 0.8 -8.2 z" fill="${a}" stroke="${ol}" stroke-width="0.5"/>
-  <path d="M36.2 31 q2.4 5 1.2 9.8 l-2.4 -0.7 q1 -4.6 -0.8 -8.2 z" fill="${a}" stroke="${ol}" stroke-width="0.5"/>
-  <circle cx="18.6" cy="40.6" r="2" fill="${sk}"/><circle cx="37.4" cy="40.6" r="2" fill="${sk}"/>
+  <ellipse cx="28" cy="61" rx="11" ry="2.8" fill="#000" opacity="0.22"/>
+  <rect x="24.4" y="45" width="3.3" height="14.5" rx="1.6" fill="#2b3142"/><rect x="28.3" y="45" width="3.3" height="14.5" rx="1.6" fill="#2b3142"/>
+  <path d="M24.4 52 h3.3 v7.5 h-3.3 z" fill="#000" opacity="0.12"/>
+  <path d="M22.9 57.6 h5.2 v2.2 q0 1.5 -1.5 1.5 h-2.2 q-1.5 0 -1.5 -1.5 z" fill="#1c2233"/><path d="M27.9 57.6 h5.2 v2.2 q0 1.5 -1.5 1.5 h-2.2 q-1.5 0 -1.5 -1.5 z" fill="#1c2233"/>
+  <path d="M20.8 31 Q28 28 35.2 31 L32.8 47 Q28 49 23.2 47 Z" fill="${a}" stroke="${ol}" stroke-width="0.6"/>
+  <path d="M28 28.6 Q31.6 29.4 35.2 31 L32.8 47 Q30.4 48.4 28 48.7 Z" fill="#000" opacity="0.10"/>
+  <path d="M20.8 31 Q24.4 29.4 28 28.6 L28 48.7 Q25.6 48.4 23.2 47 Z" fill="#fff" opacity="0.08"/>
+  <path d="M24.6 30.4 L28 34.2 L31.4 30.4" fill="none" stroke="#fff" stroke-width="1" opacity="0.5" stroke-linecap="round"/>
+  <circle cx="28" cy="36" r="1.1" fill="#fff" opacity="0.8"/>
+  <path d="M20.2 31 q-2.8 6.5 -1.5 11.8 l2.5 -0.7 q-1.1 -5 0.8 -9.6 z" fill="${a}" stroke="${ol}" stroke-width="0.5"/>
+  <path d="M35.8 31 q2.8 6.5 1.5 11.8 l-2.5 -0.7 q1.1 -5 -0.8 -9.6 z" fill="${a}" stroke="${ol}" stroke-width="0.5"/>
+  <circle cx="18.8" cy="43.6" r="1.9" fill="${sk}"/><circle cx="37.2" cy="43.6" r="1.9" fill="${sk}"/>
   ${itemVec(item)}
   <rect x="25.9" y="25.6" width="4.2" height="4" rx="1.6" fill="${sk}"/><path d="M25.9 25.6 h4.2 v1.5 q-2.1 1.1 -4.2 0 z" fill="#000" opacity="0.08"/>
   <circle cx="28" cy="16" r="12" fill="${sk}" stroke="${ol}" stroke-width="0.6"/>

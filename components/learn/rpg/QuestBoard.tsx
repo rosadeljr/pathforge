@@ -32,8 +32,9 @@ export function QuestBoard({ ps, focusId }: { ps: PlayerState; focusId?: string 
     <div className="space-y-4">
       <ScreenIntro
         emoji="📜"
+        eyebrow="Quest Log"
         title="Quest Board"
-        blurb="Pick a quest, play it, and earn XP and rewards. Start with the easy ones and work your way up — every quest teaches you something new!"
+        blurb="Take on quests to earn XP, unlock skills, and level up your hero. Clear daily drills, map trials, and class challenges to climb the ranks."
         accent="#38bdf8"
       />
       <Panel accent="#38bdf8" glow>

@@ -17,8 +17,9 @@ export default function SkillsPage() {
         <div className="space-y-4">
           <ScreenIntro
             emoji="🌳"
-            title="Your Powers"
-            blurb="Pick a hero class that matches what you love, then unlock new learning powers as you level up. You can change your class anytime!"
+            eyebrow="Progression"
+            title="Class & Skill Tree"
+            blurb="Choose a class that fits your style, then unlock new skills as you level up. Switch class and rebuild your tree whenever you want."
             accent="#a78bfa"
           />
           <ClassHall ps={ps} onSelectClass={selectClass} saving={saving} />

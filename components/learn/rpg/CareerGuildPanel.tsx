@@ -26,8 +26,9 @@ export function CareerGuildPanel({ ps }: { ps: PlayerState }) {
     <div className="space-y-4">
       <ScreenIntro
         emoji="🏛️"
-        title="Career Guild Hall"
-        blurb="Join a guild that matches a real dream job. The more you learn, the higher your guild rank climbs — all the way to a special certificate you can be proud of!"
+        eyebrow="Guild Hall"
+        title="Career Guilds"
+        blurb="Join a guild tied to a real career and rank up as you learn. Reach the top rank to earn a Mastery Certificate you can actually show off."
         accent="#fb7185"
       />
 

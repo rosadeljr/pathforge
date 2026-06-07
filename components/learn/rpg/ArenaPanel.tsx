@@ -84,8 +84,9 @@ export function ArenaPanel({ ps }: { ps: PlayerState }) {
     <div className="space-y-4">
       <ScreenIntro
         emoji="⚔️"
+        eyebrow="Live Duels"
         title="Knowledge Arena"
-        blurb="Play quick, friendly quiz duels and earn XP. You're matched with a kind practice buddy your age — it's all about having fun and learning, win or lose!"
+        blurb="Test your knowledge in fast, fair duels against an AI rival matched to your level. Every match earns XP — no chat, no real names, ever."
         accent="#f43f5e"
         chips={ARENA_SAFETY_RULES.map((r) => (
           <span key={r} className="inline-flex items-center gap-1 rounded-full bg-emerald-500/15 px-2 py-0.5 text-[10px] font-semibold text-emerald-300">

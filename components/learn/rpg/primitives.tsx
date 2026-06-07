@@ -44,17 +44,18 @@ export const Panel = forwardRef<
 });
 
 /**
- * ScreenIntro — a soft, friendly "anime dusk" hero banner shown at the top of
- * each RPG screen (Quests / Skills / Arena …). Warm gradient, a big glowing
- * emoji badge, a plain-language title + description written for kids, gentle
- * twinkles, and an optional right slot. Keeps every screen feeling like part of
- * the same storybook world as Forgeheart City.
+ * ScreenIntro — a sleek "mission console" header shown atop each RPG screen
+ * (Quests / Skills / Arena …). Deep panel with a left accent spine, a faint
+ * holo-grid, a framed tech-badge icon, an uppercase section label, a bold title
+ * and a confident one-line brief. Tuned to read for ages 7–15 — game-UI, not
+ * a toddler app — while staying part of the Forgeheart world.
  */
 export function ScreenIntro({
   emoji,
   title,
   blurb,
   accent = "#7c5cff",
+  eyebrow,
   chips,
   right,
 }: {
@@ -62,37 +63,60 @@ export function ScreenIntro({
   title: string;
   blurb: string;
   accent?: string;
+  eyebrow?: string;
   chips?: ReactNode;
   right?: ReactNode;
 }) {
   return (
     <div
-      className="relative overflow-hidden rounded-3xl p-4 sm:p-5"
+      className="relative overflow-hidden rounded-2xl p-4 pl-5 sm:p-5 sm:pl-6"
       style={{
-        background: `linear-gradient(135deg, ${accent}33 0%, rgba(124,92,255,0.14) 38%, rgba(8,13,22,0.72) 100%)`,
-        border: `1px solid ${accent}55`,
-        boxShadow: `inset 0 1px 0 rgba(255,255,255,0.12), 0 16px 40px -22px ${accent}aa`,
+        background:
+          "linear-gradient(120deg, rgba(13,18,30,0.96) 0%, rgba(10,14,24,0.92) 55%, rgba(8,11,20,0.9) 100%)",
+        border: "1px solid rgba(255,255,255,0.08)",
+        boxShadow: `inset 0 1px 0 rgba(255,255,255,0.06), 0 14px 36px -22px ${accent}99`,
       }}
     >
-      {/* warm dusk glow + gentle twinkles */}
-      <span aria-hidden className="pointer-events-none absolute -right-10 -top-12 h-40 w-40 rounded-full opacity-40 blur-2xl" style={{ background: accent }} />
-      <span aria-hidden className="rpg-twinkle pointer-events-none absolute right-8 top-5 text-sm">✦</span>
-      <span aria-hidden className="rpg-twinkle pointer-events-none absolute right-24 top-10 text-xs" style={{ animationDelay: "1.1s" }}>✦</span>
-      <span aria-hidden className="rpg-twinkle pointer-events-none absolute right-14 bottom-4 text-[10px]" style={{ animationDelay: "0.6s" }}>✦</span>
+      {/* left accent spine */}
+      <span aria-hidden className="pointer-events-none absolute inset-y-0 left-0 w-[3px]" style={{ background: `linear-gradient(180deg, ${accent}, ${accent}33)` }} />
+      {/* one-corner accent glow */}
+      <span aria-hidden className="pointer-events-none absolute -right-16 -top-16 h-44 w-44 rounded-full opacity-25 blur-2xl" style={{ background: accent }} />
+      {/* faint holo grid */}
+      <span
+        aria-hidden
+        className="pointer-events-none absolute inset-0 opacity-[0.06]"
+        style={{
+          backgroundImage:
+            "linear-gradient(rgba(255,255,255,0.9) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.9) 1px, transparent 1px)",
+          backgroundSize: "26px 26px",
+          maskImage: "radial-gradient(120% 90% at 100% 0%, #000 0%, transparent 70%)",
+          WebkitMaskImage: "radial-gradient(120% 90% at 100% 0%, #000 0%, transparent 70%)",
+        }}
+      />
 
-      <div className="relative flex items-start gap-3 sm:gap-4">
-        <span
-          className="rpg-float grid h-14 w-14 flex-shrink-0 place-items-center rounded-2xl text-3xl sm:h-16 sm:w-16"
-          style={{ background: `${accent}2e`, border: `1px solid ${accent}88`, boxShadow: `inset 0 1px 0 rgba(255,255,255,0.25), 0 0 22px ${accent}66` }}
-        >
-          {emoji}
+      <div className="relative flex items-center gap-3 sm:gap-4">
+        {/* tech-badge icon: diamond accent ring behind a framed tile */}
+        <span className="relative grid h-14 w-14 flex-shrink-0 place-items-center sm:h-[60px] sm:w-[60px]">
+          <span aria-hidden className="absolute inset-1 rotate-45 rounded-[10px] opacity-60" style={{ border: `1.5px solid ${accent}` }} />
+          <span
+            className="grid h-11 w-11 place-items-center rounded-xl text-2xl sm:h-12 sm:w-12"
+            style={{ background: `${accent}1f`, border: `1px solid ${accent}66`, boxShadow: `inset 0 1px 0 rgba(255,255,255,0.15), 0 0 18px ${accent}55` }}
+          >
+            {emoji}
+          </span>
         </span>
         <div className="min-w-0 flex-1">
-          <h2 className="font-display text-lg font-black tracking-tight text-white sm:text-xl">{title}</h2>
-          <p className="mt-0.5 max-w-xl text-sm text-slate-200/90">{blurb}</p>
-          {chips && <div className="mt-2 flex flex-wrap gap-1.5">{chips}</div>}
+          <div className="flex items-center gap-2">
+            <span aria-hidden className="h-1.5 w-1.5 rounded-full" style={{ background: accent, boxShadow: `0 0 8px ${accent}` }} />
+            <span className="text-[10px] font-bold uppercase tracking-[0.22em]" style={{ color: accent }}>
+              {eyebrow ?? "Forgeheart"}
+            </span>
+          </div>
+          <h2 className="mt-0.5 font-display text-xl font-black tracking-tight text-white sm:text-2xl">{title}</h2>
+          <p className="mt-1 max-w-2xl text-[13px] leading-snug text-slate-300/90 sm:text-sm">{blurb}</p>
+          {chips && <div className="mt-2.5 flex flex-wrap gap-1.5">{chips}</div>}
         </div>
-        {right && <div className="flex-shrink-0">{right}</div>}
+        {right && <div className="flex-shrink-0 self-start">{right}</div>}
       </div>
     </div>
   );
