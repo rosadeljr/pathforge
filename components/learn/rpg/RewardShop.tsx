@@ -12,12 +12,19 @@ import type { PlayerState } from "@/lib/rpg/state";
 import { REWARDS, shopRewards, type RewardType } from "@/lib/data/rpg-rewards";
 import { Panel, PanelHeader } from "./primitives";
 import { RewardBadge } from "./RewardBadge";
+import { logRpgEvent } from "@/lib/rpg/track";
 
 const COLLECTION_TYPES: RewardType[] = ["badge", "title", "stamp", "emblem", "certificate", "outfit"];
 
 export function RewardShop({ ps }: { ps: PlayerState }) {
-  const earned = new Set(ps.earnedRewardIds);
+  const [claimed, setClaimed] = useState<Set<string>>(new Set());
+  const earned = new Set([...ps.earnedRewardIds, ...claimed]);
   const [tab, setTab] = useState<"collection" | "shop">("collection");
+
+  function claim(id: string, name: string) {
+    setClaimed((s) => new Set(s).add(id));
+    void logRpgEvent("rpg_reward_claimed", { reward_id: id, name });
+  }
 
   const collection = useMemo(
     () => REWARDS.filter((r) => COLLECTION_TYPES.includes(r.type)),
@@ -75,15 +82,16 @@ export function RewardShop({ ps }: { ps: PlayerState }) {
                   <span className="text-[11px] text-slate-300">{r.name}</span>
                   <button
                     disabled={owned || !affordable}
+                    onClick={() => affordable && !owned && claim(r.id, r.name)}
                     className="w-full rounded-lg px-2 py-1.5 text-[11px] font-bold transition disabled:opacity-50"
                     style={{
                       background: owned ? "rgba(52,211,153,0.18)" : affordable ? "linear-gradient(180deg,#fcd34d,#f59e0b)" : "rgba(255,255,255,0.05)",
                       color: owned ? "#34d399" : affordable ? "#0f172a" : "#94a3b8",
                     }}
                   >
-                    {owned ? "Owned" : (
+                    {owned ? "✓ Claimed" : (
                       <span className="inline-flex items-center gap-1">
-                        <Coins size={11} /> {r.coinPrice}
+                        <Coins size={11} /> Claim · {r.coinPrice}
                       </span>
                     )}
                   </button>

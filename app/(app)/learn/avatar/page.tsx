@@ -10,7 +10,7 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { ArrowLeft, Check } from "lucide-react";
 import { heroSvg, type AvatarLook } from "@/components/learn/rpg/forgeheartArt";
-import { loadAvatar, saveAvatar, type SavedAvatar } from "@/components/learn/rpg/useAvatar";
+import { loadAvatar, hydrateAvatar, saveAvatar, type SavedAvatar } from "@/components/learn/rpg/useAvatar";
 
 const SKINS = ["#f7d6b3", "#f2c79b", "#e8b88f", "#d39b75", "#a9744f", "#7c4f33"];
 const HAIRS = ["#3b2a1a", "#5b3a21", "#1f2937", "#8a5a12", "#b04a3a", "#6b21a8", "#0ea5e9", "#e879f9"];
@@ -33,6 +33,7 @@ export default function AvatarCreatorPage() {
   useEffect(() => {
     const a = loadAvatar();
     if (Object.keys(a).length) setLook((l) => ({ ...l, ...a }));
+    hydrateAvatar().then((s) => { if (s) setLook((l) => ({ ...l, ...s })); });
   }, []);
 
   const previewSvg = useMemo(() => heroSvg(look as AvatarLook, 200), [look]);

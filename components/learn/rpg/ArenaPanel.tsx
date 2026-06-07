@@ -20,6 +20,7 @@ import {
 } from "@/lib/data/rpg-arena";
 import { Panel, PanelHeader } from "./primitives";
 import { LevelProgressBar } from "./LevelProgressBar";
+import { logRpgEvent } from "@/lib/rpg/track";
 
 type Phase = "select" | "matchup" | "playing" | "result";
 interface MiniQ {
@@ -60,6 +61,7 @@ export function ArenaPanel({ ps }: { ps: PlayerState }) {
         const res = scoreDuel(mode!, nextCorrect, questions.length, ghost!);
         setResult(res);
         setPhase("result");
+        void logRpgEvent("rpg_arena_completed", { mode: mode!.id, correct: res.correct, total: res.total, accuracy: res.accuracy, outcome: res.outcome }, res.xpEarned);
       } else {
         setCorrect(nextCorrect);
         setQIndex(qIndex + 1);

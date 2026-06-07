@@ -87,6 +87,7 @@ export interface PlayerState {
   clearedBossIds: Set<string>;
   unlockedSkillIds: string[];
   earnedRewardIds: string[];
+  startedQuestIds: Set<string>;
   dreamCareerId: string | null;
 }
 
@@ -117,16 +118,18 @@ export function buildPlayerState(profile: RawProfile | null, events: RawEvent[] 
   const classLevel = classLevelFromXp(classXp);
   const classLevel_ = classLevelProgress(classXp);
 
-  // completed lessons + boss clears from events
+  // completed lessons + boss clears + durable RPG events
   const completedLessonIds = new Set<string>();
   const clearedBossIds = new Set<string>();
+  const claimedRewardIds = new Set<string>();
+  const startedQuestIds = new Set<string>();
   for (const e of events) {
     const t = e.event_type;
     const p = (e.event_payload ?? {}) as Record<string, unknown>;
     if (t === "lesson_completed" && typeof p.lesson_id === "string") completedLessonIds.add(p.lesson_id);
-    if ((t === "boss_cleared" || t === "region_cleared") && typeof p.boss_id === "string") {
-      clearedBossIds.add(p.boss_id as string);
-    }
+    if ((t === "boss_cleared" || t === "region_cleared") && typeof p.boss_id === "string") clearedBossIds.add(p.boss_id as string);
+    if (t === "rpg_reward_claimed" && typeof p.reward_id === "string") claimedRewardIds.add(p.reward_id as string);
+    if (t === "rpg_quest_started" && typeof p.quest_id === "string") startedQuestIds.add(p.quest_id as string);
   }
 
   // started maps = any subject XP in the map's focus subject
@@ -140,7 +143,7 @@ export function buildPlayerState(profile: RawProfile | null, events: RawEvent[] 
         .map((n) => n.id)
     : [];
 
-  const earnedRewardIds = profile?.rpg_earned_rewards ?? [];
+  const earnedRewardIds = Array.from(new Set([...(profile?.rpg_earned_rewards ?? []), ...claimedRewardIds]));
 
   return {
     name: profile?.username || "Hero",
@@ -166,6 +169,7 @@ export function buildPlayerState(profile: RawProfile | null, events: RawEvent[] 
     clearedBossIds,
     unlockedSkillIds,
     earnedRewardIds,
+    startedQuestIds,
     dreamCareerId: profile?.dream_career_id ?? null,
   };
 }
@@ -221,6 +225,7 @@ export function questStatus(quest: Quest, ps: PlayerState): QuestStatus {
     if (done >= need) return "completed";
     if (done > 0) return "in-progress";
   }
+  if (ps.startedQuestIds.has(quest.id)) return "in-progress";
   return "available";
 }
 

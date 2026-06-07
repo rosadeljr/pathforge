@@ -16,7 +16,14 @@ ALTER TABLE public.profiles
   ADD COLUMN IF NOT EXISTS rpg_class_xp        INTEGER NOT NULL DEFAULT 0,
   ADD COLUMN IF NOT EXISTS rpg_unlocked_skills TEXT[]  NOT NULL DEFAULT '{}',
   ADD COLUMN IF NOT EXISTS rpg_completed_quests TEXT[] NOT NULL DEFAULT '{}',
-  ADD COLUMN IF NOT EXISTS rpg_earned_rewards  TEXT[]  NOT NULL DEFAULT '{}';
+  ADD COLUMN IF NOT EXISTS rpg_earned_rewards  TEXT[]  NOT NULL DEFAULT '{}',
+  -- hero cosmetics from the Avatar Creator (skin/hair/outfit/headgear/gear/title)
+  ADD COLUMN IF NOT EXISTS rpg_avatar          JSONB   NOT NULL DEFAULT '{}'::jsonb;
+
+-- NOTE: quest starts, arena completions, and reward claims are logged to the
+-- existing analytics_events table (event_type rpg_quest_started /
+-- rpg_arena_completed / rpg_reward_claimed) and derived back in lib/rpg/state.ts
+-- — no extra tables needed for those.
 
 -- Constrain selected class to the known RPG classes (nullable = not chosen yet).
 DO $$

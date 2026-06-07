@@ -12,7 +12,7 @@ import type { PlayerState } from "@/lib/rpg/state";
 import { WORLD_MAPS } from "@/lib/data/rpg-maps";
 import { mapStatusFor } from "@/lib/rpg/state";
 import { buildTownSvg, SUBJECTS, PORTAL_X, VB_W, VB_H, type AvatarLook } from "./forgeheartArt";
-import { loadAvatar } from "./useAvatar";
+import { loadAvatar, hydrateAvatar } from "./useAvatar";
 
 interface Hit { id: string; label: string; href: string; x: number; y: number; w: number; h: number; }
 
@@ -25,7 +25,10 @@ export function ForgeheartTown({ ps }: { ps: PlayerState }) {
 
   // saved hero cosmetics (worn in town)
   const [look, setLook] = useState<AvatarLook>({});
-  useEffect(() => setLook(loadAvatar()), []);
+  useEffect(() => {
+    setLook(loadAvatar());
+    hydrateAvatar().then((s) => { if (s) setLook(s); });
+  }, []);
 
   const hits: Hit[] = [
     { id: "class", label: "Class Hall — skill tree & job progress", href: "/learn/skills", x: 140, y: 205, w: 150, h: 222 },
