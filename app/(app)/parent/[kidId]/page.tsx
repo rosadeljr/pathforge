@@ -242,6 +242,26 @@ export default function KidDetailPage() {
     return { days, total, activeDays, max, topSubjects };
   }, [eventTimes]);
 
+  /** Per-lesson mastery (first-try %) keyed by lesson id, for the learned list. */
+  const masteryByLesson = useMemo(() => {
+    const m = new Map<string, { pct: number | null; passed: boolean }>();
+    for (const p of eventPayloads) {
+      if (p.lesson_id) m.set(p.lesson_id, { pct: p.first_try_pct ?? null, passed: !!p.mastery_passed });
+    }
+    return m;
+  }, [eventPayloads]);
+
+  /** The actual lessons the kid has completed, grouped by subject — concrete
+   *  proof of what they've learned, using real lesson titles (no fabrication). */
+  const learnedBySubject = useMemo(() => {
+    return SUBJECTS.map((s) => {
+      const lessons = LESSONS.filter((l) => l.subject === s.id && completedLessonIds.has(l.id)).sort(
+        (a, b) => a.grade - b.grade
+      );
+      return { subject: s, lessons };
+    }).filter((g) => g.lessons.length > 0);
+  }, [completedLessonIds]);
+
   if (loading) return <PageShimmer />;
   if (!kid) {
     return (
@@ -539,6 +559,76 @@ export default function KidDetailPage() {
             })}
           </div>
         </motion.div>
+
+        {/* What they've learned — concrete lesson record by subject */}
+        {learnedBySubject.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.12 }}
+            className="rounded-3xl border border-white/[0.08] bg-gradient-to-br from-white/[0.04] to-transparent p-5 sm:p-6"
+          >
+            <div className="flex items-center justify-between mb-1">
+              <h2 className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+                What {kid.username || "they"} has learned
+              </h2>
+              <span className="text-[11px] text-slate-500">{completedLessonIds.size} lessons</span>
+            </div>
+            <p className="mb-4 text-[11px] text-slate-500">
+              Real lessons completed, by subject. Each is aligned to the K–10 curriculum.
+            </p>
+            <div className="space-y-5">
+              {learnedBySubject.map(({ subject, lessons }) => (
+                <div key={subject.id}>
+                  <div className="mb-2 flex items-center gap-2">
+                    <span
+                      className={`grid h-7 w-7 place-items-center rounded-lg bg-gradient-to-br ${subject.gradient} text-sm`}
+                    >
+                      {subject.emoji}
+                    </span>
+                    <span className="text-sm font-semibold text-white">{subject.title}</span>
+                    <span className="text-[11px] text-slate-500">· {lessons.length} done</span>
+                  </div>
+                  <div className="flex flex-wrap gap-1.5">
+                    {lessons.map((l) => {
+                      const m = masteryByLesson.get(l.id);
+                      const strong = m?.pct != null && m.pct >= 80;
+                      return (
+                        <span
+                          key={l.id}
+                          className="inline-flex items-center gap-1.5 rounded-lg border px-2 py-1 text-[11px]"
+                          style={{
+                            background: "rgba(255,255,255,0.03)",
+                            borderColor: strong ? "rgba(52,211,153,0.35)" : "rgba(255,255,255,0.08)",
+                          }}
+                          title={l.melcCode ? `DepEd competency ${l.melcCode}` : l.description}
+                        >
+                          <span className="text-slate-200">{l.title}</span>
+                          <span className="text-[9px] font-semibold uppercase tracking-wide text-slate-500">
+                            G{l.grade}
+                          </span>
+                          {m?.pct != null && (
+                            <span
+                              className="font-bold tabular-nums"
+                              style={{ color: strong ? "#6ee7b7" : "#94a3b8" }}
+                            >
+                              {m.pct}%
+                            </span>
+                          )}
+                          {l.melcCode && (
+                            <span className="rounded bg-indigo-500/15 px-1 text-[8px] font-bold text-indigo-300">
+                              MELC
+                            </span>
+                          )}
+                        </span>
+                      );
+                    })}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </motion.div>
+        )}
 
         {/* Dream career adventure */}
         {dreamCareer && (
