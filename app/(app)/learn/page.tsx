@@ -5,17 +5,19 @@
  * nav over the ForgeheartTown isometric city (a single responsive SVG hub).
  */
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { PlayerHUD } from "@/components/learn/rpg/PlayerHUD";
 import { SectionNav } from "@/components/learn/rpg/GameShell";
 import { ForgeheartTown } from "@/components/learn/rpg/ForgeheartTown";
 import { DailyGoalsCard } from "@/components/learn/rpg/DailyGoalsCard";
+import { FirstRunWelcome, hasSeenWelcome } from "@/components/learn/rpg/FirstRunWelcome";
 import { usePlayerState } from "@/components/learn/rpg/usePlayerState";
 
 export default function LearnHubPage() {
   const router = useRouter();
   const { ps, loading, error, needsSetup, refresh } = usePlayerState();
+  const [showWelcome, setShowWelcome] = useState(false);
 
   // Signed in but never onboarded → send to setup (restores prior behavior).
   useEffect(() => {
@@ -26,6 +28,13 @@ export default function LearnHubPage() {
   useEffect(() => {
     if (error === "Not signed in") router.replace("/login");
   }, [error, router]);
+
+  // First-run: greet brand-new learners (no XP, no lessons) once.
+  useEffect(() => {
+    if (!loading && !needsSetup && ps.totalXp === 0 && ps.completedLessonIds.size === 0 && !hasSeenWelcome()) {
+      setShowWelcome(true);
+    }
+  }, [loading, needsSetup, ps.totalXp, ps.completedLessonIds]);
 
   if (loading || needsSetup) {
     return (
@@ -62,6 +71,8 @@ export default function LearnHubPage() {
           <DailyGoalsCard streak={ps.streak} />
         </div>
       </div>
+
+      {showWelcome && <FirstRunWelcome ps={ps} onClose={() => setShowWelcome(false)} />}
     </div>
   );
 }
