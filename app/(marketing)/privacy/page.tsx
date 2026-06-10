@@ -3,7 +3,7 @@ import { Logo } from "@/components/brand/Logo";
 import { ArrowLeft } from "lucide-react";
 
 export const metadata = {
-  title: "Privacy Policy — PathForge",
+  title: "Privacy Policy",
   description:
     "Privacy Policy for PathForge, a ZenForge Technologies product. Compliant with the Data Privacy Act of 2012 (R.A. 10173).",
 };

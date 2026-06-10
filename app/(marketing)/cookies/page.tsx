@@ -3,7 +3,7 @@ import { Logo } from "@/components/brand/Logo";
 import { ArrowLeft } from "lucide-react";
 
 export const metadata = {
-  title: "Cookie Policy — PathForge",
+  title: "Cookie Policy",
   description:
     "Cookie Policy for PathForge, a ZenForge Technologies product. Compliant with the Data Privacy Act of 2012.",
 };

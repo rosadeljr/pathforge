@@ -3,7 +3,7 @@ import { Logo } from "@/components/brand/Logo";
 import { ArrowLeft } from "lucide-react";
 
 export const metadata = {
-  title: "Terms of Service — PathForge",
+  title: "Terms of Service",
   description:
     "Terms of Service for PathForge, a ZenForge Technologies product. Governed by Philippine law.",
 };
