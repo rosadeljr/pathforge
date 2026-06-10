@@ -8,15 +8,23 @@
  */
 
 import Link from "next/link";
+import { useState } from "react";
 import { Flame, Check, Sparkles, ArrowRight } from "lucide-react";
 import { Panel, PanelHeader } from "./primitives";
 import { useDailyGoals } from "./useDailyGoals";
+import { Celebration } from "./Celebration";
 
 export function DailyGoalsCard({ streak = 0 }: { streak?: number }) {
   const { ready, goals, progress, completed, allDone, claimed, bonusXp, claim } = useDailyGoals();
+  const [celebrate, setCelebrate] = useState(false);
 
   // Avoid SSR/first-paint flicker until localStorage is read.
   if (!ready) return null;
+
+  function handleClaim() {
+    claim();
+    setCelebrate(true);
+  }
 
   const accent = allDone ? "#34d399" : "#f59e0b";
 
@@ -81,7 +89,7 @@ export function DailyGoalsCard({ streak = 0 }: { streak?: number }) {
             </div>
           ) : (
             <button
-              onClick={claim}
+              onClick={handleClaim}
               className="mt-1 flex w-full items-center justify-center gap-1.5 rounded-xl py-2.5 text-sm font-black text-slate-900 transition active:scale-[0.98]"
               style={{ background: "linear-gradient(180deg,#6ee7b7,#34d399)", boxShadow: "inset 0 1px 0 rgba(255,255,255,0.45), 0 0 18px rgba(52,211,153,0.5)" }}
             >
@@ -94,6 +102,13 @@ export function DailyGoalsCard({ streak = 0 }: { streak?: number }) {
           </p>
         )}
       </div>
+
+      <Celebration
+        show={celebrate}
+        title="Daily Goals complete!"
+        subtitle={`+${bonusXp} XP · ${streak + 1}-day streak`}
+        onDone={() => setCelebrate(false)}
+      />
     </Panel>
   );
 }
