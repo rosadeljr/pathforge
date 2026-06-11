@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { ArrowLeft, Award, Sparkles, Share2 } from "lucide-react";
+import { clientAppUrl } from "@/lib/site-url";
 import toast from "react-hot-toast";
 import { createClient } from "@/lib/supabase/client";
 import { getCareer } from "@/lib/data/careers";
@@ -60,7 +61,7 @@ export default function CertificateDetailPage() {
   const career = getCareer(cert.career_id);
 
   async function shareCert() {
-    const url = `${window.location.origin}/learn/certificates/${code}`;
+    const url = `${clientAppUrl()}/learn/certificates/${code}`;
     if (navigator.share) {
       try {
         await navigator.share({

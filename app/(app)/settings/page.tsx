@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { createClient } from "@/lib/supabase/client";
+import { clientAppUrl } from "@/lib/site-url";
 import toast from "react-hot-toast";
 import {
   Settings as SettingsIcon,
@@ -498,11 +499,7 @@ export default function Settings() {
               </p>
 
               <ShareButtons
-                url={
-                  typeof window !== "undefined"
-                    ? `${window.location.origin}/u/${profile.username}`
-                    : `/u/${profile.username}`
-                }
+                url={`${clientAppUrl()}/u/${profile.username}`}
                 title={`${profile.full_name || profile.username} on PathForge`}
                 text={`Check out my learning journey on PathForge — Grade ${profile.learner_grade ?? "—"} forger`}
               />

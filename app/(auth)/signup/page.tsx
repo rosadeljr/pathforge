@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { createClient } from "@/lib/supabase/client";
+import { clientAppUrl } from "@/lib/site-url";
 import toast from "react-hot-toast";
 import Link from "next/link";
 import { Logo } from "@/components/brand/Logo";
@@ -146,7 +147,7 @@ export default function SignUp() {
             username,
             full_name: username,
           },
-          emailRedirectTo: `${window.location.origin}/api/auth/callback`,
+          emailRedirectTo: `${clientAppUrl()}/api/auth/callback`,
         },
       });
 
