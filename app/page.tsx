@@ -21,10 +21,12 @@ import { StickyCTA } from "@/components/landing/StickyCTA";
 import { FloatingParticles } from "@/components/landing/FloatingParticles";
 import { HeroPreview } from "@/components/landing/HeroPreview";
 import { UtmCapture } from "@/components/marketing/UtmCapture";
+import { RedirectIfAuthed } from "@/components/landing/RedirectIfAuthed";
 
 export default function Landing() {
   return (
     <div className="min-h-screen bg-[#0a0a0f] text-white relative overflow-hidden">
+      <RedirectIfAuthed />
       <UtmCapture />
       {/* Ambient background */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
