@@ -172,6 +172,10 @@ export default function PricingPage() {
   }, [supabase]);
 
   const handleSelect = async (planName: string) => {
+    // Auth state still loading — ignore the click rather than mis-routing a
+    // signed-in user to signup.
+    if (authenticated === null) return;
+
     // Free always goes to signup (if not auth'd) or dashboard (if auth'd)
     if (planName === "Free") {
       router.push(authenticated ? "/learn" : "/signup");

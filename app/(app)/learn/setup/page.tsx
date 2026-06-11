@@ -204,7 +204,7 @@ export default function LearnerSetupPage() {
         <div className="flex-1 flex items-center justify-center px-4 sm:px-6 lg:px-8 py-8">
           <div className="w-full max-w-2xl">
             <AnimatePresence mode="wait">
-              {step === "grade" ? (
+              {step === "grade" && (
                 <motion.div
                   key="grade"
                   initial={{ opacity: 0, y: 12 }}
@@ -281,7 +281,9 @@ export default function LearnerSetupPage() {
                     </button>
                   </div>
                 </motion.div>
-              ) : (
+              )}
+
+              {step === "subjects" && (
                 <motion.div
                   key="subjects"
                   initial={{ opacity: 0, y: 12 }}
