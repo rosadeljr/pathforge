@@ -589,38 +589,43 @@ export default function KidDetailPage() {
                     <span className="text-sm font-semibold text-white">{subject.title}</span>
                     <span className="text-[11px] text-slate-500">· {lessons.length} done</span>
                   </div>
-                  <div className="flex flex-wrap gap-1.5">
+                  <div className="grid grid-cols-1 gap-1.5 sm:grid-cols-2">
                     {lessons.map((l) => {
                       const m = masteryByLesson.get(l.id);
                       const strong = m?.pct != null && m.pct >= 80;
                       return (
-                        <span
+                        <div
                           key={l.id}
-                          className="inline-flex items-center gap-1.5 rounded-lg border px-2 py-1 text-[11px]"
+                          className="rounded-lg border px-2.5 py-1.5"
                           style={{
                             background: "rgba(255,255,255,0.03)",
                             borderColor: strong ? "rgba(52,211,153,0.35)" : "rgba(255,255,255,0.08)",
                           }}
                           title={l.melcCode ? `DepEd competency ${l.melcCode}` : l.description}
                         >
-                          <span className="text-slate-200">{l.title}</span>
-                          <span className="text-[9px] font-semibold uppercase tracking-wide text-slate-500">
-                            G{l.grade}
-                          </span>
-                          {m?.pct != null && (
-                            <span
-                              className="font-bold tabular-nums"
-                              style={{ color: strong ? "#6ee7b7" : "#94a3b8" }}
-                            >
-                              {m.pct}%
+                          <div className="flex items-center gap-1.5">
+                            <span className="min-w-0 flex-1 truncate text-[11px] font-semibold text-slate-100">{l.title}</span>
+                            <span className="flex-shrink-0 text-[9px] font-semibold uppercase tracking-wide text-slate-500">
+                              G{l.grade}
                             </span>
+                            {m?.pct != null && (
+                              <span
+                                className="flex-shrink-0 text-[11px] font-bold tabular-nums"
+                                style={{ color: strong ? "#6ee7b7" : "#94a3b8" }}
+                              >
+                                {m.pct}%
+                              </span>
+                            )}
+                            {l.melcCode && (
+                              <span className="flex-shrink-0 rounded bg-indigo-500/15 px-1 text-[8px] font-bold text-indigo-300">
+                                MELC
+                              </span>
+                            )}
+                          </div>
+                          {l.competencyTitle && (
+                            <p className="mt-0.5 line-clamp-1 text-[10px] leading-tight text-slate-400">{l.competencyTitle}</p>
                           )}
-                          {l.melcCode && (
-                            <span className="rounded bg-indigo-500/15 px-1 text-[8px] font-bold text-indigo-300">
-                              MELC
-                            </span>
-                          )}
-                        </span>
+                        </div>
                       );
                     })}
                   </div>
