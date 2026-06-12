@@ -16,9 +16,7 @@ import {
   Flame,
   Calendar,
   Loader2,
-  ExternalLink,
 } from "lucide-react";
-import Link from "next/link";
 import { CAREER_PATHS } from "@/lib/data/career-paths";
 
 interface AdminUser {
@@ -327,14 +325,9 @@ function UserDetailModal({
               </h2>
               <div className="text-xs text-slate-400 truncate">{user.email || user.username}</div>
               {user.username && (
-                <Link
-                  href={`/u/${user.username}`}
-                  target="_blank"
-                  className="text-[10px] text-indigo-300 hover:text-indigo-200 inline-flex items-center gap-1 mt-1"
-                >
-                  /u/{user.username}
-                  <ExternalLink size={9} />
-                </Link>
+                <span className="text-[10px] text-slate-500 inline-flex items-center gap-1 mt-1">
+                  @{user.username}
+                </span>
               )}
             </div>
           </div>

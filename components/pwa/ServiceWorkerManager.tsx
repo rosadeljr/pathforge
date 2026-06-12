@@ -76,8 +76,13 @@ export function ServiceWorkerManager() {
         /* SW is an enhancement — never break the app over it */
       });
 
+    // Only reload on a *takeover* (an updated worker replacing an old one).
+    // On the very first visit clients.claim() flips the controller from null
+    // to the new worker — reloading then would wipe in-progress state (e.g. a
+    // half-typed signup form) for every new visitor.
+    const hadController = !!navigator.serviceWorker.controller;
     const onControllerChange = () => {
-      if (reloaded.current) return;
+      if (!hadController || reloaded.current) return;
       reloaded.current = true;
       window.location.reload();
     };

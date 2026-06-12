@@ -60,7 +60,11 @@ export default function LearnerSetupPage() {
           .eq("id", session.user.id);
       }
       if (profile?.learner_grade != null) {
-        router.replace("/learn");
+        // HARD navigation, not router.replace: the (app) layout caches the
+        // profile from its own fetch, and a client-side nav would leave it
+        // stale (learner_grade: null) — it would bounce straight back here,
+        // ping-ponging forever. A full load refetches the profile.
+        window.location.replace("/learn");
         return;
       }
       setRedirecting(false);
@@ -149,7 +153,10 @@ export default function LearnerSetupPage() {
         });
       }
 
-      router.replace("/learn");
+      // HARD navigation (see the mount check above): the (app) layout's cached
+      // profile still has learner_grade null and would redirect any client-side
+      // nav right back to /learn/setup — an infinite onboarding loop.
+      window.location.assign("/learn");
     } catch (e: any) {
       toast.error(e?.message || "Couldn't save. Try again.");
       setSaving(false);

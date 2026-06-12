@@ -86,6 +86,27 @@ export default function LessonPlayerPage() {
   const [burst, setBurst] = useState<{ x: number; y: number; key: number } | null>(null);
   const [xpFloat, setXpFloat] = useState<{ key: number; amount: number } | null>(null);
   const [feedbackMsg, setFeedbackMsg] = useState("");
+  // Completion-overlay state. MUST live up here with the other hooks: the
+  // component early-returns while phase === "loading", so any hook declared
+  // below those returns changes the hook count between renders and crashes
+  // React ("Rendered more hooks than during the previous render").
+  const [isFirstEver, setIsFirstEver] = useState(false);
+  // Replays award no XP (anti-grind) — surface that honestly on the done screen.
+  const [isReplay, setIsReplay] = useState(false);
+  const [newCerts, setNewCerts] = useState<
+    { career_id: string; career_title: string; credential_code: string }[]
+  >([]);
+  const [leveledUpTo, setLeveledUpTo] = useState<number | null>(null);
+  /** When the kid clears the last lesson in a realm region, snap the
+   * region info so RegionClearOverlay can render it. */
+  const [regionCleared, setRegionCleared] = useState<{
+    regionName: string;
+    regionEmoji: string;
+    realmName: string;
+    accentColor: string;
+    lessonsCleared: number;
+    bossCrowns: number;
+  } | null>(null);
 
   // Load tier on mount
   useEffect(() => {
@@ -110,7 +131,7 @@ export default function LessonPlayerPage() {
   }, [supabase]);
 
   useEffect(() => {
-    if (!lesson || !subject || subject.id !== lesson.subject) {
+    if (!lesson || !subject || subject.id !== lesson.subject || lesson.questions.length === 0) {
       setPhase("loading");
     } else {
       setFirstTryCorrect(new Array(lesson.questions.length).fill(false));
@@ -118,7 +139,9 @@ export default function LessonPlayerPage() {
     }
   }, [lesson, subject]);
 
-  if (!lesson || !subject || subject.id !== lesson.subject) {
+  // A lesson with zero questions would crash the player (q undefined) and
+  // produce NaN scores — treat it as not found.
+  if (!lesson || !subject || subject.id !== lesson.subject || lesson.questions.length === 0) {
     return (
       <div className="max-w-md mx-auto px-4 py-16 text-center">
         <h1 className="text-xl font-semibold mb-2">Lesson not found</h1>
@@ -224,22 +247,6 @@ export default function LessonPlayerPage() {
     bumpDailyGoal("lesson");
   }
 
-  const [isFirstEver, setIsFirstEver] = useState(false);
-  const [newCerts, setNewCerts] = useState<
-    { career_id: string; career_title: string; credential_code: string }[]
-  >([]);
-  const [leveledUpTo, setLeveledUpTo] = useState<number | null>(null);
-  /** When the kid clears the last lesson in a realm region, snap the
-   * region info so RegionClearOverlay can render it. */
-  const [regionCleared, setRegionCleared] = useState<{
-    regionName: string;
-    regionEmoji: string;
-    realmName: string;
-    accentColor: string;
-    lessonsCleared: number;
-    bossCrowns: number;
-  } | null>(null);
-
   async function persistCompletion() {
     setPersisting(true);
     try {
@@ -266,6 +273,7 @@ export default function LessonPlayerPage() {
         .limit(1);
 
       const alreadyDone = (existing?.length || 0) > 0;
+      setIsReplay(alreadyDone);
       // First-time + perfect (no hints, no wrongs) earns a 25% bonus
       const isFlawless = correctCount === total && usedHintOn.size === 0;
       const baseXp = alreadyDone ? 0 : lesson!.xpReward;
@@ -858,7 +866,11 @@ export default function LessonPlayerPage() {
             <div className="grid grid-cols-3 gap-3 mb-5">
               <StatBox label="Score" value={`${score}/${total}`} tone={toneText[tone]} />
               <StatBox label="First try" value={`${pct}%`} tone={masteryPassed ? "text-emerald-300" : "text-white"} />
-              <StatBox label="XP earned" value={`+${lesson.xpReward + bonusXp}`} tone="text-indigo-300" />
+              <StatBox
+                label={isReplay ? "XP (replay)" : "XP earned"}
+                value={isReplay ? "+0" : `+${lesson.xpReward + bonusXp}`}
+                tone={isReplay ? "text-slate-400" : "text-indigo-300"}
+              />
             </div>
             <div className="h-2 rounded-full bg-white/[0.06] overflow-hidden mb-2">
               <motion.div
@@ -874,7 +886,7 @@ export default function LessonPlayerPage() {
                 Best in-lesson streak: {bestStreak}
               </div>
             )}
-            {isFlawless && (
+            {isFlawless && !isReplay && (
               <motion.div
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}

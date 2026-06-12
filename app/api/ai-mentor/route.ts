@@ -316,11 +316,16 @@ export async function GET(_request: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    // Most-recent 50, returned oldest-first. Ascending+limit would pin the
+    // FIRST-ever 50 rows forever (stale history + a daily-limit counter that
+    // never sees today's messages). Filter to chat roles only so internal
+    // moderation-log rows (role "system") never reach a kid's screen.
     const { data: messages, error } = await supabase
       .from("ai_messages")
       .select("*")
       .eq("user_id", user.id)
-      .order("created_at", { ascending: true })
+      .in("role", ["user", "assistant"])
+      .order("created_at", { ascending: false })
       .limit(50);
 
     if (error) {
@@ -328,7 +333,7 @@ export async function GET(_request: Request) {
       return NextResponse.json({ messages: [] });
     }
 
-    return NextResponse.json({ messages: messages || [] });
+    return NextResponse.json({ messages: (messages || []).reverse() });
   } catch (error: any) {
     console.warn("[ai-mentor] History error:", error);
     return NextResponse.json({ messages: [] });

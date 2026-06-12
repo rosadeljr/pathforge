@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { createClient } from "@/lib/supabase/client";
-import { clientAppUrl } from "@/lib/site-url";
 import toast from "react-hot-toast";
 import {
   Settings as SettingsIcon,
@@ -17,7 +16,6 @@ import {
   Mail,
   Sparkles,
   ArrowRight,
-  Share2,
   Copy,
   Volume2,
   VolumeX,
@@ -29,7 +27,6 @@ import { SUBJECTS, gradeLabel } from "@/lib/data/learner";
 import { PageShimmer } from "@/components/ui/Shimmer";
 import { isSoundEnabled, setSoundEnabled } from "@/lib/effects/celebration";
 import { useTheme } from "@/components/theme/ThemeProvider";
-import { ShareButtons } from "@/components/share/ShareButtons";
 import { GCashPaymentModal } from "@/components/payments/GCashPaymentModal";
 import { AVATAR_CLASSES, type AvatarClassId } from "@/lib/data/avatar-classes";
 
@@ -478,42 +475,9 @@ export default function Settings() {
           </div>
         </motion.section>
 
-        {/* Public Profile / Share */}
-        {profile.username && (
-          <motion.section
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.125 }}
-            className="rounded-2xl border border-white/[0.06] bg-white/[0.02] overflow-hidden"
-          >
-            <div className="px-6 py-4 border-b border-white/[0.06] flex items-center gap-2">
-              <Share2 size={14} className="text-slate-400" />
-              <h2 className="text-sm font-semibold uppercase tracking-wider text-slate-300">
-                Public Profile
-              </h2>
-            </div>
-            <div className="p-6 space-y-4">
-              <p className="text-sm text-slate-400">
-                Your public profile shows your level, rank, projects, and achievements. Share the
-                link with recruiters or post on LinkedIn.
-              </p>
-
-              <ShareButtons
-                url={`${clientAppUrl()}/u/${profile.username}`}
-                title={`${profile.full_name || profile.username} on PathForge`}
-                text={`Check out my learning journey on PathForge — Grade ${profile.learner_grade ?? "—"} forger`}
-              />
-              <Link
-                href={`/u/${profile.username}`}
-                target="_blank"
-                className="inline-flex items-center gap-1.5 text-xs font-medium text-indigo-300 hover:text-indigo-200 transition-colors"
-              >
-                Open my public profile
-                <ArrowRight size={11} />
-              </Link>
-            </div>
-          </motion.section>
-        )}
+        {/* NOTE: the old "Public Profile / Share" section was removed — the
+            /u/[username] route was deleted as vestigial (and publicly browsable
+            child profiles conflict with the kid-safety posture). */}
 
         {/* Subscription */}
         <motion.section

@@ -20,12 +20,14 @@ const OFFLINE_URL = "/offline";
 const MEDIA_LIMIT = 60;
 
 self.addEventListener("install", (event) => {
+  // NOTE: no skipWaiting() here — a new version must wait until the user
+  // accepts the "Refresh" toast (SKIP_WAITING message below). Activating
+  // immediately would force-reload kids mid-lesson on every deploy.
   event.waitUntil(
     caches
       .open(OFFLINE_CACHE)
       .then((cache) => cache.add(new Request(OFFLINE_URL, { cache: "reload" })))
       .catch(() => {})
-      .then(() => self.skipWaiting())
   );
 });
 
