@@ -65,6 +65,12 @@ provider config must agree or it will still drift.
 - [ ] Parent account → `/parent` lists linked kids; a kid detail page shows
       "This week" + "What they've learned".
 - [ ] Mobile: HUD, section nav, and town render without horizontal scroll.
+- [ ] PWA: visit on Android Chrome → install prompt appears (with Forgeheart
+      screenshots in the dialog) → installed app opens to /learn standalone.
+- [ ] PWA: turn on airplane mode in the installed app → navigating shows the
+      branded "You're offline" page, not a browser error.
+- [ ] PWA: after a redeploy, an open session shows the "New version ready —
+      Refresh" toast.
 
 ## 5. Trust & safety (verify before promoting)
 
