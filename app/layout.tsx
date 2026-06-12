@@ -5,6 +5,7 @@ import { Inter } from "next/font/google";
 import { AppToaster } from "@/components/ui/AppToaster";
 import { ThemeProvider } from "@/components/theme/ThemeProvider";
 import { Pixels } from "@/components/marketing/Pixels";
+import { ServiceWorkerManager } from "@/components/pwa/ServiceWorkerManager";
 import { APP_URL } from "@/lib/site-url";
 
 const inter = Inter({
@@ -107,6 +108,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <ThemeProvider>
           {children}
           <AppToaster />
+          <ServiceWorkerManager />
           <Analytics />
           <Pixels />
         </ThemeProvider>

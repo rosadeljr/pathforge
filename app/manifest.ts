@@ -11,7 +11,8 @@ export default function manifest(): MetadataRoute.Manifest {
     short_name: "PathForge",
     description:
       "Fun, interactive K-10 lessons for Filipino kids ages 6–15. Quests, streaks, careers to unlock, and a kid-safe AI tutor.",
-    start_url: "/learn",
+    // ?source=pwa lets analytics distinguish installed-app sessions.
+    start_url: "/learn?source=pwa",
     scope: "/",
     display: "standalone",
     display_override: ["standalone", "minimal-ui"],
@@ -21,6 +22,26 @@ export default function manifest(): MetadataRoute.Manifest {
     lang: "en-PH",
     dir: "ltr",
     categories: ["education", "kids", "productivity", "lifestyle"],
+    prefer_related_applications: false,
+    // Focus the already-open app window instead of spawning duplicates.
+    launch_handler: { client_mode: ["navigate-existing", "auto"] },
+    // Real in-game art — shown in the richer Chrome/Android install dialog.
+    screenshots: [
+      {
+        src: "/screenshots/town-wide.png",
+        sizes: "1280x720",
+        type: "image/png",
+        form_factor: "wide",
+        label: "Forgeheart City — your learning hub",
+      },
+      {
+        src: "/screenshots/town-narrow.png",
+        sizes: "720x1280",
+        type: "image/png",
+        form_factor: "narrow",
+        label: "Quests, careers, and a kid-safe arena",
+      },
+    ],
     icons: [
       {
         src: "/icon",

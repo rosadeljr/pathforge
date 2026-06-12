@@ -49,6 +49,6 @@ export const config = {
      * - icon / apple-icon / manifest (generated metadata routes)
      * - public folder
      */
-    "/((?!_next/static|_next/image|favicon.ico|icon|apple-icon|manifest.webmanifest|public).*)",
+    "/((?!_next/static|_next/image|favicon.ico|icon|apple-icon|manifest.webmanifest|sw.js|screenshots/|public).*)",
   ],
 };
