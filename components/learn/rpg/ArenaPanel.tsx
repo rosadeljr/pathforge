@@ -22,6 +22,7 @@ import { Panel, PanelHeader, ScreenIntro } from "./primitives";
 import { LevelProgressBar } from "./LevelProgressBar";
 import { logRpgEvent } from "@/lib/rpg/track";
 import { bumpDailyGoal } from "@/lib/rpg/daily-goals";
+import { Celebration } from "./Celebration";
 
 type Phase = "select" | "matchup" | "playing" | "result";
 interface MiniQ {
@@ -38,6 +39,7 @@ export function ArenaPanel({ ps }: { ps: PlayerState }) {
   const [correct, setCorrect] = useState(0);
   const [result, setResult] = useState<ArenaResult | null>(null);
   const [picked, setPicked] = useState<number | null>(null);
+  const [celebrate, setCelebrate] = useState(false);
 
   const ghost = useMemo(() => (mode ? makeGhost(mode.id, ps.grade, seed) : null), [mode, ps.grade, seed]);
   const questions = useMemo(() => (mode ? buildQuestions(mode, ps.grade, seed) : []), [mode, ps.grade, seed]);
@@ -62,6 +64,7 @@ export function ArenaPanel({ ps }: { ps: PlayerState }) {
         const res = scoreDuel(mode!, nextCorrect, questions.length, ghost!);
         setResult(res);
         setPhase("result");
+        if (res.outcome === "win") setCelebrate(true);
         void logRpgEvent("rpg_arena_completed", { mode: mode!.id, correct: res.correct, total: res.total, accuracy: res.accuracy, outcome: res.outcome }, res.xpEarned);
         bumpDailyGoal("arena");
       } else {
@@ -211,6 +214,13 @@ export function ArenaPanel({ ps }: { ps: PlayerState }) {
           </div>
         </Panel>
       )}
+
+      <Celebration
+        show={celebrate}
+        title="Victory!"
+        subtitle={result ? `+${result.xpEarned} XP earned` : undefined}
+        onDone={() => setCelebrate(false)}
+      />
     </div>
   );
 }
