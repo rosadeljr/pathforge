@@ -10,6 +10,7 @@ import {
   Check,
   Lock,
   Sparkles,
+  Target,
   Zap,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
@@ -551,6 +552,17 @@ function LessonCard({
               ? `Realm checkpoint. Prove mastery to clear ${lesson.title.toLowerCase()}.`
               : lesson.description}
           </p>
+          {lesson.competencyTitle && !isBoss && (
+            <div
+              className="mb-3 flex items-start gap-1.5 rounded-lg px-2 py-1.5"
+              style={{ background: "rgba(99,102,241,0.07)", border: "1px solid rgba(99,102,241,0.18)" }}
+            >
+              <Target size={11} className="mt-0.5 flex-shrink-0 text-indigo-300" />
+              <span className="text-[11px] leading-snug text-slate-300">
+                <span className="font-semibold text-indigo-300">Skill:</span> {lesson.competencyTitle}
+              </span>
+            </div>
+          )}
           {lesson.melcCode && !isBoss && (
             <div className="mb-3">
               <span
