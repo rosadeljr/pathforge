@@ -51,14 +51,16 @@ function hash(s: string): number {
   return h >>> 0;
 }
 
-/** The three goals for a given day — always one study, one quest, one duel. */
+/** The three goals for a given day — always one study, one quest, one duel.
+ *  Uses unsigned shifts (>>>) so the index is never negative for hashes whose
+ *  high bit is set (a signed >> would yield a negative index → undefined goal). */
 export function goalsForDate(dateKey: string): DailyGoal[] {
   const h = hash(dateKey);
   return [
     STUDY_GOALS[h % STUDY_GOALS.length],
-    QUEST_GOALS[(h >> 3) % QUEST_GOALS.length],
-    ARENA_GOALS[(h >> 6) % ARENA_GOALS.length],
-  ];
+    QUEST_GOALS[(h >>> 3) % QUEST_GOALS.length],
+    ARENA_GOALS[(h >>> 6) % ARENA_GOALS.length],
+  ].filter((g): g is DailyGoal => Boolean(g));
 }
 
 export interface DailyState {

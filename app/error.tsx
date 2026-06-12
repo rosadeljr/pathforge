@@ -27,11 +27,6 @@ export default function Error({ error, reset }: { error: Error & { digest?: stri
         {error?.digest && (
           <p className="mt-2 font-mono text-[11px] text-slate-600">ref: {error.digest}</p>
         )}
-        {error?.message && (
-          <p className="mx-auto mt-2 max-w-md break-words rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2 font-mono text-[11px] text-rose-300/80">
-            {error.message.slice(0, 300)}
-          </p>
-        )}
         <div className="mt-7 flex flex-wrap items-center justify-center gap-3">
           <button
             onClick={reset}
