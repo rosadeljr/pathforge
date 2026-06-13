@@ -481,7 +481,7 @@ export default function Landing() {
                 step: "01",
                 emoji: "🎒",
                 title: "Pick your grade",
-                description: "Choose Grade 1 through 12. We'll match lessons to the right level — no overwhelming a 6-year-old with algebra.",
+                description: "Choose Grade 1 through 10. We'll match lessons to the right level — no overwhelming a 6-year-old with algebra.",
               },
               {
                 step: "02",
@@ -502,10 +502,13 @@ export default function Landing() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.5, delay: i * 0.1 }}
-                whileHover={{ y: -3 }}
-                className="relative p-6 rounded-2xl border border-white/[0.06] bg-white/[0.02] hover:border-white/[0.14] transition-all"
+                whileHover={{ y: -4 }}
+                className="group relative overflow-hidden p-6 rounded-2xl border border-white/[0.08] bg-gradient-to-b from-white/[0.05] to-white/[0.01] hover:border-white/[0.18] transition-all"
+                style={{ boxShadow: "inset 0 1px 0 rgba(255,255,255,0.06)" }}
               >
-                <div className="flex items-start justify-between mb-4">
+                <span aria-hidden className="pointer-events-none absolute inset-x-5 top-0 h-px opacity-70" style={{ background: "linear-gradient(90deg, transparent, #818cf8, transparent)" }} />
+                <span aria-hidden className="pointer-events-none absolute -top-14 -right-14 w-40 h-40 rounded-full opacity-20 group-hover:opacity-40 transition-opacity" style={{ background: "radial-gradient(circle, rgba(129,140,248,0.6), transparent 70%)" }} />
+                <div className="relative flex items-start justify-between mb-4">
                   <div className="text-4xl font-semibold tracking-tighter text-transparent bg-clip-text bg-gradient-to-br from-indigo-300 to-purple-400">
                     {step.step}
                   </div>
@@ -557,11 +560,13 @@ export default function Landing() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, margin: "-50px" }}
                 transition={{ duration: 0.5, delay: i * 0.06 }}
-                whileHover={{ y: -3 }}
-                className="group relative overflow-hidden p-5 rounded-2xl border border-white/[0.06] bg-white/[0.02] hover:border-white/[0.16] hover:bg-white/[0.04] transition-all"
+                whileHover={{ y: -4 }}
+                className="group relative overflow-hidden p-5 rounded-2xl border border-white/[0.08] bg-gradient-to-b from-white/[0.05] to-white/[0.01] hover:border-white/[0.18] transition-all"
+                style={{ boxShadow: "inset 0 1px 0 rgba(255,255,255,0.06)" }}
               >
+                <span aria-hidden className="pointer-events-none absolute inset-x-4 top-0 h-px opacity-70" style={{ background: `linear-gradient(90deg, transparent, ${f.accent}, transparent)` }} />
                 <div
-                  className="absolute -top-12 -right-12 w-32 h-32 rounded-full opacity-10 group-hover:opacity-30 transition-opacity"
+                  className="absolute -top-12 -right-12 w-32 h-32 rounded-full opacity-10 group-hover:opacity-40 transition-opacity"
                   style={{ background: `radial-gradient(circle, ${f.accent}, transparent 70%)` }}
                 />
                 <div className="relative">
