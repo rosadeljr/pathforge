@@ -12,6 +12,7 @@ import { SectionNav } from "@/components/learn/rpg/GameShell";
 import { ForgeheartTown } from "@/components/learn/rpg/ForgeheartTown";
 import { DailyGoalsCard } from "@/components/learn/rpg/DailyGoalsCard";
 import { SalitaCard } from "@/components/learn/rpg/SalitaCard";
+import { HubGreeting } from "@/components/learn/rpg/HubGreeting";
 import { FirstRunWelcome, hasSeenWelcome } from "@/components/learn/rpg/FirstRunWelcome";
 import { usePlayerState } from "@/components/learn/rpg/usePlayerState";
 
@@ -62,6 +63,7 @@ export default function LearnHubPage() {
 
   return (
     <div className="mx-auto w-full max-w-7xl px-3 pb-24 pt-3 sm:px-4 lg:pb-8">
+      <HubGreeting ps={ps} />
       <PlayerHUD ps={ps} />
       <div className="sticky top-2 z-30 mt-3">
         <SectionNav active="town" />
