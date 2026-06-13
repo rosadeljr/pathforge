@@ -11,6 +11,7 @@ import { PlayerHUD } from "@/components/learn/rpg/PlayerHUD";
 import { SectionNav } from "@/components/learn/rpg/GameShell";
 import { ForgeheartTown } from "@/components/learn/rpg/ForgeheartTown";
 import { DailyGoalsCard } from "@/components/learn/rpg/DailyGoalsCard";
+import { SalitaCard } from "@/components/learn/rpg/SalitaCard";
 import { FirstRunWelcome, hasSeenWelcome } from "@/components/learn/rpg/FirstRunWelcome";
 import { usePlayerState } from "@/components/learn/rpg/usePlayerState";
 
@@ -67,8 +68,9 @@ export default function LearnHubPage() {
       </div>
       <div className="mt-3 grid grid-cols-1 gap-3 lg:grid-cols-[minmax(0,1fr)_320px]">
         <ForgeheartTown ps={ps} />
-        <div className="lg:order-last">
+        <div className="space-y-3 lg:order-last">
           <DailyGoalsCard streak={ps.streak} />
+          <SalitaCard />
         </div>
       </div>
 
