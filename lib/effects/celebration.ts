@@ -78,6 +78,16 @@ function playTone({
 // Celebration types
 // ============================================================
 
+/** Sound-only reward chime (no confetti) — pairs with the framer-motion
+ *  Celebration overlay, which draws its own particles. A warm bell on a
+ *  perfect-fifth interval. Respects the sound toggle; safe to call from any
+ *  post-gesture moment (the AudioContext resumes off the user's click). */
+export function playRewardChime(): void {
+  if (!isSoundEnabled()) return;
+  playTone({ frequency: 880, duration: 0.5, type: "sine", volume: 0.13, release: 0.42 });
+  playTone({ frequency: 1318.51, duration: 0.5, type: "sine", volume: 0.1, release: 0.42 }, 0.04);
+}
+
 /** Standard quest completion — small ping + tiny confetti burst */
 export function celebrateQuestComplete(): void {
   if (isSoundEnabled()) {

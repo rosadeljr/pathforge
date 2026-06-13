@@ -9,6 +9,7 @@
 
 import { useEffect, useMemo } from "react";
 import { motion, useReducedMotion } from "framer-motion";
+import { playRewardChime } from "@/lib/effects/celebration";
 
 const COLORS = ["#fcd34d", "#34d399", "#38bdf8", "#a78bfa", "#fb7185", "#f59e0b"];
 
@@ -29,6 +30,7 @@ export function Celebration({
 
   useEffect(() => {
     if (!show) return;
+    playRewardChime(); // sound-only; no-op when the user muted sound
     const t = setTimeout(onDone, duration);
     return () => clearTimeout(t);
   }, [show, duration, onDone]);
