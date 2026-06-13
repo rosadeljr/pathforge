@@ -30,8 +30,29 @@ export default function Landing() {
       <UtmCapture />
       {/* Ambient background */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        {/* Aurora band — slow futuristic sweep across the top */}
         <div
-          className="absolute top-0 left-1/2 -translate-x-1/2 w-[1200px] h-[700px] rounded-full opacity-40"
+          className="lp-aurora absolute -top-24 left-1/2 -translate-x-1/2 w-[140%] h-[460px] opacity-60"
+          style={{
+            background:
+              "radial-gradient(60% 100% at 30% 0%, rgba(56,189,248,0.22), transparent 60%), radial-gradient(55% 100% at 70% 0%, rgba(168,85,247,0.22), transparent 60%)",
+            filter: "blur(40px)",
+          }}
+        />
+        {/* Subtle Philippine golden sun — rays + halo, premium not literal */}
+        <div className="absolute -top-44 left-1/2 -translate-x-1/2 w-[760px] h-[760px] opacity-[0.07]">
+          <div
+            className="lp-sun absolute inset-0"
+            style={{
+              background:
+                "conic-gradient(from 0deg at 50% 50%, transparent 0deg, rgba(252,211,77,0.9) 4deg, transparent 8deg, transparent 30deg, rgba(252,211,77,0.9) 34deg, transparent 38deg, transparent 60deg, rgba(252,211,77,0.9) 64deg, transparent 68deg, transparent 90deg, rgba(252,211,77,0.9) 94deg, transparent 98deg, transparent 120deg, rgba(252,211,77,0.9) 124deg, transparent 128deg, transparent 150deg, rgba(252,211,77,0.9) 154deg, transparent 158deg, transparent 180deg, rgba(252,211,77,0.9) 184deg, transparent 188deg, transparent 210deg, rgba(252,211,77,0.9) 214deg, transparent 218deg, transparent 240deg, rgba(252,211,77,0.9) 244deg, transparent 248deg, transparent 270deg, rgba(252,211,77,0.9) 274deg, transparent 278deg, transparent 300deg, rgba(252,211,77,0.9) 304deg, transparent 308deg, transparent 330deg, rgba(252,211,77,0.9) 334deg, transparent 338deg)",
+              maskImage: "radial-gradient(circle, #000 18%, transparent 62%)",
+              WebkitMaskImage: "radial-gradient(circle, #000 18%, transparent 62%)",
+            }}
+          />
+        </div>
+        <div
+          className="lp-halo absolute top-0 left-1/2 -translate-x-1/2 w-[1200px] h-[700px] rounded-full opacity-40"
           style={{ background: "radial-gradient(ellipse at top, rgba(99,102,241,0.4), rgba(168,85,247,0.15), transparent 70%)" }}
         />
         <div
@@ -209,15 +230,48 @@ export default function Landing() {
           </motion.div>
         </div>
 
-        {/* Live dashboard preview — shows the real /learn experience */}
+        {/* Live dashboard preview — framed as a premium product showcase */}
         <motion.div
           initial={{ opacity: 0, y: 40 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 1, delay: 0.8, ease: [0.16, 1, 0.3, 1] }}
           className="relative max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 mt-16 lg:mt-20"
         >
-          <div className="min-h-[420px]">
-            <HeroPreview />
+          {/* under-glow */}
+          <div
+            aria-hidden
+            className="absolute -inset-x-10 -bottom-10 top-10 -z-10 opacity-60 blur-3xl"
+            style={{ background: "radial-gradient(60% 60% at 50% 50%, rgba(124,92,255,0.35), rgba(56,189,248,0.18), transparent 75%)" }}
+          />
+          <div
+            className="group relative overflow-hidden rounded-[26px] p-2 sm:p-3"
+            style={{
+              background: "linear-gradient(160deg, rgba(255,255,255,0.10), rgba(255,255,255,0.02) 30%, rgba(8,11,20,0.7))",
+              border: "1px solid rgba(255,255,255,0.12)",
+              boxShadow: "inset 0 1px 0 rgba(255,255,255,0.14), 0 40px 80px -30px rgba(124,92,255,0.55)",
+            }}
+          >
+            {/* neon top hairline */}
+            <span aria-hidden className="pointer-events-none absolute inset-x-6 top-0 h-px" style={{ background: "linear-gradient(90deg, transparent, rgba(124,92,255,0.9), rgba(56,189,248,0.9), transparent)" }} />
+            {/* corner ticks */}
+            <span aria-hidden className="pointer-events-none absolute left-2.5 top-2.5 h-4 w-4 rounded-tl-lg border-l-2 border-t-2 border-violet-400/50" />
+            <span aria-hidden className="pointer-events-none absolute right-2.5 top-2.5 h-4 w-4 rounded-tr-lg border-r-2 border-t-2 border-sky-400/50" />
+            <span aria-hidden className="pointer-events-none absolute left-2.5 bottom-2.5 h-4 w-4 rounded-bl-lg border-l-2 border-b-2 border-sky-400/50" />
+            <span aria-hidden className="pointer-events-none absolute right-2.5 bottom-2.5 h-4 w-4 rounded-br-lg border-r-2 border-b-2 border-violet-400/50" />
+            {/* LIVE chip */}
+            <div className="pointer-events-none absolute right-4 top-4 z-20 inline-flex items-center gap-1.5 rounded-full bg-black/50 px-2.5 py-1 backdrop-blur-md" style={{ border: "1px solid rgba(255,255,255,0.12)" }}>
+              <span className="relative flex h-1.5 w-1.5">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-60" />
+                <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-emerald-400" />
+              </span>
+              <span className="text-[10px] font-bold uppercase tracking-[0.18em] text-emerald-200">Live preview</span>
+            </div>
+
+            <div className="relative min-h-[420px] overflow-hidden rounded-[18px]">
+              {/* drifting scanline for a futuristic 'screen' feel */}
+              <span aria-hidden className="lp-scan pointer-events-none absolute inset-x-0 top-0 z-10 h-16" style={{ background: "linear-gradient(180deg, rgba(124,92,255,0.10), transparent)" }} />
+              <HeroPreview />
+            </div>
           </div>
         </motion.div>
       </section>
