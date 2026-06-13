@@ -346,8 +346,11 @@ export default function Landing() {
                 viewport={{ once: true }}
                 transition={{ duration: 0.6, delay: i * 0.08 }}
                 whileHover={{ y: -4 }}
-                className="group relative overflow-hidden rounded-3xl border border-white/[0.08] bg-gradient-to-br from-white/[0.04] to-transparent p-6 hover:border-white/[0.18] transition-all"
+                className="group relative overflow-hidden rounded-3xl border border-white/[0.08] bg-gradient-to-br from-white/[0.05] to-transparent p-6 hover:border-white/[0.18] transition-all"
+                style={{ boxShadow: "inset 0 1px 0 rgba(255,255,255,0.06)" }}
               >
+                {/* accent top hairline */}
+                <span aria-hidden className="pointer-events-none absolute inset-x-5 top-0 h-px opacity-70" style={{ background: `linear-gradient(90deg, transparent, ${t.glow}, transparent)` }} />
                 <div
                   className="absolute -top-20 -right-20 w-56 h-56 rounded-full opacity-25 pointer-events-none group-hover:opacity-50 transition-opacity"
                   style={{
@@ -419,15 +422,20 @@ export default function Landing() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, margin: "-50px" }}
                 transition={{ duration: 0.5, delay: i * 0.05 }}
-                whileHover={{ y: -3 }}
+                whileHover={{ y: -4 }}
                 className={`group relative overflow-hidden rounded-2xl border p-5 transition-all ${
                   s.soon
                     ? "border-white/[0.04] bg-white/[0.01] opacity-70"
-                    : "border-white/[0.06] bg-white/[0.02] hover:bg-white/[0.04] hover:border-white/[0.16]"
+                    : "border-white/[0.08] bg-gradient-to-b from-white/[0.05] to-white/[0.01] hover:border-white/[0.18]"
                 }`}
+                style={s.soon ? undefined : { boxShadow: "inset 0 1px 0 rgba(255,255,255,0.06)" }}
               >
+                {/* accent top hairline */}
+                {!s.soon && (
+                  <span aria-hidden className="pointer-events-none absolute inset-x-4 top-0 h-px opacity-70" style={{ background: `linear-gradient(90deg, transparent, ${s.accent}, transparent)` }} />
+                )}
                 <div
-                  className="absolute -top-12 -right-12 w-32 h-32 rounded-full opacity-20 group-hover:opacity-30 transition-opacity"
+                  className="absolute -top-12 -right-12 w-32 h-32 rounded-full opacity-20 group-hover:opacity-40 transition-opacity"
                   style={{ background: `radial-gradient(circle, ${s.accent}, transparent 70%)` }}
                 />
                 <div className="relative">
