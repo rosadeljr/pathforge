@@ -29,6 +29,7 @@ import {
   generateCredentialCode,
 } from "@/lib/certificates";
 import { nextStreakState } from "@/lib/learner/streak";
+import { celebrateStreak } from "@/lib/effects/celebration";
 import { PageShimmer } from "@/components/ui/Shimmer";
 import { LevelUpOverlay } from "@/components/learn/LevelUpOverlay";
 import { RegionClearOverlay } from "@/components/learn/RegionClearOverlay";
@@ -97,6 +98,8 @@ export default function LessonPlayerPage() {
     { career_id: string; career_title: string; credential_code: string }[]
   >([]);
   const [leveledUpTo, setLeveledUpTo] = useState<number | null>(null);
+  // A streak milestone (3/7/14/30…) crossed by THIS completion → fanfare.
+  const [streakMilestone, setStreakMilestone] = useState<number | null>(null);
   /** When the kid clears the last lesson in a realm region, snap the
    * region info so RegionClearOverlay can render it. */
   const [regionCleared, setRegionCleared] = useState<{
@@ -107,6 +110,12 @@ export default function LessonPlayerPage() {
     lessonsCleared: number;
     bossCrowns: number;
   } | null>(null);
+
+  // Streak milestone fanfare — ascending chime + fire confetti (reuses the
+  // procedural effects system). Fires once when the milestone is set.
+  useEffect(() => {
+    if (streakMilestone) celebrateStreak(streakMilestone);
+  }, [streakMilestone]);
 
   // Load tier on mount
   useEffect(() => {
@@ -538,6 +547,17 @@ export default function LessonPlayerPage() {
             setLeveledUpTo(newLevel);
           }
 
+          // 🔥 Streak milestone — celebrate only when the streak actually grew
+          // into a milestone this completion (not on same-day repeats).
+          const STREAK_MILESTONES = [3, 7, 14, 30, 60, 100, 200, 365];
+          const prevStreakVal = prof.streak_count ?? 0;
+          if (
+            nextStreak.streakCount > prevStreakVal &&
+            STREAK_MILESTONES.includes(nextStreak.streakCount)
+          ) {
+            setStreakMilestone(nextStreak.streakCount);
+          }
+
           // 🏆 Career mastery — auto-award certificates for any newly
           // mastered career (reached final stage at new total XP).
           try {
@@ -694,6 +714,40 @@ export default function LessonPlayerPage() {
                 </div>
                 <div className="text-base sm:text-lg font-bold text-amber-50">
                   Welcome to PathForge, Forger. Your journey starts here.
+                </div>
+              </div>
+            </motion.div>
+          )}
+
+          {/* 🔥 Streak milestone banner */}
+          {streakMilestone !== null && (
+            <motion.div
+              initial={{ opacity: 0, y: -20, scale: 0.9 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              transition={{ type: "spring", stiffness: 220, damping: 18, delay: 0.15 }}
+              className="relative overflow-hidden rounded-3xl border border-orange-400/40 bg-gradient-to-br from-orange-500/[0.20] via-red-500/[0.10] to-transparent p-5 mb-7 text-center"
+            >
+              <div
+                className="absolute -top-12 left-1/2 -translate-x-1/2 w-72 h-32 rounded-full opacity-50 pointer-events-none"
+                style={{ background: "radial-gradient(ellipse, rgba(249,115,22,0.6), transparent 70%)" }}
+              />
+              <div className="relative">
+                <motion.div
+                  animate={{ rotate: [0, -8, 8, -8, 0], scale: [1, 1.18, 1] }}
+                  transition={{ duration: 1.1, repeat: Infinity, repeatDelay: 1 }}
+                  className="text-5xl mb-2 inline-block"
+                >
+                  🔥
+                </motion.div>
+                <div className="text-[10px] uppercase tracking-wider text-orange-300 font-bold mb-1">
+                  {streakMilestone}-day streak!
+                </div>
+                <div className="text-base sm:text-lg font-bold text-orange-50">
+                  {streakMilestone >= 30
+                    ? `Ang husay, ${streakMilestone} days in a row! You're a true Forger.`
+                    : streakMilestone >= 7
+                    ? `${streakMilestone} days straight — grabe, keep it burning!`
+                    : `${streakMilestone} days in a row — you're on fire!`}
                 </div>
               </div>
             </motion.div>
