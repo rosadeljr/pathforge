@@ -12,6 +12,7 @@ import type { PlayerState } from "@/lib/rpg/state";
 import { REWARDS, shopRewards, type RewardType } from "@/lib/data/rpg-rewards";
 import { Panel, PanelHeader, ScreenIntro } from "./primitives";
 import { RewardBadge } from "./RewardBadge";
+import { Celebration } from "./Celebration";
 import { logRpgEvent } from "@/lib/rpg/track";
 
 const COLLECTION_TYPES: RewardType[] = ["badge", "title", "stamp", "emblem", "certificate", "outfit"];
@@ -20,9 +21,11 @@ export function RewardShop({ ps }: { ps: PlayerState }) {
   const [claimed, setClaimed] = useState<Set<string>>(new Set());
   const earned = new Set([...ps.earnedRewardIds, ...claimed]);
   const [tab, setTab] = useState<"collection" | "shop">("collection");
+  const [won, setWon] = useState<string | null>(null);
 
   function claim(id: string, name: string) {
     setClaimed((s) => new Set(s).add(id));
+    setWon(name);
     void logRpgEvent("rpg_reward_claimed", { reward_id: id, name });
   }
 
@@ -111,6 +114,13 @@ export function RewardShop({ ps }: { ps: PlayerState }) {
           </p>
         </Panel>
       )}
+
+      <Celebration
+        show={won != null}
+        title="Unlocked!"
+        subtitle={won ? `${won} added to your collection` : undefined}
+        onDone={() => setWon(null)}
+      />
     </div>
   );
 }
