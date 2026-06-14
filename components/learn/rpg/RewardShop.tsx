@@ -9,7 +9,7 @@
 import { useMemo, useState } from "react";
 import { Coins } from "lucide-react";
 import type { PlayerState } from "@/lib/rpg/state";
-import { REWARDS, shopRewards, type RewardType } from "@/lib/data/rpg-rewards";
+import { REWARDS, shopRewards, REWARD_TYPE_META, type RewardType, type Reward } from "@/lib/data/rpg-rewards";
 import { Panel, PanelHeader, ScreenIntro } from "./primitives";
 import { RewardBadge } from "./RewardBadge";
 import { Celebration } from "./Celebration";
@@ -21,12 +21,12 @@ export function RewardShop({ ps }: { ps: PlayerState }) {
   const [claimed, setClaimed] = useState<Set<string>>(new Set());
   const earned = new Set([...ps.earnedRewardIds, ...claimed]);
   const [tab, setTab] = useState<"collection" | "shop">("collection");
-  const [won, setWon] = useState<string | null>(null);
+  const [won, setWon] = useState<Reward | null>(null);
 
-  function claim(id: string, name: string) {
-    setClaimed((s) => new Set(s).add(id));
-    setWon(name);
-    void logRpgEvent("rpg_reward_claimed", { reward_id: id, name });
+  function claim(reward: Reward) {
+    setClaimed((s) => new Set(s).add(reward.id));
+    setWon(reward);
+    void logRpgEvent("rpg_reward_claimed", { reward_id: reward.id, name: reward.name });
   }
 
   const collection = useMemo(
@@ -92,7 +92,7 @@ export function RewardShop({ ps }: { ps: PlayerState }) {
                   <span className="text-[11px] text-slate-300">{r.name}</span>
                   <button
                     disabled={owned || !affordable}
-                    onClick={() => affordable && !owned && claim(r.id, r.name)}
+                    onClick={() => affordable && !owned && claim(r)}
                     className="w-full rounded-lg px-2 py-1.5 text-[11px] font-bold transition disabled:opacity-50"
                     style={{
                       background: owned ? "rgba(52,211,153,0.18)" : affordable ? "linear-gradient(180deg,#fcd34d,#f59e0b)" : "rgba(255,255,255,0.05)",
@@ -117,8 +117,9 @@ export function RewardShop({ ps }: { ps: PlayerState }) {
 
       <Celebration
         show={won != null}
-        title="Unlocked!"
-        subtitle={won ? `${won} added to your collection` : undefined}
+        emoji={won?.emoji}
+        title={won ? `${won.name} unlocked!` : "Unlocked!"}
+        subtitle={won ? `${REWARD_TYPE_META[won.type].label} · added to your collection` : undefined}
         onDone={() => setWon(null)}
       />
     </div>

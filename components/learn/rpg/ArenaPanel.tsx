@@ -23,6 +23,9 @@ import { LevelProgressBar } from "./LevelProgressBar";
 import { logRpgEvent } from "@/lib/rpg/track";
 import { bumpDailyGoal } from "@/lib/rpg/daily-goals";
 import { Celebration } from "./Celebration";
+import { haptic, celebrateAchievement } from "@/lib/effects/celebration";
+
+const FIRST_WIN_KEY = "pathforge-arena-first-win";
 
 type Phase = "select" | "matchup" | "playing" | "result";
 interface MiniQ {
@@ -40,6 +43,7 @@ export function ArenaPanel({ ps }: { ps: PlayerState }) {
   const [result, setResult] = useState<ArenaResult | null>(null);
   const [picked, setPicked] = useState<number | null>(null);
   const [celebrate, setCelebrate] = useState(false);
+  const [firstWin, setFirstWin] = useState(false);
 
   const ghost = useMemo(() => (mode ? makeGhost(mode.id, ps.grade, seed) : null), [mode, ps.grade, seed]);
   const questions = useMemo(() => (mode ? buildQuestions(mode, ps.grade, seed) : []), [mode, ps.grade, seed]);
@@ -58,13 +62,23 @@ export function ArenaPanel({ ps }: { ps: PlayerState }) {
     if (picked !== null) return;
     setPicked(i);
     const isRight = i === questions[qIndex].answer;
+    haptic(isRight ? "success" : "error");
     const nextCorrect = correct + (isRight ? 1 : 0);
     setTimeout(() => {
       if (qIndex + 1 >= questions.length) {
         const res = scoreDuel(mode!, nextCorrect, questions.length, ghost!);
         setResult(res);
         setPhase("result");
-        if (res.outcome === "win") setCelebrate(true);
+        if (res.outcome === "win") {
+          // Make the very first Arena win extra special.
+          const isFirst = typeof window !== "undefined" && !localStorage.getItem(FIRST_WIN_KEY);
+          if (isFirst) {
+            localStorage.setItem(FIRST_WIN_KEY, "1");
+            setFirstWin(true);
+            celebrateAchievement(); // golden star confetti on top of the overlay
+          }
+          setCelebrate(true);
+        }
         void logRpgEvent("rpg_arena_completed", { mode: mode!.id, correct: res.correct, total: res.total, accuracy: res.accuracy, outcome: res.outcome }, res.xpEarned);
         bumpDailyGoal("arena");
       } else {
@@ -217,9 +231,13 @@ export function ArenaPanel({ ps }: { ps: PlayerState }) {
 
       <Celebration
         show={celebrate}
-        title="Victory!"
+        emoji={firstWin ? "🏆" : "🎉"}
+        title={firstWin ? "First Arena Victory!" : "Victory!"}
         subtitle={result ? `+${result.xpEarned} XP earned` : undefined}
-        onDone={() => setCelebrate(false)}
+        onDone={() => {
+          setCelebrate(false);
+          setFirstWin(false);
+        }}
       />
     </div>
   );

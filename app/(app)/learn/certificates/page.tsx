@@ -8,6 +8,7 @@ import { createClient } from "@/lib/supabase/client";
 import { getCareer } from "@/lib/data/careers";
 import type { CareerCertificate } from "@/lib/certificates";
 import { PageShimmer } from "@/components/ui/Shimmer";
+import { BackToTop } from "@/components/ui/BackToTop";
 
 export default function CertificatesPage() {
   const supabase = createClient();
@@ -38,6 +39,7 @@ export default function CertificatesPage() {
 
   return (
     <div className="min-h-screen pb-12">
+      <BackToTop />
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-10 space-y-7">
         <Link
           href="/learn/careers"

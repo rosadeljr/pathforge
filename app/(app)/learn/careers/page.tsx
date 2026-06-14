@@ -28,6 +28,7 @@ import {
 } from "@/lib/data/careers";
 import { SUBJECTS, ageTierForGrade } from "@/lib/data/learner";
 import { PageShimmer } from "@/components/ui/Shimmer";
+import { BackToTop } from "@/components/ui/BackToTop";
 import { ScreenIntro } from "@/components/learn/rpg/primitives";
 
 /**
@@ -113,6 +114,7 @@ export default function CareersPage() {
 
   return (
     <div className="min-h-screen pb-12">
+      <BackToTop />
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-10 space-y-7">
         {/* Header */}
         <motion.div

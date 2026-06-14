@@ -17,12 +17,14 @@ export function Celebration({
   show,
   title,
   subtitle,
+  emoji = "🎉",
   onDone,
   duration = 2400,
 }: {
   show: boolean;
   title: string;
   subtitle?: string;
+  emoji?: string;
   onDone: () => void;
   duration?: number;
 }) {
@@ -91,7 +93,7 @@ export function Celebration({
           transition={{ duration: 0.6 }}
           className="text-4xl"
         >
-          🎉
+          {emoji}
         </motion.span>
         <h3 className="mt-2 font-display text-lg font-black tracking-tight text-white">{title}</h3>
         {subtitle && <p className="mt-0.5 text-sm font-semibold text-emerald-300">{subtitle}</p>}
