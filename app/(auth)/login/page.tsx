@@ -27,6 +27,7 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
   const [configError, setConfigError] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<{ email?: string; password?: string }>({});
+  const [notice, setNotice] = useState<string | null>(null);
   const router = useRouter();
   const searchParams = useSearchParams();
   const supabase = createClient();
@@ -41,7 +42,10 @@ export default function Login() {
 
     const error = searchParams.get("error");
     if (error === "email_verification_sent") {
-      toast.success("Check your email to verify your account before signing in.", { duration: 6000 });
+      const msg = "Check your email to verify your account before signing in.";
+      // Persisted, screen-reader-announced banner in addition to the toast.
+      setNotice(msg);
+      toast.success(msg, { duration: 6000 });
     } else if (error) {
       const errorMessages: Record<string, string> = {
         session_expired: "Your session has expired. Please sign in again.",
@@ -282,6 +286,18 @@ export default function Login() {
                 </motion.div>
               )}
             </AnimatePresence>
+
+            {/* Verification notice — persistent + announced to screen readers */}
+            {notice && (
+              <div
+                role="status"
+                aria-live="polite"
+                className="mb-6 flex gap-3 rounded-lg border border-emerald-500/20 bg-emerald-500/[0.08] p-3.5"
+              >
+                <Mail className="mt-0.5 h-4 w-4 flex-shrink-0 text-emerald-400" />
+                <p className="text-xs text-emerald-200">{notice}</p>
+              </div>
+            )}
 
             <form onSubmit={handleLogin} className="space-y-5">
               {/* Email */}

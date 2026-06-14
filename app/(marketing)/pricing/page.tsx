@@ -12,6 +12,7 @@ import {
   Heart,
   Zap,
   ArrowLeft,
+  Loader2,
   Users,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
@@ -356,15 +357,19 @@ export default function PricingPage() {
                   </div>
                 </div>
 
-                {/* CTA */}
+                {/* CTA — disabled with a spinner until we know the auth state,
+                    so the button can't be clicked into a no-op. */}
                 <button
                   onClick={() => handleSelect(plan.name)}
-                  className={`w-full py-2.5 rounded-lg text-sm font-semibold transition-all mb-6 inline-flex items-center justify-center gap-2 ${
+                  disabled={authenticated === null}
+                  aria-busy={authenticated === null}
+                  className={`w-full py-2.5 rounded-lg text-sm font-semibold transition-all mb-6 inline-flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-wait ${
                     plan.highlight
                       ? "bg-white text-slate-900 hover:bg-slate-100 shadow-lg shadow-white/5"
                       : "border border-white/[0.08] text-slate-300 hover:bg-white/[0.04] hover:border-white/[0.16]"
                   }`}
                 >
+                  {authenticated === null && <Loader2 size={14} className="animate-spin" />}
                   {ctaLabel(plan)}
                 </button>
 

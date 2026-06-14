@@ -93,7 +93,7 @@ export default function ForgotPassword() {
 
         {mode === "request" && (
           sent ? (
-            <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-6 text-center">
+            <div role="status" aria-live="polite" className="rounded-2xl border border-white/10 bg-white/[0.03] p-6 text-center">
               <CheckCircle2 className="mx-auto text-emerald-400" size={28} />
               <h1 className="mt-3 text-lg font-bold text-white">Check your email</h1>
               <p className="mx-auto mt-1.5 max-w-xs text-sm text-slate-400">
