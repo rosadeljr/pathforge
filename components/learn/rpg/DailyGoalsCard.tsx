@@ -9,6 +9,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { motion, useReducedMotion } from "framer-motion";
 import { Flame, Check, Sparkles, ArrowRight } from "lucide-react";
 import { Panel, PanelHeader } from "./primitives";
 import { useDailyGoals } from "./useDailyGoals";
@@ -17,6 +18,7 @@ import { Celebration } from "./Celebration";
 export function DailyGoalsCard({ streak = 0 }: { streak?: number }) {
   const { ready, goals, progress, completed, allDone, claimed, bonusXp, claim } = useDailyGoals();
   const [celebrate, setCelebrate] = useState(false);
+  const reduce = useReducedMotion();
 
   // Avoid SSR/first-paint flicker until localStorage is read. Show a skeleton
   // (rather than collapsing to nothing) so the rail doesn't jump on load.
@@ -76,12 +78,17 @@ export function DailyGoalsCard({ streak = 0 }: { streak?: number }) {
               className="group flex items-center gap-3 rounded-xl p-2.5 transition hover:bg-white/[0.05]"
               style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)" }}
             >
-              <span
+              <motion.span
+                // Re-key on completion so the icon pops the moment a goal is cleared.
+                key={done ? "done" : "todo"}
+                initial={done && !reduce ? { scale: 0.5 } : false}
+                animate={done && !reduce ? { scale: [0.5, 1.25, 1] } : { scale: 1 }}
+                transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
                 className="grid h-9 w-9 flex-shrink-0 place-items-center rounded-lg text-lg"
                 style={{ background: done ? "rgba(52,211,153,0.18)" : "rgba(245,158,11,0.14)", border: `1px solid ${done ? "#34d39955" : "#f59e0b44"}` }}
               >
                 {done ? <Check size={16} className="text-emerald-300" /> : g.emoji}
-              </span>
+              </motion.span>
               <div className="min-w-0 flex-1">
                 <div className="flex items-center justify-between gap-2">
                   <span className={`truncate text-sm font-semibold ${done ? "text-emerald-200 line-through/0" : "text-white"}`}>{g.title}</span>

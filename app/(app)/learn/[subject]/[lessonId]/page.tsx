@@ -77,6 +77,7 @@ export default function LessonPlayerPage() {
   const [currentIdx, setCurrentIdx] = useState(0);
   const [pickedIdx, setPickedIdx] = useState<number | null>(null);
   const [wrongCount, setWrongCount] = useState(0);
+  const [totalWrong, setTotalWrong] = useState(0); // cumulative misses → triggers a ForgeBot nudge
   const [revealed, setRevealed] = useState(false);
   const [firstTryCorrect, setFirstTryCorrect] = useState<boolean[]>([]);
   const [persisting, setPersisting] = useState(false);
@@ -229,6 +230,7 @@ export default function LessonPlayerPage() {
       setFeedbackMsg(pickRandom(CHEERS[tier]));
     } else {
       haptic("error");
+      setTotalWrong((n) => n + 1);
       if (wrongCount === 0) {
         setWrongCount(1);
         setStreak(0);
@@ -618,6 +620,7 @@ export default function LessonPlayerPage() {
     setBestStreak(0);
     setUsedHintOn(new Set());
     setHintOpen(false);
+    setTotalWrong(0);
     setPhase("playing");
   }
 
@@ -1248,6 +1251,32 @@ export default function LessonPlayerPage() {
                   </button>
                 )}
               </div>
+            )}
+
+            {/* ForgeBot nudge — appears once a kid has missed a few times, so a
+                stuck learner gets a friendly route to a simpler explanation. */}
+            {totalWrong >= 3 && (
+              <motion.div
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="mt-4"
+              >
+                <Link
+                  href={`/mentor?seed=${encodeURIComponent(
+                    `I'm working on "${lesson!.title}" and I keep getting stuck. Can you explain this in a simpler way?\n\nThe question is: ${q.prompt}`
+                  )}`}
+                  className="flex items-center gap-2.5 rounded-2xl border border-indigo-400/30 bg-indigo-500/[0.08] px-3.5 py-3 text-sm text-indigo-100 transition hover:bg-indigo-500/[0.14]"
+                >
+                  <span className="grid h-8 w-8 flex-shrink-0 place-items-center rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 text-base">
+                    🤖
+                  </span>
+                  <span className="flex-1 leading-tight">
+                    <span className="font-semibold text-white">Stuck? Ask ForgeBot</span>
+                    <span className="block text-xs text-indigo-300/90">I&apos;ll explain it a simpler way.</span>
+                  </span>
+                  <ArrowRight size={15} className="flex-shrink-0 text-indigo-300" />
+                </Link>
+              </motion.div>
             )}
 
             {/* Feedback strip */}

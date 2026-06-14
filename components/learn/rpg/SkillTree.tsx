@@ -7,13 +7,15 @@
  * the selected node's unlock requirements, subject and career relevance.
  */
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { ClassId } from "@/lib/data/rpg-classes";
 import { getClass } from "@/lib/data/rpg-classes";
 import { skillsForClass, isSkillUnlocked, type SkillNode as SkillNodeData } from "@/lib/data/rpg-skills";
 import type { PlayerState } from "@/lib/rpg/state";
 import { Panel, PanelHeader } from "./primitives";
 import { SkillNode } from "./SkillNode";
+import { Celebration } from "./Celebration";
+import { celebrateAchievement } from "@/lib/effects/celebration";
 
 export function SkillTree({ ps, classId }: { ps: PlayerState; classId: ClassId }) {
   const cls = getClass(classId)!;
@@ -25,6 +27,24 @@ export function SkillTree({ ps, classId }: { ps: PlayerState; classId: ClassId }
 
   const [selectedId, setSelectedId] = useState<string>(nodes[0]?.id ?? "");
   const selected = nodes.find((n) => n.id === selectedId) ?? nodes[0];
+
+  const unlockedCount = useMemo(
+    () => nodes.filter((n) => isSkillUnlocked(n, ps.classLevel, ps.unlockedSkillIds)).length,
+    [nodes, ps.classLevel, ps.unlockedSkillIds]
+  );
+  const mastered = nodes.length > 0 && unlockedCount === nodes.length;
+
+  // Celebrate a fully-unlocked tree once per class (persisted), so revisiting
+  // a mastered tree doesn't re-fire confetti every time.
+  const [celebrate, setCelebrate] = useState(false);
+  useEffect(() => {
+    if (!mastered || typeof window === "undefined") return;
+    const key = `pathforge-skilltree-mastered-${classId}`;
+    if (localStorage.getItem(key)) return;
+    localStorage.setItem(key, "1");
+    setCelebrate(true);
+    celebrateAchievement();
+  }, [mastered, classId]);
 
   function stateOf(n: SkillNodeData): "unlocked" | "current" | "locked" {
     const unlocked = isSkillUnlocked(n, ps.classLevel, ps.unlockedSkillIds);
@@ -39,8 +59,18 @@ export function SkillTree({ ps, classId }: { ps: PlayerState; classId: ClassId }
       <PanelHeader
         emoji={cls.emoji}
         title={`${cls.name} Skill Tree`}
-        subtitle={`${ps.unlockedSkillIds.length}/${nodes.length} unlocked · Class Lv ${ps.classLevel}`}
+        subtitle={`${unlockedCount}/${nodes.length} unlocked · Class Lv ${ps.classLevel}`}
         accent={accent}
+        right={
+          mastered ? (
+            <span
+              className="mr-4 inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-bold"
+              style={{ background: `${accent}22`, color: accent, border: `1px solid ${accent}66` }}
+            >
+              ✨ Mastered
+            </span>
+          ) : undefined
+        }
       />
 
       <div className="grid grid-cols-1 gap-3 p-4 lg:grid-cols-[minmax(0,1fr)_240px]">
@@ -109,6 +139,14 @@ export function SkillTree({ ps, classId }: { ps: PlayerState; classId: ClassId }
           </div>
         )}
       </div>
+
+      <Celebration
+        show={celebrate}
+        emoji={cls.emoji}
+        title={`${cls.name} mastered!`}
+        subtitle="Every skill unlocked — incredible work."
+        onDone={() => setCelebrate(false)}
+      />
     </Panel>
   );
 }
