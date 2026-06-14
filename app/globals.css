@@ -494,29 +494,29 @@ select:focus-visible {
   /* Most inputs already have their own focus ring; this is a fallback */
 }
 
-/* Typography */
-h1, h2, h3, h4, h5, h6 {
-  @apply font-bold tracking-tight;
-}
-
-h1 {
-  @apply text-5xl md:text-6xl;
-}
-
-h2 {
-  @apply text-3xl md:text-4xl;
-}
-
-h3 {
-  @apply text-2xl md:text-3xl;
-}
-
-h4 {
-  @apply text-xl md:text-2xl;
-}
-
-p {
-  @apply text-base leading-relaxed;
+/* Typography — MUST be in @layer base so Tailwind text-*/font-* utilities
+   (in @layer utilities) win. Unlayered, these would override every size/weight
+   class on headings and <p> (Tailwind v4 cascade-layer behavior). Elements
+   with no utility size still fall back to these defaults. */
+@layer base {
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-bold tracking-tight;
+  }
+  h1 {
+    @apply text-5xl md:text-6xl;
+  }
+  h2 {
+    @apply text-3xl md:text-4xl;
+  }
+  h3 {
+    @apply text-2xl md:text-3xl;
+  }
+  h4 {
+    @apply text-xl md:text-2xl;
+  }
+  p {
+    @apply text-base leading-relaxed;
+  }
 }
 
 /* Links — inherit color by default; components style their own.

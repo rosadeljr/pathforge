@@ -59,7 +59,7 @@ export default function AvatarCreatorPage() {
           className="flex flex-col items-center gap-3 rounded-2xl p-5"
           style={{ background: "linear-gradient(180deg, rgba(124,92,255,0.14), rgba(8,11,18,0.6))", border: "1px solid rgba(124,92,255,0.35)" }}
         >
-          <h1 className="font-display text-lg font-bold text-white">Choose your hero look!</h1>
+          <h1 className="font-display text-xl font-bold text-white sm:text-2xl">Choose your hero look!</h1>
           <div
             className="grid place-items-center rounded-2xl p-3"
             style={{ width: 220, height: 240, background: `radial-gradient(circle at 50% 35%, ${look.accent}33, rgba(8,11,18,0.7))`, border: `1px solid ${look.accent}66` }}

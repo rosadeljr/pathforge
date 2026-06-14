@@ -52,7 +52,7 @@ export function PlayerHUD({ ps }: { ps: PlayerState }) {
 
           <div className="min-w-0">
             <div className="flex items-center gap-2">
-              <h2 className="truncate font-display text-base font-bold tracking-tight text-white">{ps.name}</h2>
+              <h2 className="truncate font-display text-lg font-bold tracking-tight text-white sm:text-xl">{ps.name}</h2>
               <span
                 className="hidden flex-shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold sm:inline"
                 style={{ background: `${ps.rank.accent}22`, color: ps.rank.accent, border: `1px solid ${ps.rank.accent}66` }}
