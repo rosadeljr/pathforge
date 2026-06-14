@@ -53,13 +53,15 @@ export function HubGreeting({ ps }: { ps: PlayerState }) {
     <div className="mb-3 flex items-center gap-3">
       <span aria-hidden className="text-2xl">{emoji}</span>
       <div className="min-w-0">
-        <h1 className="truncate font-display text-lg font-black tracking-tight text-white sm:text-xl">
+        {/* Non-heading elements on purpose: the global unlayered h1/p base
+            rules force large sizes and would override these utilities. */}
+        <div className="truncate font-display text-xl font-black tracking-tight text-white sm:text-2xl">
           {greeting}, {firstName}!
-        </h1>
-        <p className="flex items-center gap-1 truncate text-xs sm:text-[13px]" style={{ color: ps.streak ? accent : "#94a3b8" }}>
+        </div>
+        <div className="mt-0.5 flex items-center gap-1 truncate text-xs sm:text-[13px]" style={{ color: ps.streak ? accent : "#94a3b8" }}>
           {ps.streak ? <Flame size={12} className="flex-shrink-0" /> : null}
           <span className="truncate">{nudge.replace(/^🔥\s*/, "")}</span>
-        </p>
+        </div>
       </div>
     </div>
   );
