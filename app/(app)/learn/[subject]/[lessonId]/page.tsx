@@ -29,7 +29,7 @@ import {
   generateCredentialCode,
 } from "@/lib/certificates";
 import { nextStreakState } from "@/lib/learner/streak";
-import { celebrateStreak } from "@/lib/effects/celebration";
+import { celebrateStreak, haptic } from "@/lib/effects/celebration";
 import { PageShimmer } from "@/components/ui/Shimmer";
 import { LevelUpOverlay } from "@/components/learn/LevelUpOverlay";
 import { RegionClearOverlay } from "@/components/learn/RegionClearOverlay";
@@ -210,6 +210,7 @@ export default function LessonPlayerPage() {
     if (revealed) return;
     setPickedIdx(i);
     if (i === correctIndexFor(q)) {
+      haptic("success");
       const fresh = [...firstTryCorrect];
       fresh[currentIdx] = wrongCount === 0;
       setFirstTryCorrect(fresh);
@@ -227,6 +228,7 @@ export default function LessonPlayerPage() {
       }
       setFeedbackMsg(pickRandom(CHEERS[tier]));
     } else {
+      haptic("error");
       if (wrongCount === 0) {
         setWrongCount(1);
         setStreak(0);

@@ -19,13 +19,14 @@ import {
   Copy,
   Volume2,
   VolumeX,
+  Vibrate,
   Sun,
   Moon,
 } from "lucide-react";
 import Link from "next/link";
 import { SUBJECTS, gradeLabel } from "@/lib/data/learner";
 import { PageShimmer } from "@/components/ui/Shimmer";
-import { isSoundEnabled, setSoundEnabled } from "@/lib/effects/celebration";
+import { isSoundEnabled, setSoundEnabled, isHapticsEnabled, setHapticsEnabled, haptic } from "@/lib/effects/celebration";
 import { useTheme } from "@/components/theme/ThemeProvider";
 import { GCashPaymentModal } from "@/components/payments/GCashPaymentModal";
 import { AVATAR_CLASSES, type AvatarClassId } from "@/lib/data/avatar-classes";
@@ -53,6 +54,8 @@ export default function Settings() {
   const [username, setUsername] = useState("");
   const [fullName, setFullName] = useState("");
   const [soundOn, setSoundOn] = useState(true);
+  const [hapticsOn, setHapticsOn] = useState(true);
+  const [hapticsSupported, setHapticsSupported] = useState(false);
   const [avatarClass, setAvatarClass] = useState<AvatarClassId | null>(null);
   const [showOnLeaderboard, setShowOnLeaderboard] = useState(true);
   const [pseudonymous, setPseudonymous] = useState(false);
@@ -61,6 +64,12 @@ export default function Settings() {
 
   useEffect(() => {
     setSoundOn(isSoundEnabled());
+    const supported =
+      typeof navigator !== "undefined" &&
+      typeof navigator.vibrate === "function" &&
+      !window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+    setHapticsSupported(supported);
+    setHapticsOn(isHapticsEnabled());
   }, []);
 
   const toggleSound = () => {
@@ -68,6 +77,14 @@ export default function Settings() {
     setSoundEnabled(next);
     setSoundOn(next);
     toast.success(next ? "Sound effects enabled" : "Sound effects muted");
+  };
+
+  const toggleHaptics = () => {
+    const next = !hapticsOn;
+    setHapticsEnabled(next);
+    setHapticsOn(next);
+    if (next) haptic("success"); // confirm with a buzz
+    toast.success(next ? "Vibration enabled" : "Vibration off");
   };
   const router = useRouter();
   const supabase = createClient();
@@ -617,6 +634,40 @@ export default function Settings() {
                 />
               </button>
             </div>
+
+            {/* Haptics toggle — only on devices that can vibrate */}
+            {hapticsSupported && (
+              <div className="flex items-center justify-between gap-4 pt-5 border-t border-white/[0.06]">
+                <div className="flex items-center gap-3 min-w-0">
+                  <div
+                    className={`w-10 h-10 rounded-xl flex items-center justify-center ${
+                      hapticsOn ? "bg-indigo-500/15 text-indigo-300" : "bg-white/[0.04] text-slate-500"
+                    }`}
+                  >
+                    <Vibrate size={18} />
+                  </div>
+                  <div>
+                    <div className="text-sm font-semibold">Vibration</div>
+                    <div className="text-xs text-slate-400">
+                      Gentle buzz on correct answers, wins, and rewards.
+                    </div>
+                  </div>
+                </div>
+                <button
+                  onClick={toggleHaptics}
+                  className={`relative w-11 h-6 rounded-full transition-colors flex-shrink-0 ${
+                    hapticsOn ? "bg-indigo-500" : "bg-white/[0.1]"
+                  }`}
+                  aria-label={hapticsOn ? "Turn off vibration" : "Turn on vibration"}
+                >
+                  <span
+                    className={`absolute top-0.5 w-5 h-5 rounded-full bg-white shadow-md transition-transform ${
+                      hapticsOn ? "translate-x-5" : "translate-x-0.5"
+                    }`}
+                  />
+                </button>
+              </div>
+            )}
           </div>
         </motion.section>
 

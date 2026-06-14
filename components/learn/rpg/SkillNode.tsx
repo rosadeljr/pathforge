@@ -18,12 +18,16 @@ export function SkillNode({
   selected?: boolean;
 }) {
   const unlocked = state !== "locked";
+  const tip = unlocked
+    ? `${node.name} — ${node.description}`
+    : `🔒 ${node.name} — Unlocks at Class Lv ${node.classLevel}`;
   return (
     <button
       onClick={onSelect}
       aria-pressed={selected}
+      aria-label={tip}
       className="group flex w-[84px] flex-col items-center gap-1 outline-none"
-      title={`${node.name} — ${node.description}`}
+      title={tip}
     >
       <span
         className="relative grid h-14 w-14 place-items-center rounded-2xl text-xl transition-transform group-hover:scale-105 group-focus-visible:ring-2"

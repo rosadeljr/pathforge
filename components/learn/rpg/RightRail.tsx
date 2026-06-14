@@ -93,7 +93,19 @@ export function RightRail({ ps }: { ps: PlayerState }) {
           }
         />
         <ul className="space-y-1.5 px-3 pt-3">
-          {active.length === 0 && <li className="px-1 pb-2 text-xs text-slate-400">No active quests — pick one from the board.</li>}
+          {active.length === 0 && (
+            <li className="flex flex-col items-start gap-2 px-1 pb-2">
+              <span className="text-xs text-slate-400">No active quests yet — pick one to get started.</span>
+              <Link
+                href="/learn/quests"
+                className="group inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-bold text-slate-900 transition hover:brightness-110"
+                style={{ background: "#38bdf8" }}
+              >
+                Pick a quest
+                <ArrowRight size={13} className="transition group-hover:translate-x-0.5" />
+              </Link>
+            </li>
+          )}
           {active.map(({ q, s }) => (
             <li key={q.id}>
               <Link

@@ -76,7 +76,29 @@ export function QuestBoard({ ps, focusId }: { ps: PlayerState; focusId?: string 
           <QuestCard key={q.id} quest={q} ps={ps} highlight={q.id === focusId} />
         ))}
       </div>
-      {visible.length === 0 && <p className="px-1 text-sm text-slate-400">No quests of this type yet.</p>}
+      {visible.length === 0 && (
+        <div
+          className="flex flex-col items-center gap-3 rounded-2xl px-6 py-10 text-center"
+          style={{ background: "rgba(255,255,255,0.02)", border: "1px dashed rgba(255,255,255,0.12)" }}
+        >
+          <span className="text-4xl" aria-hidden>🗺️</span>
+          <div>
+            <p className="text-sm font-semibold text-slate-200">
+              No {filter !== "all" ? `${QUEST_TYPE_META[filter].label.toLowerCase()} ` : ""}quests here yet
+            </p>
+            <p className="mt-1 text-xs text-slate-400">Keep exploring the world to unlock new quests.</p>
+          </div>
+          {filter !== "all" && (
+            <button
+              onClick={() => setFilter("all")}
+              className="rounded-full px-4 py-1.5 text-xs font-bold text-slate-900 transition hover:brightness-110"
+              style={{ background: "#38bdf8" }}
+            >
+              Show all quests
+            </button>
+          )}
+        </div>
+      )}
     </div>
   );
 }

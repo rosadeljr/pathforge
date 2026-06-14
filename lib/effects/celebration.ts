@@ -20,6 +20,43 @@ export function setSoundEnabled(enabled: boolean): void {
 }
 
 // ============================================================
+// Haptics (mobile) — short vibration patterns for tactile wins.
+// Gracefully no-ops where the Vibration API is unavailable (iOS Safari,
+// desktop), respects the same on/off pref pattern, and honors
+// prefers-reduced-motion so motion-sensitive users aren't buzzed.
+// ============================================================
+
+const HAPTICS_PREF_KEY = "pathforge-haptics-enabled";
+
+export function isHapticsEnabled(): boolean {
+  if (typeof window === "undefined") return false;
+  if (typeof navigator === "undefined" || typeof navigator.vibrate !== "function") return false;
+  if (window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) return false;
+  return localStorage.getItem(HAPTICS_PREF_KEY) !== "0"; // default ON
+}
+
+export function setHapticsEnabled(enabled: boolean): void {
+  if (typeof window === "undefined") return;
+  localStorage.setItem(HAPTICS_PREF_KEY, enabled ? "1" : "0");
+}
+
+/** Named haptic patterns tuned to the moment. Safe to call anywhere. */
+export function haptic(kind: "tap" | "success" | "win" | "error" = "tap"): void {
+  if (!isHapticsEnabled()) return;
+  const patterns: Record<string, number | number[]> = {
+    tap: 10,
+    success: [12, 40, 18],
+    win: [16, 50, 24, 60, 40],
+    error: [40, 30, 40],
+  };
+  try {
+    navigator.vibrate(patterns[kind]);
+  } catch {
+    /* some browsers throw on disallowed patterns — ignore */
+  }
+}
+
+// ============================================================
 // Procedural sound generation (no audio files needed)
 // ============================================================
 

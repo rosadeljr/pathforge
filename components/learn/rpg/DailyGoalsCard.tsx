@@ -18,8 +18,26 @@ export function DailyGoalsCard({ streak = 0 }: { streak?: number }) {
   const { ready, goals, progress, completed, allDone, claimed, bonusXp, claim } = useDailyGoals();
   const [celebrate, setCelebrate] = useState(false);
 
-  // Avoid SSR/first-paint flicker until localStorage is read.
-  if (!ready) return null;
+  // Avoid SSR/first-paint flicker until localStorage is read. Show a skeleton
+  // (rather than collapsing to nothing) so the rail doesn't jump on load.
+  if (!ready) {
+    return (
+      <Panel accent="#f59e0b">
+        <PanelHeader emoji="🎯" title="Daily Goals" subtitle="Loading today's goals…" accent="#f59e0b" />
+        <div className="space-y-2 px-3 pb-3 pt-2" aria-hidden>
+          {[0, 1, 2].map((i) => (
+            <div key={i} className="flex items-center gap-3 rounded-xl p-2.5" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)" }}>
+              <span className="h-9 w-9 flex-shrink-0 animate-pulse rounded-lg bg-white/10" />
+              <div className="min-w-0 flex-1 space-y-2">
+                <div className="h-3 w-2/3 animate-pulse rounded bg-white/10" />
+                <div className="h-1.5 w-full animate-pulse rounded-full bg-white/5" />
+              </div>
+            </div>
+          ))}
+        </div>
+      </Panel>
+    );
+  }
 
   function handleClaim() {
     claim();
@@ -69,7 +87,15 @@ export function DailyGoalsCard({ streak = 0 }: { streak?: number }) {
                   <span className={`truncate text-sm font-semibold ${done ? "text-emerald-200 line-through/0" : "text-white"}`}>{g.title}</span>
                   <span className="flex-shrink-0 text-[11px] font-bold tabular-nums text-slate-400">{have}/{g.target}</span>
                 </div>
-                <div className="mt-1 h-1.5 w-full overflow-hidden rounded-full" style={{ background: "rgba(255,255,255,0.06)" }}>
+                <div
+                  className="mt-1 h-1.5 w-full overflow-hidden rounded-full"
+                  style={{ background: "rgba(255,255,255,0.06)" }}
+                  role="progressbar"
+                  aria-label={`${g.title}: ${have} of ${g.target}`}
+                  aria-valuenow={have}
+                  aria-valuemin={0}
+                  aria-valuemax={g.target}
+                >
                   <div
                     className="h-full rounded-full transition-[width] duration-500"
                     style={{ width: `${pct}%`, background: done ? "#34d399" : "linear-gradient(90deg,#fcd34d,#f59e0b)" }}
