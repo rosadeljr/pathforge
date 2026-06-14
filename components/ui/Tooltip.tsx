@@ -80,6 +80,18 @@ export function Tooltip({
     setTimeout(() => setShowTooltip(false), 150);
   };
 
+  // Keyboard accessibility: show immediately on focus, hide on blur or Escape
+  // (was mouse-only before, so keyboard users never saw tooltips).
+  const handleFocus = () => {
+    if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    setIsVisible(true);
+    setShowTooltip(true);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Escape' && showTooltip) handleMouseLeave();
+  };
+
   useEffect(() => {
     return () => {
       if (timeoutRef.current) clearTimeout(timeoutRef.current);
@@ -92,6 +104,9 @@ export function Tooltip({
       className={`relative inline-block w-fit ${className}`}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
+      onFocus={handleFocus}
+      onBlur={handleMouseLeave}
+      onKeyDown={handleKeyDown}
     >
       {/* Trigger */}
       {children}
@@ -106,7 +121,7 @@ export function Tooltip({
             transition={{ duration: 0.15 }}
             className={`absolute z-50 pointer-events-none ${positionClasses[position]}`}
           >
-            <div className="px-3 py-2 glass-dark rounded-lg border border-white/10 whitespace-nowrap text-xs font-medium text-white shadow-lg">
+            <div role="tooltip" className="px-3 py-2 glass-dark rounded-lg border border-white/10 whitespace-nowrap text-xs font-medium text-white shadow-lg">
               {content}
 
               {/* Arrow */}

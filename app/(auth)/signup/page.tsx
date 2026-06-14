@@ -457,12 +457,15 @@ export default function SignUp() {
 
               {/* Password */}
               <div>
-                <label className="block text-xs font-medium text-slate-300 mb-2">
+                <label htmlFor="signup-password" className="block text-xs font-medium text-slate-300 mb-2">
                   Password
                 </label>
                 <div className="relative">
                   <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 pointer-events-none" />
                   <input
+                    id="signup-password"
+                    aria-invalid={!!fieldErrors.password}
+                    aria-describedby="password-strength password-error"
                     type={showPassword ? "text" : "password"}
                     value={password}
                     onChange={(e) => {
@@ -485,6 +488,8 @@ export default function SignUp() {
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
+                    aria-label={showPassword ? "Hide password" : "Show password"}
+                    aria-pressed={showPassword}
                     className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 transition-colors"
                     tabIndex={-1}
                   >
@@ -498,8 +503,11 @@ export default function SignUp() {
                     initial={{ opacity: 0, height: 0 }}
                     animate={{ opacity: 1, height: "auto" }}
                     className="mt-2"
+                    id="password-strength"
+                    role="status"
+                    aria-live="polite"
                   >
-                    <div className="flex gap-1 mb-1.5">
+                    <div className="flex gap-1 mb-1.5" aria-hidden>
                       {[1, 2, 3, 4].map((i) => (
                         <div
                           key={i}
@@ -530,6 +538,7 @@ export default function SignUp() {
 
                 {fieldErrors.password && (
                   <motion.p
+                    id="password-error"
                     initial={{ opacity: 0, y: -4 }}
                     animate={{ opacity: 1, y: 0 }}
                     className="text-xs text-red-400 mt-1.5"

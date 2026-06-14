@@ -239,7 +239,9 @@ export default function LearnerSetupPage() {
                         <button
                           key={g}
                           onClick={() => setGrade(g)}
-                          className={`relative p-4 rounded-xl border transition-all ${
+                          aria-pressed={isPicked}
+                          aria-label={`Grade ${g}, ${t === "little" ? "ages 6 to 9" : t === "junior" ? "ages 10 to 13" : "ages 14 to 15"}`}
+                          className={`relative p-4 rounded-xl border transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/70 ${
                             isPicked
                               ? "border-amber-400/60 bg-amber-500/[0.08]"
                               : "border-white/[0.08] bg-white/[0.03] hover:bg-white/[0.06] hover:border-white/[0.16]"
@@ -396,7 +398,9 @@ export default function LearnerSetupPage() {
                         <button
                           key={c.id}
                           onClick={() => setAvatarClass(c.id)}
-                          className={`relative text-left p-4 rounded-xl border transition-all ${
+                          aria-pressed={isPicked}
+                          aria-label={`Choose the ${c.name} class`}
+                          className={`relative text-left p-4 rounded-xl border transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/70 ${
                             isPicked
                               ? "border-amber-400/60 bg-amber-500/[0.08]"
                               : "border-white/[0.08] bg-white/[0.03] hover:bg-white/[0.06] hover:border-white/[0.16]"

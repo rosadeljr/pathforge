@@ -5,7 +5,7 @@ import { useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { createClient } from "@/lib/supabase/client";
 import toast from "react-hot-toast";
-import { Send, Bot, Sparkles, Loader2, User, Trash2 } from "lucide-react";
+import { Send, Bot, Sparkles, Loader2, User, Trash2, RefreshCw, AlertTriangle } from "lucide-react";
 
 interface Message {
   id: string;
@@ -44,6 +44,7 @@ export default function Mentor() {
   const [initialLoading, setInitialLoading] = useState(true);
   const [clearing, setClearing] = useState(false);
   const [tier, setTier] = useState<string>("free");
+  const [retryText, setRetryText] = useState<string | null>(null);
   const supabase = createClient();
   const messagesEnd = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -104,6 +105,7 @@ export default function Mentor() {
     if (!text.trim() || loading) return;
 
     setInput("");
+    setRetryText(null);
     setLoading(true);
 
     // Optimistic user message
@@ -150,10 +152,10 @@ export default function Mentor() {
       ]);
     } catch (error: any) {
       console.error(error);
-      toast.error("ForgeBot is offline right now. Try again in a moment.");
-      // Remove the optimistic user message
+      // Remove the optimistic user message and surface an accessible, retryable
+      // error banner instead of a fire-and-forget toast.
       setMessages((prev) => prev.filter((m) => m.id !== userMsg.id));
-      setInput(text);
+      setRetryText(text);
     } finally {
       setLoading(false);
     }
@@ -297,6 +299,7 @@ export default function Mentor() {
                     key={p.title}
                     onClick={() => sendMessage(p.prompt)}
                     disabled={loading}
+                    aria-label={`Ask ForgeBot: ${p.title}`}
                     className="text-left p-4 rounded-2xl border border-white/[0.06] bg-white/[0.02] hover:bg-white/[0.04] hover:border-white/[0.12] transition-all disabled:opacity-50"
                   >
                     <div className="flex items-start gap-2.5">
@@ -377,6 +380,26 @@ export default function Mentor() {
           )}
           <div ref={messagesEnd} />
         </div>
+
+        {/* Retryable error banner — ForgeBot offline / network failure */}
+        {retryText && (
+          <div
+            role="alert"
+            className="mb-3 flex items-center gap-3 rounded-2xl border border-amber-500/30 bg-amber-500/[0.08] px-4 py-3"
+          >
+            <AlertTriangle size={16} className="flex-shrink-0 text-amber-300" />
+            <span className="flex-1 text-sm text-amber-100">
+              ForgeBot is offline right now. Your message wasn&apos;t sent.
+            </span>
+            <button
+              onClick={() => sendMessage(retryText)}
+              disabled={loading}
+              className="inline-flex flex-shrink-0 items-center gap-1.5 rounded-lg bg-amber-400 px-3 py-1.5 text-xs font-bold text-slate-900 transition hover:brightness-110 disabled:opacity-50"
+            >
+              <RefreshCw size={13} /> Retry
+            </button>
+          </div>
+        )}
 
         {/* Input */}
         <form onSubmit={handleSend} className="pt-4 border-t border-white/[0.06]">

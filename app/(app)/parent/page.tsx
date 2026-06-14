@@ -404,6 +404,7 @@ function KidCard({ kid, index }: { kid: KidWithActivity; index: number }) {
         {/* CTA */}
         <Link
           href={`/parent/${kid.id}`}
+          aria-label={`View detailed progress for ${kid.username || "this kid"}`}
           className="inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl bg-white/[0.04] border border-white/[0.08] text-xs font-semibold text-slate-200 hover:bg-white/[0.08] hover:text-white transition-colors flex-shrink-0"
         >
           Details

@@ -1,6 +1,6 @@
 'use client';
 
-import { ReactNode } from 'react';
+import { ReactNode, useEffect, useId } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X } from 'lucide-react';
 
@@ -30,6 +30,24 @@ export function Modal({
   size = 'md',
   closeButton = true,
 }: ModalProps) {
+  const titleId = useId();
+
+  // Close on Escape and lock background scroll while open — standard dialog
+  // behavior that was missing (keyboard users couldn't dismiss the modal).
+  useEffect(() => {
+    if (!isOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    document.addEventListener('keydown', onKey);
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.removeEventListener('keydown', onKey);
+      document.body.style.overflow = prevOverflow;
+    };
+  }, [isOpen, onClose]);
+
   return (
     <AnimatePresence>
       {isOpen && (
@@ -56,11 +74,12 @@ export function Modal({
               className={`w-full ${sizeClasses[size]} glass-dark rounded-2xl pointer-events-auto overflow-hidden`}
               role="dialog"
               aria-modal="true"
+              aria-labelledby={title ? titleId : undefined}
             >
               {/* Header */}
               {title && (
                 <div className="flex items-center justify-between p-6 border-b border-white/10">
-                  <h2 className="text-xl font-semibold text-white">{title}</h2>
+                  <h2 id={titleId} className="text-xl font-semibold text-white">{title}</h2>
                   {closeButton && (
                     <button
                       onClick={onClose}
