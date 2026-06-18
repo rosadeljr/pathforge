@@ -48,6 +48,10 @@ export default function Mentor() {
   const supabase = createClient();
   const messagesEnd = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+  // Synchronous send lock — the `loading` state check is async and can't stop a
+  // fast double-tap (Enter + click) from firing two requests and double-charging
+  // the daily quota.
+  const sendingRef = useRef(false);
   const searchParams = useSearchParams();
 
   // Honour `?seed=` — the ForgeBot floating companion deep-links here
@@ -102,7 +106,8 @@ export default function Mentor() {
   }, [messages, loading]);
 
   const sendMessage = async (text: string) => {
-    if (!text.trim() || loading) return;
+    if (!text.trim() || loading || sendingRef.current) return;
+    sendingRef.current = true;
 
     setInput("");
     setRetryText(null);
@@ -158,6 +163,7 @@ export default function Mentor() {
       setRetryText(text);
     } finally {
       setLoading(false);
+      sendingRef.current = false;
     }
   };
 

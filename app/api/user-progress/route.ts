@@ -14,9 +14,14 @@ export async function GET(request: Request) {
       .from("profiles")
       .select("*")
       .eq("id", user.id)
-      .single();
+      .maybeSingle();
 
     if (profileError) throw profileError;
+    // A missing profile is a legitimate state (auto-creation is best-effort
+    // elsewhere) — return 404 rather than a 500 from .single()'s no-row throw.
+    if (!profile) {
+      return NextResponse.json({ error: "Profile not found" }, { status: 404 });
+    }
 
     const { data: quests } = await supabase
       .from("quests")

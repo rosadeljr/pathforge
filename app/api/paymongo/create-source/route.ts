@@ -128,15 +128,24 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  // 3. Persist the Source id + status. The webhook will use external_id
-  //    to find this row again later.
-  await supabase
+  // 3. Persist the Source id + status. The webhook keys on external_id to find
+  //    this row again, so this write is load-bearing: if it fails, the payment
+  //    can succeed at PayMongo but never reconcile to an upgrade. Fail loudly
+  //    rather than hand back a checkout URL we can't later match.
+  const { error: linkError } = await supabase
     .from("payment_requests")
     .update({
       external_id: source.id,
       external_status: source.status,
     })
     .eq("id", pr.id);
+  if (linkError) {
+    console.error("[paymongo/create-source] failed to persist external_id:", linkError);
+    return NextResponse.json(
+      { error: "Could not initialize payment. Please try again." },
+      { status: 500 }
+    );
+  }
 
   return NextResponse.json({
     checkoutUrl: source.checkoutUrl,

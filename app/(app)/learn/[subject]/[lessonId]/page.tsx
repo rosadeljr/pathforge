@@ -305,30 +305,36 @@ export default function LessonPlayerPage() {
       // A Boss is only "cleared" if mastery passes — not just completion.
       const bossCleared = isBossLesson && masteryPassed;
 
-      await supabase.from("analytics_events").insert({
-        user_id: uid,
-        event_type: "lesson_completed",
-        event_payload: {
-          lesson_id: lesson!.id,
-          subject: lesson!.subject,
-          grade: lesson!.grade,
-          competency: lesson!.competency ?? null,
-          melc_code: lesson!.melcCode ?? null,
-          score: correctCount,
-          total,
-          first_try_correct: firstTryCount,
-          first_try_pct: Math.round(firstTryPct * 100),
-          mastery_threshold_pct: Math.round(masteryThreshold * 100),
-          mastery_passed: masteryPassed,
-          hints_used: usedHintOn.size,
-          best_streak: bestStreak,
-          flawless: isFlawless,
-          replay: alreadyDone,
-          is_boss: isBossLesson,
-          boss_cleared: bossCleared,
-        },
-        xp_delta: awardXp,
-      });
+      const { error: completionError } = await supabase
+        .from("analytics_events")
+        .insert({
+          user_id: uid,
+          event_type: "lesson_completed",
+          event_payload: {
+            lesson_id: lesson!.id,
+            subject: lesson!.subject,
+            grade: lesson!.grade,
+            competency: lesson!.competency ?? null,
+            melc_code: lesson!.melcCode ?? null,
+            score: correctCount,
+            total,
+            first_try_correct: firstTryCount,
+            first_try_pct: Math.round(firstTryPct * 100),
+            mastery_threshold_pct: Math.round(masteryThreshold * 100),
+            mastery_passed: masteryPassed,
+            hints_used: usedHintOn.size,
+            best_streak: bestStreak,
+            flawless: isFlawless,
+            replay: alreadyDone,
+            is_boss: isBossLesson,
+            boss_cleared: bossCleared,
+          },
+          xp_delta: awardXp,
+        });
+      // This row is the source of truth for the completion (and its XP). If it
+      // didn't land, fail the whole persist rather than letting the done screen
+      // claim success while the lesson silently stays incomplete on reload.
+      if (completionError) throw completionError;
 
       // ── Region clear detection ──
       // If THIS lesson was the last one the kid hadn't finished in their

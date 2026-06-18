@@ -101,8 +101,12 @@ export async function POST(request: NextRequest) {
     // Any other event type (e.g. source.expired, source.cancelled): no-op,
     // but acknowledge so PayMongo stops retrying.
   } catch (e) {
-    // Log and 200 — replay would loop forever on a permanent failure.
+    // A handler failed (e.g. a transient DB error on the tier upgrade). Return
+    // 500 so PayMongo re-delivers the event — our idempotency guards (status
+    // checks + upgrade-before-approve ordering) make reprocessing safe. A
+    // bounded provider retry beats a customer who paid but never got upgraded.
     console.error("[paymongo/webhook] handler error:", e);
+    return NextResponse.json({ error: "handler_failed" }, { status: 500 });
   }
 
   return NextResponse.json({ ok: true });
@@ -247,8 +251,22 @@ async function handlePaymentPaid(
     return;
   }
 
-  // 1. Mark payment_request as approved.
-  await supabase
+  // 1. Upgrade the user's tier FIRST — this is the revenue-critical write.
+  //    Doing it before marking the request approved means that if it fails, the
+  //    request stays un-approved and the webhook retry re-attempts the upgrade
+  //    (the early `status === "approved"` guard would otherwise skip it).
+  const { error: tierError } = await supabase
+    .from("profiles")
+    .update({ subscription_tier: prRow.tier })
+    .eq("id", prRow.user_id);
+  if (tierError) {
+    throw new Error(
+      `tier upgrade failed for user ${prRow.user_id}: ${tierError.message}`
+    );
+  }
+
+  // 2. Mark payment_request as approved (only after the upgrade succeeded).
+  const { error: prError } = await supabase
     .from("payment_requests")
     .update({
       status: "approved",
@@ -256,12 +274,11 @@ async function handlePaymentPaid(
       external_status: "paid",
     })
     .eq("id", prRow.id);
-
-  // 2. Upgrade the user's tier.
-  await supabase
-    .from("profiles")
-    .update({ subscription_tier: prRow.tier })
-    .eq("id", prRow.user_id);
+  if (prError) {
+    throw new Error(
+      `marking payment_request ${prRow.id} approved failed: ${prError.message}`
+    );
+  }
 
   // 3. Best-effort subscription record (parallel to admin approval flow).
   try {

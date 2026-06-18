@@ -92,6 +92,9 @@ export default function FriendsPage() {
       setResults([]);
       return;
     }
+    // Guard against out-of-order resolution: a slower earlier request must not
+    // overwrite the results of the query the user is now typing.
+    let ignore = false;
     const timer = setTimeout(async () => {
       setSearching(true);
       try {
@@ -127,14 +130,17 @@ export default function FriendsPage() {
         } else {
           data = (primary.data as ProfileLite[]) || null;
         }
-        setResults(data || []);
+        if (!ignore) setResults(data || []);
       } catch {
-        setResults([]);
+        if (!ignore) setResults([]);
       } finally {
-        setSearching(false);
+        if (!ignore) setSearching(false);
       }
     }, 250);
-    return () => clearTimeout(timer);
+    return () => {
+      ignore = true;
+      clearTimeout(timer);
+    };
   }, [query, me, supabase]);
 
   // ============ Buckets ============

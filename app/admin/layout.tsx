@@ -34,11 +34,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         router.replace("/login");
         return;
       }
+      // .maybeSingle so a 0-row profile doesn't throw (PGRST116) and get
+      // swallowed; we still fail closed on any denial.
       const { data } = await supabase
         .from("profiles")
         .select("is_admin")
         .eq("id", session.user.id)
-        .single();
+        .maybeSingle();
       if (data?.is_admin) {
         setAuthState("admin");
       } else {
