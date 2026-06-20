@@ -103,6 +103,18 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             `,
           }}
         />
+        {/* Resilience: much of the UI fades in via framer-motion (initial
+            opacity:0 → 1). If JS never runs, reveal that content so visitors
+            and crawlers never face a blank screen. Only applies with JS off —
+            a no-op for the normal hydrated path. */}
+        <noscript>
+          {/* eslint-disable-next-line react/no-danger */}
+          <style
+            dangerouslySetInnerHTML={{
+              __html: `[style*="opacity:0"],[style*="opacity: 0"]{opacity:1!important}`,
+            }}
+          />
+        </noscript>
       </head>
       <body className="font-sans antialiased">
         <ThemeProvider>

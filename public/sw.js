@@ -12,7 +12,7 @@
  * Bump VERSION to invalidate all caches on deploy of breaking changes.
  */
 
-const VERSION = "pf-v1";
+const VERSION = "pf-v2";
 const OFFLINE_CACHE = `${VERSION}-offline`;
 const STATIC_CACHE = `${VERSION}-static`;
 const MEDIA_CACHE = `${VERSION}-media`;
