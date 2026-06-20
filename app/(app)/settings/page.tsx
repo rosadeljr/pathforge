@@ -163,11 +163,19 @@ export default function Settings() {
           : showOnLeaderboard;
       const nextPseudo =
         overrides?.pseudonymous !== undefined ? overrides.pseudonymous : pseudonymous;
-      const full = {
-        learner_avatar_class: nextAvatar,
-        show_on_leaderboard: nextShow,
-        display_mode: nextPseudo ? "pseudonymous" : "username",
-      } as Record<string, unknown>;
+      // Only write the column(s) actually being changed. Rebuilding the whole
+      // row from current state meant two quick toggles could race and the
+      // later-resolving UPDATE would clobber the field the user just changed.
+      const full: Record<string, unknown> = {};
+      if (overrides?.avatarClass !== undefined) full.learner_avatar_class = nextAvatar;
+      if (overrides?.showOnLeaderboard !== undefined) full.show_on_leaderboard = nextShow;
+      if (overrides?.pseudonymous !== undefined) full.display_mode = nextPseudo ? "pseudonymous" : "username";
+      // No overrides → a full manual save of the current state.
+      if (Object.keys(full).length === 0) {
+        full.learner_avatar_class = nextAvatar;
+        full.show_on_leaderboard = nextShow;
+        full.display_mode = nextPseudo ? "pseudonymous" : "username";
+      }
       let { error } = await supabase
         .from("profiles")
         .update(full)

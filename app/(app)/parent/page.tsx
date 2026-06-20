@@ -213,13 +213,20 @@ export default function ParentDashboardPage() {
                   if (!parentEmail) return;
                   const { data: { session } } = await supabase.auth.getSession();
                   if (!session?.user) return;
-                  const { data: linked } = await supabase
+                  const { data: linked, error } = await supabase
                     .from("profiles")
                     .update({ parent_profile_id: session.user.id })
                     .eq("parent_email", parentEmail.toLowerCase())
                     .neq("id", session.user.id)
                     .is("parent_profile_id", null)
                     .select("id");
+                  if (error) {
+                    // Don't mask a real failure (e.g. RLS/transient) as "no kids".
+                    alert(
+                      "We couldn't scan for your kids just now. Please try again in a moment."
+                    );
+                    return;
+                  }
                   if (linked && linked.length > 0) {
                     window.location.reload();
                   } else {
