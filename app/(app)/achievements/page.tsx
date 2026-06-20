@@ -122,7 +122,7 @@ export default function AchievementsPage() {
 
   return (
     <div className="min-h-screen pb-12">
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-10 space-y-8">
+      <div className="max-w-5xl xl:max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-10 space-y-8">
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: 8 }}
@@ -176,7 +176,7 @@ export default function AchievementsPage() {
             </p>
           </div>
         ) : (
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
             {achievements.map((achievement, i) => {
               const isUnlocked = unlocked.has(achievement.id);
               const rarity = RARITY_META[achievement.rarity] || RARITY_META.common;

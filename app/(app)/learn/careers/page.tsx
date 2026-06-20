@@ -115,7 +115,7 @@ export default function CareersPage() {
   return (
     <div className="min-h-screen pb-12">
       <BackToTop />
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-10 space-y-7">
+      <div className="max-w-5xl xl:max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-10 space-y-7">
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: 8 }}
@@ -288,7 +288,7 @@ export default function CareersPage() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.5, delay: 0.15 }}
-          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3"
+          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3"
         >
           <AnimatePresence mode="popLayout">
             {sorted.map((career, i) => (
