@@ -2,6 +2,15 @@
   "name": "pathforge",
   "version": "0.1.0",
   "private": true,
+  "browserslist": [
+    "safari >= 13",
+    "ios >= 13",
+    "chrome >= 90",
+    "edge >= 90",
+    "firefox >= 90",
+    "> 0.2%",
+    "not dead"
+  ],
   "scripts": {
     "dev": "next dev",
     "build": "next build",
