@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
@@ -30,6 +30,7 @@ import {
 } from "@/lib/certificates";
 import { nextStreakState } from "@/lib/learner/streak";
 import { celebrateStreak, haptic } from "@/lib/effects/celebration";
+import toast from "react-hot-toast";
 import { PageShimmer } from "@/components/ui/Shimmer";
 import { LevelUpOverlay } from "@/components/learn/LevelUpOverlay";
 import { RegionClearOverlay } from "@/components/learn/RegionClearOverlay";
@@ -111,6 +112,17 @@ export default function LessonPlayerPage() {
     lessonsCleared: number;
     bossCrowns: number;
   } | null>(null);
+
+  // Tracks whether the component is still mounted. persistCompletion() runs
+  // fire-and-forget after the done screen shows and does several awaited writes;
+  // if the kid navigates away mid-persist we must not touch state afterwards.
+  const mountedRef = useRef(true);
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+    };
+  }, []);
 
   // Streak milestone fanfare — ascending chime + fire confetti (reuses the
   // procedural effects system). Fires once when the milestone is set.
@@ -611,8 +623,13 @@ export default function LessonPlayerPage() {
       }
     } catch (e) {
       console.error("Lesson completion error:", e);
+      // The done screen already shows success, so tell the kid their progress
+      // didn't save rather than letting it silently diverge on reload.
+      if (mountedRef.current) {
+        toast.error("We couldn't save your progress. Check your connection and try the lesson again.");
+      }
     } finally {
-      setPersisting(false);
+      if (mountedRef.current) setPersisting(false);
     }
   }
 
