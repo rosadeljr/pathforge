@@ -115,10 +115,14 @@ export default function LearnerSetupPage() {
         .eq("id", session.user.id);
 
       // Graceful fallback: schema not yet migrated → drop avatar field & retry.
+      // Match on the column name alone — PostgREST phrases this as
+      // "Could not find the 'learner_avatar_class' column ... in the schema
+      // cache", i.e. the column name comes BEFORE the word "column", so an
+      // order-sensitive pattern misses it and the error reaches the user.
       if (
         error &&
         avatarClass &&
-        /column.*learner_avatar_class/i.test(error.message)
+        /learner_avatar_class/i.test(error.message || "")
       ) {
         const retry = await supabase
           .from("profiles")
