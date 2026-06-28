@@ -31,10 +31,45 @@ set -euo pipefail
 # Resolve paths relative to this script so it works from any cwd.
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
-SQL_FILE="$REPO_ROOT/RPG_PROGRESSION_MIGRATION.sql"
 
-# Connection string: $1 → $SUPABASE_DB_URL → $DATABASE_URL
-CONN="${1:-${SUPABASE_DB_URL:-${DATABASE_URL:-}}}"
+# Apply ALL migrations in dependency order by default. Every file is idempotent
+# (IF NOT EXISTS / CREATE OR REPLACE / DROP POLICY IF EXISTS), so re-running is
+# safe. Pass a single .sql filename as the first arg to run just that one.
+#
+# Order matters: base schema → learner columns → features that build on them.
+ORDERED_MIGRATIONS=(
+  "COMPLETE_DATABASE_SETUP.sql"
+  "LEARNER_MODE_MIGRATION.sql"
+  "RPG_PROGRESSION_MIGRATION.sql"
+  "AVATAR_CLASS_MIGRATION.sql"
+  "ADMIN_ANALYTICS_MIGRATION.sql"
+  "AI_MENTOR_RLS_FIX.sql"
+  "PARENT_FAMILY_MIGRATION.sql"
+  "PARENT_LINK_RPC_MIGRATION.sql"
+  "CAREERS_MIGRATION.sql"
+  "SEED_CAREER_PATHS.sql"
+  "CERTIFICATES_MIGRATION.sql"
+  "CERTIFICATIONS_MIGRATION.sql"
+  "FRIENDSHIPS_MIGRATION.sql"
+  "STREAK_FREEZE_MIGRATION.sql"
+  "PRIVACY_CONTROLS_MIGRATION.sql"
+  "PUBLIC_PROFILE_MIGRATION.sql"
+  "RESUME_BUILDER_MIGRATION.sql"
+  "PAYMONGO_MIGRATION.sql"
+  "GCASH_MAYA_PAYMENT_MIGRATION.sql"
+  "LAUNCH_READY_MIGRATION.sql"
+)
+
+# First arg may be EITHER a .sql file to run, or the connection string.
+SINGLE_FILE=""
+CONN_ARG=""
+if [[ "${1:-}" == *.sql ]]; then
+  SINGLE_FILE="$1"; shift
+fi
+CONN_ARG="${1:-}"
+
+# Connection string: positional → $SUPABASE_DB_URL → $DATABASE_URL
+CONN="${CONN_ARG:-${SUPABASE_DB_URL:-${DATABASE_URL:-}}}"
 
 err() { printf '\033[31m✖ %s\033[0m\n' "$1" >&2; }
 ok()  { printf '\033[32m✔ %s\033[0m\n' "$1"; }
@@ -53,9 +88,18 @@ if [[ -z "$CONN" ]]; then
   exit 1
 fi
 
-if [[ ! -f "$SQL_FILE" ]]; then
-  err "Migration file not found at: $SQL_FILE"
-  exit 1
+# Build the list of files to run: one named file, or the full ordered set.
+FILES=()
+if [[ -n "$SINGLE_FILE" ]]; then
+  [[ "$SINGLE_FILE" != /* ]] && SINGLE_FILE="$REPO_ROOT/$SINGLE_FILE"
+  if [[ ! -f "$SINGLE_FILE" ]]; then
+    err "Migration file not found: $SINGLE_FILE"; exit 1
+  fi
+  FILES=("$SINGLE_FILE")
+else
+  for f in "${ORDERED_MIGRATIONS[@]}"; do
+    [[ -f "$REPO_ROOT/$f" ]] && FILES+=("$REPO_ROOT/$f")
+  done
 fi
 
 # Force TLS (Supabase requires it) unless the URL already sets sslmode.
@@ -65,35 +109,49 @@ fi
 
 # Show a redacted version so the password never lands in logs/history.
 REDACTED="$(printf '%s' "$CONN" | sed -E 's#(://[^:]+:)[^@]+(@)#\1********\2#')"
-info "Target:    $REDACTED"
-info "Migration: RPG_PROGRESSION_MIGRATION.sql"
+info "Target:     $REDACTED"
+info "Migrations: ${#FILES[@]} file(s)"
 echo
 
-# --single-transaction = all-or-nothing; ON_ERROR_STOP = fail loudly on any error.
-if psql "$CONN" --single-transaction -v ON_ERROR_STOP=1 -f "$SQL_FILE"; then
-  echo
-  ok "Migration applied successfully."
-else
-  echo
-  err "Migration failed — no changes were committed (ran in a single transaction)."
+# Run each file in its own all-or-nothing transaction. Continue on failure so
+# one unrelated migration can't block the rest; summarize at the end.
+APPLIED=(); FAILED=()
+for f in "${FILES[@]}"; do
+  name="$(basename "$f")"
+  info "Applying $name …"
+  if psql "$CONN" --single-transaction -v ON_ERROR_STOP=1 -q -f "$f"; then
+    ok "  $name"
+    APPLIED+=("$name")
+  else
+    err "  $name failed (rolled back; continuing)"
+    FAILED+=("$name")
+  fi
+done
+
+echo
+ok "Applied ${#APPLIED[@]}/${#FILES[@]} migration(s)."
+if [[ ${#FAILED[@]} -gt 0 ]]; then
+  err "Failed: ${FAILED[*]}"
   echo "  Common cause: wrong password, or using the Transaction pooler (port 6543)."
   echo "  Try the direct connection or the Session pooler (port 5432)."
   exit 1
 fi
 
-# Verify the new columns + table actually exist.
-info "Verifying schema…"
+# Verify the columns this app most depends on actually exist now.
+info "Verifying key columns…"
 psql "$CONN" -v ON_ERROR_STOP=1 <<'SQL'
-SELECT 'profiles.' || column_name AS added
+SELECT 'profiles.' || column_name AS present
 FROM information_schema.columns
 WHERE table_schema = 'public' AND table_name = 'profiles'
-  AND column_name IN ('learner_selected_class','rpg_class_xp','rpg_unlocked_skills',
-                      'rpg_completed_quests','rpg_earned_rewards','rpg_avatar')
+  AND column_name IN ('learner_grade','learner_avatar_class','parent_email',
+                      'is_parent_account','parent_profile_id')
 ORDER BY 1;
-SELECT 'table: ' || table_name AS created
-FROM information_schema.tables
-WHERE table_schema = 'public' AND table_name = 'arena_results';
+SELECT 'function: ' || routine_name AS present
+FROM information_schema.routines
+WHERE routine_schema = 'public'
+  AND routine_name IN ('parent_claim_kids','learner_link_parent')
+ORDER BY 1;
 SQL
 
 echo
-ok "Done. Avatars, class/skill/quest/reward progress, and arena history are now durable."
+ok "Done. Schema is in sync with the app."
