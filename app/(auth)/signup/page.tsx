@@ -146,6 +146,11 @@ export default function SignUp() {
           data: {
             username,
             full_name: username,
+            // Carry the parent role through email confirmation: when
+            // confirmation is on the client isn't signed in yet, so the
+            // is_parent_account upsert below can't run — the callback reads
+            // this to flag the account and route to /parent.
+            is_parent: role === "parent",
           },
           emailRedirectTo: `${clientAppUrl()}/api/auth/callback`,
         },
@@ -207,16 +212,13 @@ export default function SignUp() {
       // whose parent_email matches the parent's email.
       if (isParent && data.user) {
         try {
-          const { data: linked, error: linkErr } = await supabase
-            .from("profiles")
-            .update({ parent_profile_id: data.user.id })
-            .eq("parent_email", email.toLowerCase().trim())
-            .neq("id", data.user.id)
-            .select("id");
+          const { data: linkedCount, error: linkErr } = await supabase.rpc(
+            "parent_claim_kids"
+          );
           if (linkErr) {
             console.warn("[signup] kid link (non-fatal):", linkErr);
-          } else if (linked && linked.length > 0) {
-            toast.success(`Linked ${linked.length} kid${linked.length > 1 ? "s" : ""} to your account 👨‍👩‍👧‍👦`, {
+          } else if ((linkedCount ?? 0) > 0) {
+            toast.success(`Linked ${linkedCount} kid${linkedCount > 1 ? "s" : ""} to your account 👨‍👩‍👧‍👦`, {
               duration: 5000,
             });
           }

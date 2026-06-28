@@ -91,29 +91,19 @@ export default function LearnerSetupPage() {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session?.user) throw new Error("Not signed in");
 
-      // If a parent email was provided, see if that parent already has an
-      // account — if so, link this kid to them right now (retroactive link).
-      let parentProfileId: string | null = null;
       const cleanedParentEmail = parentEmail.trim().toLowerCase();
-      if (cleanedParentEmail) {
-        const { data: parentProfile } = await supabase
-          .from("profiles")
-          .select("id")
-          .eq("email", cleanedParentEmail)
-          .eq("is_parent_account", true)
-          .maybeSingle();
-        if (parentProfile?.id) parentProfileId = parentProfile.id;
-      }
 
       // learner_avatar_class is sent only when picked — column was added in
       // AVATAR_CLASS_MIGRATION. If the migration hasn't run yet, the update
       // will fail with "column does not exist"; we fall back to retrying
       // without that field so existing deploys don't break.
+      // NOTE: parent_profile_id is resolved server-side via the
+      // learner_link_parent RPC below — RLS blocks the kid from reading the
+      // parent's row directly, so we can't look the id up from the client.
       const baseUpdate = {
         learner_grade: grade,
         learner_subjects: subjects.length ? subjects : null,
         parent_email: cleanedParentEmail || null,
-        parent_profile_id: parentProfileId,
       };
       const updatePayload: Record<string, unknown> = avatarClass
         ? { ...baseUpdate, learner_avatar_class: avatarClass }
@@ -138,6 +128,22 @@ export default function LearnerSetupPage() {
       }
       if (error) throw error;
 
+      // Link to the parent account server-side (RLS-safe). Records the
+      // parent_email regardless, so a parent who signs up later can still claim
+      // this kid via parent_claim_kids(). Non-fatal — never block onboarding.
+      let parentLinked = false;
+      if (cleanedParentEmail) {
+        const { data: linked, error: linkErr } = await supabase.rpc(
+          "learner_link_parent",
+          { p_email: cleanedParentEmail }
+        );
+        if (linkErr) {
+          console.warn("[setup] parent link non-fatal:", linkErr.message);
+        } else {
+          parentLinked = linked === true;
+        }
+      }
+
       // Ad-funnel: setup_complete (and parent_linked when we matched one).
       track(supabase, session.user.id, "setup_complete", {
         payload: {
@@ -147,9 +153,9 @@ export default function LearnerSetupPage() {
           had_parent_email: cleanedParentEmail.length > 0,
         },
       });
-      if (parentProfileId) {
+      if (parentLinked) {
         track(supabase, session.user.id, "parent_linked", {
-          payload: { parent_profile_id: parentProfileId },
+          payload: { had_parent_email: true },
         });
       }
 

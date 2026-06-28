@@ -62,6 +62,14 @@ export default function ParentDashboardPage() {
         if (!session?.user) return;
         setParentEmail(session.user.email ?? null);
 
+        // Auto-claim any kids who entered this parent's email during their own
+        // setup (best-effort; safe if they were already linked). Keeps the
+        // dashboard in sync without the parent needing to press "Scan".
+        const { error: claimErr } = await supabase.rpc("parent_claim_kids");
+        if (claimErr) {
+          console.warn("[parent] auto-claim non-fatal:", claimErr.message);
+        }
+
         // Find linked kids
         const { data: kidProfiles } = await supabase
           .from("profiles")
@@ -211,23 +219,18 @@ export default function ParentDashboardPage() {
               <button
                 onClick={async () => {
                   if (!parentEmail) return;
-                  const { data: { session } } = await supabase.auth.getSession();
-                  if (!session?.user) return;
-                  const { data: linked, error } = await supabase
-                    .from("profiles")
-                    .update({ parent_profile_id: session.user.id })
-                    .eq("parent_email", parentEmail.toLowerCase())
-                    .neq("id", session.user.id)
-                    .is("parent_profile_id", null)
-                    .select("id");
+                  const { data: count, error } = await supabase.rpc(
+                    "parent_claim_kids"
+                  );
                   if (error) {
-                    // Don't mask a real failure (e.g. RLS/transient) as "no kids".
+                    // Don't mask a real failure (e.g. migration not run yet) as
+                    // "no kids".
                     alert(
                       "We couldn't scan for your kids just now. Please try again in a moment."
                     );
                     return;
                   }
-                  if (linked && linked.length > 0) {
+                  if ((count ?? 0) > 0) {
                     window.location.reload();
                   } else {
                     alert(
@@ -387,7 +390,7 @@ function KidCard({ kid, index }: { kid: KidWithActivity; index: number }) {
           <div className="flex items-center gap-3 mt-2 flex-wrap text-xs">
             <span className="inline-flex items-center gap-1 text-indigo-300 font-medium">
               <Sparkles size={11} />
-              {kid.total_xp.toLocaleString()} XP
+              {(kid.total_xp || 0).toLocaleString()} XP
             </span>
             {kid.streak_count > 0 && (
               <span className="inline-flex items-center gap-1 text-amber-300 font-medium">

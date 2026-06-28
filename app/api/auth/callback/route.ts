@@ -136,6 +136,20 @@ export async function GET(request: NextRequest) {
       profile = created ?? null;
     }
 
+    // Reconcile the parent flag carried through email confirmation. With
+    // confirmation on, the signup page couldn't set is_parent_account (no
+    // session yet) and the DB trigger creates the row defaulted to false — so
+    // without this a confirmed parent would be misrouted into the kid setup.
+    const wantsParent = ((user.user_metadata || {}) as Record<string, unknown>).is_parent === true;
+    if (wantsParent && profile && !profile.is_parent_account) {
+      const { error: flagErr } = await supabase
+        .from("profiles")
+        .update({ is_parent_account: true })
+        .eq("id", user.id);
+      if (flagErr) console.warn("[auth/callback] parent flag non-fatal:", flagErr.message);
+      else profile = { ...profile, is_parent_account: true };
+    }
+
     if (profile?.is_parent_account) {
       destination = "/parent";
     } else if (!profile?.learner_grade) {
