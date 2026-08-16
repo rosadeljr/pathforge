@@ -4,6 +4,7 @@ import { Analytics } from "@vercel/analytics/react";
 import { Inter } from "next/font/google";
 import { AppToaster } from "@/components/ui/AppToaster";
 import { ThemeProvider } from "@/components/theme/ThemeProvider";
+import { LanguageProvider } from "@/lib/i18n/LanguageProvider";
 import { Pixels } from "@/components/marketing/Pixels";
 import { ServiceWorkerManager } from "@/components/pwa/ServiceWorkerManager";
 import { APP_URL } from "@/lib/site-url";
@@ -118,11 +119,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body className="font-sans antialiased">
         <ThemeProvider>
-          {children}
-          <AppToaster />
-          <ServiceWorkerManager />
-          <Analytics />
-          <Pixels />
+          <LanguageProvider>
+            {children}
+            <AppToaster />
+            <ServiceWorkerManager />
+            <Analytics />
+            <Pixels />
+          </LanguageProvider>
         </ThemeProvider>
       </body>
     </html>

@@ -29,6 +29,9 @@ export async function POST(request: Request) {
     if (!message) {
       return NextResponse.json({ error: "Message is required" }, { status: 400 });
     }
+    // Language preference (localStorage-driven on the client). "fil" → the
+    // tutor replies in natural Taglish; anything else → English.
+    const language: string = (body?.language || "en").toString();
 
     // ── Inbound moderation — block harmful content BEFORE it hits the
     // tutor or gets stored. Two layers:
@@ -253,12 +256,22 @@ SAFETY GUARDRAILS (still apply, calibrated for teens):
 
 Match length to the question — short for quick clarifications, deep when they need it.`;
 
-        const systemPrompt =
+        const basePrompt =
           ageTier === "little"
             ? littlePrompt
             : ageTier === "junior"
             ? juniorPrompt
             : teenPrompt;
+
+        // Language directive — driven by the learner's chosen UI language.
+        const langDirective =
+          language === "fil"
+            ? `\n\nLANGUAGE — VERY IMPORTANT:\nReply in natural Tagalog/Taglish — the everyday conversational Filipino that ${
+                ageTier === "little" ? "young Filipino kids" : "Filipino students"
+              } actually use, mixing Tagalog with English the way they do in real life. Keep subject/technical terms in the form they're taught in Philippine schools (many Math and Science terms stay in English). Stay warm and clear; do NOT switch to deep, formal, "malalim" Tagalog that would confuse a student.`
+            : `\n\nLANGUAGE:\nReply in clear English. A few light, natural Filipino words for warmth are fine, but keep the explanation in English.`;
+
+        const systemPrompt = basePrompt + langDirective;
 
         const completion = await openai.chat.completions.create({
           model: "gpt-4o",

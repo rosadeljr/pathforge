@@ -30,6 +30,9 @@ import { isSoundEnabled, setSoundEnabled, isHapticsEnabled, setHapticsEnabled, h
 import { useTheme } from "@/components/theme/ThemeProvider";
 import { GCashPaymentModal } from "@/components/payments/GCashPaymentModal";
 import { AVATAR_CLASSES, type AvatarClassId } from "@/lib/data/avatar-classes";
+import { useLanguage } from "@/lib/i18n/LanguageProvider";
+import { LanguageToggle } from "@/components/i18n/LanguageToggle";
+import { Languages } from "lucide-react";
 
 interface Profile {
   id: string;
@@ -47,6 +50,7 @@ interface Profile {
 }
 
 export default function Settings() {
+  const { t } = useLanguage();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -240,6 +244,30 @@ export default function Settings() {
         </motion.div>
 
         {/* Profile Section */}
+        {/* Language */}
+        <motion.section
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.03 }}
+          className="rounded-2xl border border-white/[0.06] bg-white/[0.02] overflow-hidden"
+        >
+          <div className="px-6 py-4 border-b border-white/[0.06] flex items-center gap-2">
+            <Languages size={14} className="text-slate-400" />
+            <h2 className="text-sm font-semibold tracking-tight uppercase tracking-wider text-slate-300">
+              {t("settings.language")}
+            </h2>
+          </div>
+          <div className="p-6 space-y-3">
+            <p className="text-xs text-slate-400 leading-relaxed">
+              {t("settings.languageDesc")}
+            </p>
+            <LanguageToggle />
+            <p className="text-[11px] text-emerald-300/90">
+              🇵🇭 {t("settings.languageTutorNote")}
+            </p>
+          </div>
+        </motion.section>
+
         <motion.section
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}

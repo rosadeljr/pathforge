@@ -6,6 +6,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { createClient } from "@/lib/supabase/client";
 import toast from "react-hot-toast";
 import { Send, Bot, Sparkles, Loader2, User, Trash2, RefreshCw, AlertTriangle } from "lucide-react";
+import { useLanguage } from "@/lib/i18n/LanguageProvider";
+import { LanguageToggle } from "@/components/i18n/LanguageToggle";
 
 interface Message {
   id: string;
@@ -53,6 +55,7 @@ export default function Mentor() {
   // the daily quota.
   const sendingRef = useRef(false);
   const searchParams = useSearchParams();
+  const { lang, t } = useLanguage();
 
   // Honour `?seed=` — the ForgeBot floating companion deep-links here
   // with a starter prompt. Prefill the input and focus so the kid just
@@ -126,7 +129,7 @@ export default function Mentor() {
       const response = await fetch("/api/ai-mentor", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: text }),
+        body: JSON.stringify({ message: text, language: lang }),
       });
 
       if (response.status === 429) {
@@ -258,6 +261,10 @@ export default function Mentor() {
               <div className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
               <p className="text-xs text-slate-400">Online · Knows your goals & progress</p>
             </div>
+          </div>
+          {/* Language switch — the tutor replies in the chosen language */}
+          <div className="flex-shrink-0">
+            <LanguageToggle compact />
           </div>
           {!isEmpty && (
             <button
@@ -415,7 +422,7 @@ export default function Mentor() {
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder="Ask ForgeBot anything..."
+              placeholder={t("mentor.placeholder")}
               rows={1}
               disabled={loading}
               className="w-full pl-4 pr-12 py-3 bg-white/[0.03] border border-white/[0.06] rounded-2xl text-sm text-white placeholder-slate-500 focus:outline-none focus:border-violet-500/50 focus:ring-2 focus:ring-violet-500/20 transition-all resize-none disabled:opacity-50"
