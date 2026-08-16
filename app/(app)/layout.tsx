@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { ageTierForGrade } from "@/lib/data/learner";
 import { InstallPrompt } from "@/components/pwa/InstallPrompt";
+import { SchemaHealthBanner } from "@/components/admin/SchemaHealthBanner";
 
 interface Profile {
   username: string | null;
@@ -229,6 +230,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="min-h-screen bg-[#0a0a0f] text-white">
+      {/* Admin-only: loudly surface database drift instead of silent failures */}
+      {profile?.is_admin && <SchemaHealthBanner />}
       {/* Ambient background */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <div
